@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arrows Esports | Tournaments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --green:#00ff88;
+  --green2:#00c96b;
+  --bg:#050706;
+  --panel:rgba(17,23,20,.78);
+  --panel2:#101612;
+  --text:#f7fff9;
+  --muted:#91a39a;
+  --line:rgba(0,255,136,.16);
+  --shadow:0 20px 60px rgba(0,0,0,.42);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:Inter,system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 15% 5%,rgba(0,255,136,.13),transparent 28%),
+    radial-gradient(circle at 90% 20%,rgba(0,255,136,.08),transparent 25%),
+    linear-gradient(180deg,#050706 0%,#07100b 45%,#050706 100%);
+  min-height:100vh;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+a{color:inherit;text-decoration:none}
+.container{width:min(1180px,92%);margin:auto}
+header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(18px);
+  background:rgba(4,8,6,.78);
+  border-bottom:1px solid var(--line);
+}
+.nav{
+  min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px
+}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.8px}
+.brand-mark{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--green),#078c52);
+  color:#03150d;box-shadow:0 0 28px rgba(0,255,136,.3);font-weight:900
+}
+.brand span{font-family:Poppins;font-size:17px}
+nav ul{display:flex;gap:8px;list-style:none}
+nav a{
+  display:block;padding:11px 15px;border-radius:12px;color:#cbd7d0;font-size:14px;font-weight:700
+}
+nav a:hover,nav a.active{background:rgba(0,255,136,.09);color:var(--green)}
+.menu{display:none;background:none;border:0;color:white;font-size:25px}
+
+.hero{padding:74px 0 35px}
+.hero-box{
+  min-height:390px;border:1px solid var(--line);border-radius:30px;overflow:hidden;
+  position:relative;display:flex;align-items:flex-end;padding:48px;
+  background:
+    linear-gradient(90deg,rgba(3,9,6,.96) 0%,rgba(3,9,6,.72) 48%,rgba(3,9,6,.18) 100%),
+    radial-gradient(circle at 75% 45%,rgba(0,255,136,.28),transparent 28%),
+    linear-gradient(135deg,#0c2015,#07100b 60%,#0a1710);
+  box-shadow:var(--shadow)
+}
+.hero-box:after{
+  content:"";position:absolute;width:430px;height:430px;border-radius:50%;
+  right:-100px;top:-110px;border:1px solid rgba(0,255,136,.16);
+  box-shadow:0 0 100px rgba(0,255,136,.08) inset
+}
+.hero-content{position:relative;z-index:2;max-width:690px}
+.kicker{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);
+  background:rgba(0,255,136,.07);border-radius:999px;color:var(--green);font-size:12px;font-weight:800;
+  letter-spacing:1.2px;text-transform:uppercase
+}
+.hero h1{font-family:Poppins;font-size:clamp(42px,7vw,78px);line-height:.98;margin:18px 0 16px;letter-spacing:-3px}
+.hero h1 span{color:var(--green);text-shadow:0 0 35px rgba(0,255,136,.25)}
+.hero p{color:#aab9b1;max-width:600px;line-height:1.7;font-size:16px}
+.hero-actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 18px;border-radius:13px;
+  font-size:14px;font-weight:800;border:1px solid var(--line);transition:.2s
+}
+.btn.primary{background:var(--green);color:#03150d;border-color:var(--green);box-shadow:0 0 25px rgba(0,255,136,.18)}
+.btn.secondary{background:rgba(255,255,255,.04);color:white}
+.btn:hover{transform:translateY(-2px)}
+
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0 65px
+}
+.stat{
+  padding:21px;border:1px solid var(--line);border-radius:18px;background:rgba(12,18,14,.72);
+  box-shadow:0 12px 35px rgba(0,0,0,.2)
+}
+.stat b{font-family:Poppins;font-size:28px;color:var(--green)}
+.stat span{display:block;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+
+.section{padding:0 0 65px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:23px}
+.section-title{font-family:Poppins;font-size:29px}
+.section-title span{color:var(--green)}
+.section-sub{color:var(--muted);font-size:13px;margin-top:5px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.card{
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:var(--panel);
+  box-shadow:var(--shadow);transition:.25s
+}
+.card:hover{transform:translateY(-5px);border-color:rgba(0,255,136,.4)}
+.card-img{height:235px;position:relative;overflow:hidden;background:#0b120e}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:.45s}
+.card:hover .card-img img{transform:scale(1.04)}
+.card-img:after{
+  content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(3,7,5,.9) 100%)
+}
+.badge{
+  position:absolute;z-index:2;top:15px;left:15px;padding:7px 10px;border-radius:999px;
+  font-size:11px;font-weight:900;letter-spacing:.5px;background:rgba(3,9,6,.82);border:1px solid var(--line);color:var(--green)
+}
+.card-body{padding:22px}
+.card h3{font-family:Poppins;font-size:22px;margin-bottom:13px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;color:#aab8b0;font-size:13px}
+.meta strong{display:block;color:#fff;margin-top:3px}
+.status{
+  display:inline-flex;margin-top:18px;padding:8px 11px;border-radius:9px;
+  background:rgba(0,255,136,.1);color:var(--green);font-size:11px;font-weight:900;text-transform:uppercase
+}
+.card-link{float:right;margin-top:18px;color:#d8e5de;font-size:12px;font-weight:800}
+
+.champions{grid-template-columns:repeat(2,1fr)}
+.champion .card-img{height:205px}
+.champion .card-img:after{background:linear-gradient(180deg,transparent 20%,rgba(3,7,5,.95) 100%)}
+.champion .card-body{margin-top:-25px;position:relative;z-index:2}
+.trophy{color:#ffd76a;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
+
+.formats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.format{
+  padding:20px 15px;border:1px solid var(--line);border-radius:18px;background:rgba(11,17,13,.7);
+  transition:.2s
+}
+.format:hover{background:rgba(0,255,136,.07);transform:translateY(-3px)}
+.format .icon{font-size:24px;margin-bottom:14px}
+.format h4{font-size:14px;margin-bottom:5px}
+.format p{color:var(--muted);font-size:11px;line-height:1.5}
+
+footer{border-top:1px solid var(--line);padding:30px 0;color:#73827a;text-align:center;font-size:12px}
+footer strong{color:var(--green)}
+
+@media(max-width:800px){
+  nav ul{display:none}
+  .menu{display:block}
+  .hero{padding-top:30px}
+  .hero-box{padding:30px;min-height:430px;border-radius:23px}
+  .hero h1{letter-spacing:-2px}
+  .stats{grid-template-columns:1fr 1fr;margin-bottom:50px}
+  .cards,.champions{grid-template-columns:1fr}
+  .formats{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .brand span{font-size:14px}
+  .hero-box{padding:23px}
+  .hero h1{font-size:43px}
+  .hero p{font-size:14px}
+  .stats{gap:9px}
+  .stat{padding:16px}
+  .stat b{font-size:23px}
+  .formats{grid-template-columns:1fr}
+  .section{padding-bottom:48px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="container nav">
+    <a class="brand" href="index.html">
+      <div class="brand-mark">A</div><span>ARROWS ESPORTS</span>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="Playerdetails.html">Players</a></li>
+        <li><a class="active" href="Tournaments.html">Tournaments</a></li>
+        <li><a href="#">eFootball News</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="menu" aria-label="Menu" onclick="document.querySelector('nav ul').classList.toggle('show')">☰</button>
+  </div>
+</header>
+
+<main>
+<section class="hero container">
+  <div class="hero-box">
+    <div class="hero-content">
+      <div class="kicker">🏆 Arrows Esports Competition Hub</div>
+      <h1>TOURNAMENTS<br><span>THAT MAKE LEGENDS.</span></h1>
+      <p>Follow upcoming competitions, celebrate champions and discover every battle happening inside the Arrows Esports community.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#upcoming">🔥 Explore Tournaments</a>
+        <a class="btn secondary" href="#champions">🏆 Hall of Champions</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container stats">
+  <div class="stat"><b>5</b><span>Tournaments</span></div>
+  <div class="stat"><b>32+</b><span>Players</span></div>
+  <div class="stat"><b>120+</b><span>Matches</span></div>
+  <div class="stat"><b>4</b><span>Champions</span></div>
+</section>
+
+<section id="upcoming" class="section container">
+  <div class="section-head">
+    <div><h2 class="section-title">🔥 <span>Upcoming</span> Tournaments</h2><p class="section-sub">The next battles are waiting.</p></div>
+  </div>
+  <div class="cards">
+    <a class="card" href="tourdetails.html">
+      <div class="card-img">
+        <span class="badge">REGISTRATION SOON</span>
+        <img src="images/upcoming1.jpg" alt="Arrows Duo Tournament">
+      </div>
+      <div class="card-body">
+        <h3>Arrows Duo Tournament</h3>
+        <div class="meta">
+          <div>📅 Date<strong>August 2026</strong></div>
+        </div>
+        <span class="status">Coming Soon</span>
+        <span class="card-link">VIEW TOURNAMENT →</span>
+      </div>
+    </a>
+
+    <div class="card">
+      <div class="card-img">
+        <span class="badge">COMING SOON</span>
+        <img src="images/upcoming2.jpg" alt="Arrows Elite Cup Auction Tour">
+      </div>
+      <div class="card-body">
+        <h3>Arrows Elite Cup Auction Tour</h3>
+        <div class="meta">
+          <div>📅 Date<strong>SOON</strong></div>
+        </div>
+        <span class="status">Coming Soon</span>
+        <span class="card-link">MORE DETAILS →</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="champions" class="section container">
+  <div class="section-head">
+    <div><h2 class="section-title">🏆 Hall of <span>Champions</span></h2><p class="section-sub">The teams who conquered the competition.</p></div>
+  </div>
+  <div class="cards champions">
+    <div class="card champion">
+      <div class="card-img"><img src="images/trio.jpeg" alt="Trio Tournament Season 1"></div>
+      <div class="card-body">
+        <div class="trophy">🥇 Champion • 2026</div>
+        <h3>Trio Tournament — Season 1</h3>
+        <div class="meta">
+          <div>🏆 Champion<strong>Trio-X</strong></div>
+          <div>🥈 Runner-Up<strong>Poochandi FC</strong></div>
+        </div>
+        <span class="status">Completed</span>
+      </div>
+    </div>
+
+    <div class="card champion">
+      <div class="card-img"><img src="images/kada.jpg" alt="Community Cup"></div>
+      <div class="card-body">
+        <div class="trophy">🥇 Champion • 2025</div>
+        <h3>Community Cup</h3>
+        <div class="meta">
+          <div>🏆 Champion<strong>Kadayadi FC</strong></div>
+          <div>🥈 Runner-Up<strong>Strawhatss</strong></div>
+        </div>
+        <span class="status">Completed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="section-head">
+    <div><h2 class="section-title">⚔ Tournament <span>Formats</span></h2><p class="section-sub">Different formats. One goal — become champion.</p></div>
+  </div>
+  <div class="formats">
+    <div class="format"><div class="icon">🔄</div><h4>Round Robin</h4><p>Teams compete across the league stage.</p></div>
+    <div class="format"><div class="icon">🏆</div><h4>Knockout</h4><p>One defeat can end the journey.</p></div>
+    <div class="format"><div class="icon">🌎</div><h4>World Cup</h4><p>Groups followed by a knockout stage.</p></div>
+    <div class="format"><div class="icon">⭐</div><h4>UCL Format</h4><p>League-style competition with a final phase.</p></div>
+    <div class="format"><div class="icon">👥</div><h4>Group Stage</h4><p>Multiple groups battle for qualification.</p></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  © 2026 <strong>ARROWS ESPORTS</strong> · Heroes Fall... Legends Rise...
+</footer>
+
+<script>
+const menu=document.querySelector('.menu');
+const navList=document.querySelector('nav ul');
+menu?.addEventListener('click',()=>navList.classList.toggle('show'));
+</script>
+</body>
+</html>

@@ -1,0 +1,3631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin - Football Tournament Manager</title>
+
+<style>
+
+:root{
+    --bg:#07110b;
+    --panel:#102218;
+    --panel2:#172f21;
+    --panel3:#0b1910;
+    --green:#39d864;
+    --green2:#20a84c;
+    --blue:#4388ff;
+    --red:#ef5350;
+    --yellow:#f4c542;
+    --white:#f4fff6;
+    --muted:#9eb3a4;
+    --border:#2d5c3c;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--white);
+}
+
+/* =========================
+LOGIN
+========================= */
+
+#loginPage{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+
+    background:
+    radial-gradient(
+        circle at top,
+        #164d29 0%,
+        #07110b 55%
+    );
+}
+
+.login-box{
+    width:100%;
+    max-width:430px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+
+.login-logo{
+    text-align:center;
+    font-size:55px;
+}
+
+.login-box h1{
+    text-align:center;
+    margin:10px 0;
+}
+
+.login-box p{
+    text-align:center;
+    color:var(--muted);
+}
+
+.login-box input{
+    width:100%;
+    padding:14px;
+    margin:8px 0 15px;
+    border-radius:9px;
+    border:1px solid var(--border);
+    background:#07110b;
+    color:white;
+    font-size:16px;
+}
+
+.login-box button{
+    width:100%;
+}
+
+.login-error{
+    color:#ff6b6b;
+    text-align:center;
+    min-height:22px;
+    margin-top:10px;
+}
+
+/* =========================
+GENERAL
+========================= */
+
+.hidden{
+    display:none !important;
+}
+
+button{
+    border:0;
+    border-radius:8px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-weight:bold;
+    background:var(--green);
+    color:#061109;
+    margin:3px;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+.secondary{
+    background:var(--blue);
+    color:white;
+}
+
+.danger{
+    background:var(--red);
+    color:white;
+}
+
+.warning{
+    background:var(--yellow);
+    color:#111;
+}
+
+.dark{
+    background:#263a2d;
+    color:white;
+}
+
+.small{
+    padding:6px 9px;
+    font-size:12px;
+}
+
+/* =========================
+HEADER
+========================= */
+
+header{
+    padding:25px;
+    background:linear-gradient(
+        135deg,
+        #082812,
+        #12612a
+    );
+    border-bottom:2px solid var(--green);
+}
+
+.header-content{
+    max-width:1400px;
+    margin:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.header-title h1{
+    margin:0;
+}
+
+.header-title p{
+    color:var(--muted);
+    margin:5px 0 0;
+}
+
+.header-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
+/* =========================
+NAV
+========================= */
+
+nav{
+    background:#050b07;
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:20;
+    overflow-x:auto;
+}
+
+.nav-inner{
+    max-width:1400px;
+    margin:auto;
+    display:flex;
+    gap:5px;
+    padding:8px;
+}
+
+.nav-btn{
+    background:transparent;
+    color:white;
+    white-space:nowrap;
+}
+
+.nav-btn.active{
+    background:var(--green);
+    color:#061109;
+}
+
+/* =========================
+CONTAINER
+========================= */
+
+.container{
+    max-width:1400px;
+    margin:auto;
+    padding:20px;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.card h2{
+    margin-top:0;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:
+    repeat(auto-fit,minmax(170px,1fr));
+    gap:15px;
+}
+
+.stat{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:20px;
+    text-align:center;
+}
+
+.stat h2{
+    margin:0;
+    color:var(--green);
+    font-size:32px;
+}
+
+/* =========================
+FORM
+========================= */
+
+label{
+    display:block;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    padding:11px;
+    margin:6px 0 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#07110b;
+    color:white;
+}
+
+textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+/* =========================
+TEAM
+========================= */
+
+.team-card{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:15px;
+}
+
+.team-header{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+}
+
+.team-logo{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    object-fit:contain;
+    background:white;
+}
+
+.team-logo-large{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:contain;
+    background:white;
+}
+
+.team-actions{
+    margin:10px 0;
+}
+
+.player-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    background:#09140d;
+    border:1px solid #173a24;
+    border-radius:8px;
+    padding:10px;
+    margin:5px 0;
+}
+
+.player-actions{
+    display:flex;
+    flex-wrap:wrap;
+}
+
+/* =========================
+FIXTURE
+========================= */
+
+.fixture{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+.fixture-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.fixture-teams{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:15px;
+    margin:20px 0;
+}
+
+.fixture-team{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    text-align:center;
+}
+
+.score{
+    font-size:30px;
+    font-weight:bold;
+    color:var(--green);
+}
+
+.fixture-section{
+    background:var(--panel3);
+    border:1px solid var(--border);
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+}
+
+/* =========================
+TABLE
+========================= */
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    min-width:700px;
+    border-collapse:collapse;
+}
+
+th,
+td{
+    padding:10px;
+    border-bottom:1px solid var(--border);
+    text-align:center;
+}
+
+th{
+    background:#1b5d30;
+}
+
+/* =========================
+MODAL
+========================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    z-index:100;
+}
+
+.modal-box{
+    width:100%;
+    max-width:700px;
+    max-height:90vh;
+    overflow:auto;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:15px;
+    padding:25px;
+}
+
+/* =========================
+GROUP
+========================= */
+
+.group-box{
+    background:#0b1b10;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:15px;
+    margin-bottom:10px;
+}
+
+/* =========================
+MOBILE
+========================= */
+
+
+.format-badge{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#173a24;
+    border:1px solid var(--border);
+    color:var(--green);
+    font-weight:bold;
+    margin:3px 0;
+}
+.hidden{display:none !important;}
+
+@media(max-width:700px){
+
+    .header-content{
+        flex-direction:column;
+        text-align:center;
+    }
+
+    .header-buttons{
+        justify-content:center;
+    }
+
+    .fixture-teams{
+        grid-template-columns:1fr;
+    }
+
+    .player-row{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+}
+
+nav ul{
+
+display:flex;
+
+list-style:none;
+
+gap:30px;
+
+}
+
+nav a{
+
+color:white;
+
+text-decoration:none;
+
+font-weight:600;
+
+transition:.3s;
+
+}
+
+nav a:hover{
+
+color:#00ff66;
+
+}
+
+
+</style>
+
+<script>
+/* ARROWS v5: safe Duo fixture generation fallback */
+window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
+  const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
+  let groups = Math.max(1, parseInt(groupCount, 10) || 1);
+  groups = Math.min(groups, Math.max(1, list.length));
+  const buckets = Array.from({length: groups}, () => []);
+  list.forEach((item, i) => buckets[i % groups].push(item));
+  const fixtures = [];
+  buckets.forEach((bucket, gi) => {
+    if (bucket.length < 2) return;
+    for (let i = 0; i < bucket.length; i++) {
+      for (let j = i + 1; j < bucket.length; j++) {
+        fixtures.push({
+          group: String.fromCharCode(65 + gi),
+          home: bucket[i], away: bucket[j],
+          status: "scheduled", homeScore: null, awayScore: null
+        });
+      }
+    }
+  });
+  return fixtures;
+};
+</script>
+
+</head>
+
+<body>
+<script src="player-data.js"></script>
+
+
+<!-- =====================================================
+LOGIN PAGE
+===================================================== -->
+
+<div id="loginPage">
+
+    <div class="login-box">
+
+        <div class="login-logo">
+            🔐
+        </div>
+
+        <h1>Admin Login</h1>
+
+        <p>
+            Football Tournament Manager
+        </p>
+
+        <label>Username</label>
+
+        <input
+            id="loginUsername"
+            type="text"
+            placeholder="Enter username"
+            autocomplete="username"
+        >
+
+        <label>Password</label>
+
+        <input
+            id="loginPassword"
+            type="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+        >
+
+        <button onclick="login()">
+            🔑 Login
+        </button>
+
+        <div
+            id="loginError"
+            class="login-error">
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+ADMIN APP
+===================================================== -->
+
+<div id="adminApp" class="hidden">
+
+
+<header>
+    <nav>
+    
+        <ul>
+        
+        <li><a href="home.html">Home</a></li>
+
+
+    <div class="header-content">
+
+        <div class="header-title">
+
+            <h1 id="headerTournamentName">
+                🏆 ARROWS DUO TOURNAMENT
+            </h1>
+
+            <p id="headerSubtitle">
+                Administrator Panel
+            </p>
+
+        </div>
+
+        <div class="header-buttons">
+
+            <button
+                class="secondary"
+                onclick="window.location.href='tourdetails.html'">
+                👁️ Viewer Page
+            </button>
+
+            <button
+                class="danger"
+                onclick="logout()">
+                🚪 Logout
+            </button>
+
+
+    </div>
+    
+</header>
+
+
+<nav>
+
+    <div class="nav-inner">
+
+        <button
+            class="nav-btn active"
+            data-page="dashboard"
+            onclick="showPage('dashboard',this)">
+            🏠 Dashboard
+        </button>
+
+        <button
+            class="nav-btn"
+            data-page="teams"
+            onclick="showPage('teams',this)">
+            👥 Teams
+        </button>
+
+        <button
+            class="nav-btn"
+            data-page="fixtures"
+            onclick="showPage('fixtures',this)">
+            📅 Fixtures
+        </button>
+
+        <button
+            class="nav-btn"
+            data-page="settings"
+            onclick="showPage('settings',this)">
+            ⚙️ Settings
+        </button>
+
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+
+<!-- =====================================================
+DASHBOARD
+===================================================== -->
+
+<section
+    id="dashboard"
+    class="page active">
+
+    <div class="grid">
+
+        <div class="stat">
+
+            <h2 id="statTeams">0</h2>
+
+            <p>Teams</p>
+
+        </div>
+
+        <div class="stat">
+
+            <h2 id="statPlayers">0</h2>
+
+            <p>Players</p>
+
+        </div>
+
+        <div class="stat">
+
+            <h2 id="statFixtures">0</h2>
+
+            <p>Fixtures</p>
+
+        </div>
+
+        <div class="stat">
+
+            <h2 id="statPlayed">0</h2>
+
+            <p>Matches Played</p>
+
+        </div>
+
+        <div class="stat">
+
+            <h2 id="statGoals">0</h2>
+
+            <p>Total Goals</p>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>⚡ Admin Quick Actions</h2>
+
+        <button onclick="showPageByName('teams')">
+            ➕ Manage Teams
+        </button>
+
+        <button onclick="showPageByName('fixtures')">
+            📅 Manage Fixtures
+        </button>
+
+        <button onclick="generateFixtures()">
+            ⚙️ Generate Fixtures
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+TEAMS
+===================================================== -->
+
+<section
+    id="teams"
+    class="page">
+
+    <div class="card">
+
+        <h2>➕ Add Team</h2>
+
+        <label>Team Name</label>
+
+        <input
+            id="newTeamName"
+            placeholder="Example: Arrows FC">
+
+        <label>Team Logo</label>
+
+        <input
+            type="file"
+            id="newTeamLogo"
+            accept="image/*">
+
+        <div id="newLogoPreview"></div>
+
+        <button onclick="addTeam()">
+            ➕ Add Team
+        </button>
+
+    </div>
+
+
+    <div id="teamsList"></div>
+
+</section>
+
+
+<!-- =====================================================
+FIXTURES
+===================================================== -->
+
+<section
+    id="fixtures"
+    class="page">
+
+    <div class="card">
+
+        <h2>📅 Fixture Manager</h2>
+
+        <p>
+            Create and modify tournament fixtures.
+        </p>
+
+        <button id="generateFixturesButton" onclick="generateFixtures()">
+            ⚙️ Generate Fixtures
+        </button>
+
+        <button id="generateKnockoutButton" class="secondary hidden" onclick="generateKnockoutStage()">
+            🏆 Generate Knockout Stage
+        </button>
+
+        <button
+            class="danger"
+            onclick="deleteAllFixtures()">
+            🗑️ Delete All Fixtures
+        </button>
+
+    </div>
+
+
+    <div id="fixtureList"></div>
+
+</section>
+
+
+<!-- =====================================================
+SETTINGS
+===================================================== -->
+
+<section
+    id="settings"
+    class="page">
+
+    <div class="card">
+
+        <h2>⚙️ Tournament Settings</h2>
+
+        <label>Tournament Name</label>
+
+        <input id="settingName">
+
+        <label>Season</label>
+
+        <input id="settingSeason">
+
+        <label>Organizer</label>
+
+        <input id="settingOrganizer">
+
+        <label>Tournament Type</label>
+        <select id="settingTournamentType" onchange="updateTournamentTypeUI()">
+            <option value="roundrobin">Round Robin / League</option>
+            <option value="knockout">Knockout</option>
+            <option value="worldcup">World Cup Model</option>
+            <option value="ucl">UCL Type Tournament</option>
+        </select>
+
+        <div id="groupSettingsCard">
+            <label>Number of Groups</label>
+            <select id="settingGroups">
+                <option value="2">2 Groups</option>
+                <option value="3">3 Groups</option>
+                <option value="4">4 Groups</option>
+                <option value="5">5 Groups</option>
+                <option value="6">6 Groups</option>
+                <option value="7">7 Groups</option>
+                <option value="8">8 Groups</option>
+                <option value="9">9 Groups</option>
+                <option value="10">10 Groups</option>
+            </select>
+
+            <div class="fixture-section">
+                <b>How it works</b>
+                <p id="formatHelp" style="color:var(--muted);margin-bottom:0;">
+                    Teams are divided into the selected number of groups and each group plays a round-robin league.
+                </p>
+            </div>
+        </div>
+
+        <button onclick="saveSettings()">
+            💾 Save Settings
+        </button>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🗑️ Reset Tournament</h2>
+
+        <p>
+            This will delete teams, players and fixtures.
+        </p>
+
+        <button
+            class="danger"
+            onclick="resetTournament()">
+            Delete Everything
+        </button>
+
+    </div>
+
+</section>
+
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+EDIT FIXTURE MODAL
+===================================================== -->
+
+<div
+    id="fixtureModal"
+    class="modal hidden">
+
+    <div class="modal-box">
+
+        <h2>✏️ Edit Fixture</h2>
+
+        <input
+            type="hidden"
+            id="editFixtureId">
+
+
+        <label>Home Team</label>
+
+        <select id="editHomeTeam"></select>
+
+
+        <label>Away Team</label>
+
+        <select id="editAwayTeam"></select>
+
+
+        <label>Stage</label>
+
+        <input
+            id="editStage"
+            placeholder="League / Semi Final / Final">
+
+
+        <label>Round</label>
+
+        <input
+            id="editRound"
+            type="number"
+            min="1">
+
+
+        <label>Group</label>
+
+        <input
+            id="editGroup"
+            placeholder="Example: Group A">
+
+
+        <label>Date</label>
+
+        <input
+            id="editDate"
+            type="date">
+
+
+        <label>Time</label>
+
+        <input
+            id="editTime"
+            type="time">
+
+
+        <label>Venue</label>
+
+        <input
+            id="editVenue"
+            placeholder="Stadium name">
+
+
+        <div>
+
+            <button
+                onclick="saveFixtureEdit()">
+                💾 Save Fixture
+            </button>
+
+            <button
+                class="dark"
+                onclick="closeFixtureModal()">
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+ADMIN LOGIN
+===================================================== */
+
+/*
+    DEFAULT LOGIN:
+
+    Username: admin
+    Password: admin123
+
+    Change these values if required.
+*/
+
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "admin123";
+
+
+function login(){
+
+    const username =
+        document
+        .getElementById("loginUsername")
+        .value
+        .trim();
+
+    const password =
+        document
+        .getElementById("loginPassword")
+        .value;
+
+    if(
+        username === ADMIN_USERNAME &&
+        password === ADMIN_PASSWORD
+    ){
+
+        sessionStorage.setItem(
+            "footballAdminLoggedIn",
+            "true"
+        );
+
+        document
+        .getElementById("loginPage")
+        .classList.add("hidden");
+
+        document
+        .getElementById("adminApp")
+        .classList.remove("hidden");
+
+        renderAll();
+
+    }
+
+    else{
+
+        document
+        .getElementById("loginError")
+        .textContent =
+        "❌ Incorrect username or password.";
+
+    }
+
+}
+
+
+function logout(){
+
+    sessionStorage.removeItem(
+        "footballAdminLoggedIn"
+    );
+
+    location.reload();
+
+}
+
+
+function checkLogin(){
+
+    if(
+        sessionStorage.getItem(
+            "footballAdminLoggedIn"
+        ) === "true"
+    ){
+
+        document
+        .getElementById("loginPage")
+        .classList.add("hidden");
+
+        document
+        .getElementById("adminApp")
+        .classList.remove("hidden");
+
+        renderAll();
+
+    }
+
+}
+
+
+/* =====================================================
+DATABASE
+===================================================== */
+
+let tournament =
+JSON.parse(
+    localStorage.getItem(
+        "footballTournament"
+    )
+)
+||
+{
+    name:"ARROWS DUO TOURNAMENT",
+    season:"",
+    organizer:"",
+    type:"roundrobin",
+    leagueFormat:"single",
+    leagueGroups:2,
+    groupSize:4,
+    teams:[],
+    fixtures:[]
+};
+
+
+/* =====================================================
+NORMALIZE SAVED TOURNAMENT SETTINGS
+===================================================== */
+
+tournament.type = tournament.type || "roundrobin";
+tournament.leagueGroups = Math.max(
+    2,
+    Math.min(10, parseInt(tournament.leagueGroups || 2, 10))
+);
+tournament.knockoutReady = !!tournament.knockoutReady;
+
+tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
+tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
+
+/* =====================================================
+SAVE
+===================================================== */
+
+function save(){
+
+    localStorage.setItem(
+        "footballTournament",
+        JSON.stringify(tournament)
+    );
+
+}
+
+
+/* =====================================================
+NAVIGATION
+===================================================== */
+
+function showPage(page,button){
+
+    document
+    .querySelectorAll(".page")
+    .forEach(section=>{
+        section.classList.remove("active");
+    });
+
+    document
+    .getElementById(page)
+    .classList.add("active");
+
+
+    document
+    .querySelectorAll(".nav-btn")
+    .forEach(btn=>{
+        btn.classList.remove("active");
+    });
+
+
+    if(button){
+
+        button.classList.add("active");
+
+    }
+
+}
+
+
+function showPageByName(page){
+
+    const button =
+        document.querySelector(
+            `.nav-btn[data-page="${page}"]`
+        );
+
+    showPage(page,button);
+
+}
+
+
+/* =====================================================
+VIEWER
+===================================================== */
+
+function openViewer(){
+
+    window.location.href =
+        "viewer.html";
+
+}
+
+
+/* =====================================================
+TEAM LOGO
+===================================================== */
+
+let selectedLogo = "";
+
+document
+.getElementById("newTeamLogo")
+.addEventListener(
+    "change",
+    function(event){
+
+        const file =
+            event.target.files[0];
+
+        if(!file)return;
+
+        const reader =
+            new FileReader();
+
+        reader.onload =
+            function(e){
+
+                selectedLogo =
+                    e.target.result;
+
+                document
+                .getElementById(
+                    "newLogoPreview"
+                )
+                .innerHTML =
+
+                `
+                <br>
+
+                <img
+                    src="${selectedLogo}"
+                    class="team-logo-large">
+                `;
+
+            };
+
+        reader.readAsDataURL(file);
+
+    }
+);
+
+
+/* =====================================================
+GET TEAM
+===================================================== */
+
+function getTeam(id){
+
+    return tournament.teams.find(
+        team =>
+        String(team.id) === String(id)
+    );
+
+}
+
+
+/* =====================================================
+ADD TEAM
+===================================================== */
+
+function addTeam(){
+
+    const name =
+        document
+        .getElementById("newTeamName")
+        .value
+        .trim();
+
+    if(!name){
+
+        alert("Please enter team name.");
+
+        return;
+
+    }
+
+
+    tournament.teams.push({
+
+        id:Date.now()+Math.random(),
+
+        name:name,
+
+        logo:selectedLogo,
+
+        players:[]
+
+    });
+
+
+    document
+    .getElementById("newTeamName")
+    .value="";
+
+    document
+    .getElementById("newTeamLogo")
+    .value="";
+
+    document
+    .getElementById(
+        "newLogoPreview"
+    )
+    .innerHTML="";
+
+    selectedLogo="";
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+EDIT TEAM
+===================================================== */
+
+function editTeam(id){
+
+    const team =
+        getTeam(id);
+
+    if(!team)return;
+
+    const newName =
+        prompt(
+            "Enter new team name:",
+            team.name
+        );
+
+    if(
+        newName === null ||
+        !newName.trim()
+    ){
+
+        return;
+
+    }
+
+    team.name =
+        newName.trim();
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+DELETE TEAM
+===================================================== */
+
+function deleteTeam(id){
+
+    const team =
+        getTeam(id);
+
+    if(!team)return;
+
+    if(
+        !confirm(
+            `Delete ${team.name}?\n\nPlayers and related fixtures will also be removed.`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    tournament.teams =
+        tournament.teams.filter(
+            team =>
+            String(team.id) !== String(id)
+        );
+
+
+    tournament.fixtures =
+        tournament.fixtures.filter(
+            match =>
+            String(match.home) !== String(id) &&
+            String(match.away) !== String(id)
+        );
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+ADD PLAYER
+===================================================== */
+
+function addPlayer(teamId){
+
+    const input =
+        document.getElementById(
+            "playerInput-"+teamId
+        );
+
+    const name =
+        input.value.trim();
+
+    if(!name){
+
+        alert("Enter player name.");
+
+        return;
+
+    }
+
+
+    const team =
+        getTeam(teamId);
+
+    if(!team)return;
+
+
+    const clanPlayer = arrowsRegisterPlayer({name:name});
+
+    team.players.push({
+
+        id:Date.now()+Math.random(),
+
+        name:name,
+
+        clanPlayerId: clanPlayer ? clanPlayer.id : null
+
+    });
+
+
+    input.value="";
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+EDIT PLAYER
+===================================================== */
+
+function editPlayer(
+    teamId,
+    playerId
+){
+
+    const team =
+        getTeam(teamId);
+
+    if(!team)return;
+
+
+    const player =
+        team.players.find(
+            p =>
+            String(p.id) ===
+            String(playerId)
+        );
+
+    if(!player)return;
+
+
+    const name =
+        prompt(
+            "Edit player name:",
+            player.name
+        );
+
+    if(
+        name === null ||
+        !name.trim()
+    ){
+
+        return;
+
+    }
+
+
+    player.name =
+        name.trim();
+
+    const clanPlayer = arrowsRegisterPlayer({
+        name: player.name,
+        clanPlayerId: player.clanPlayerId
+    });
+    if(clanPlayer) player.clanPlayerId = clanPlayer.id;
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+DELETE PLAYER
+===================================================== */
+
+function deletePlayer(
+    teamId,
+    playerId
+){
+
+    const team =
+        getTeam(teamId);
+
+    if(!team)return;
+
+
+    if(
+        !confirm(
+            "Delete this player?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    team.players =
+        team.players.filter(
+            player =>
+            String(player.id) !==
+            String(playerId)
+        );
+
+
+    /*
+        Remove player from goals,
+        MOTM and goalkeeper selections.
+    */
+
+    tournament.fixtures.forEach(
+        match => {
+
+            match.goals =
+                match.goals.filter(
+                    goal =>
+                    String(goal.playerId) !==
+                    String(playerId)
+                );
+
+
+            if(
+                String(match.motm) ===
+                String(playerId)
+            ){
+
+                match.motm=null;
+
+            }
+
+
+            if(
+                String(match.homeGoalkeeper) ===
+                String(playerId)
+            ){
+
+                match.homeGoalkeeper=null;
+
+            }
+
+
+            if(
+                String(match.awayGoalkeeper) ===
+                String(playerId)
+            ){
+
+                match.awayGoalkeeper=null;
+
+            }
+
+        }
+    );
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+RENDER TEAMS
+===================================================== */
+
+function renderTeams(){
+
+    const box =
+        document.getElementById(
+            "teamsList"
+        );
+
+    box.innerHTML="";
+
+
+    if(!tournament.teams.length){
+
+        box.innerHTML =
+        `
+        <div class="card">
+            <h3>No teams added.</h3>
+            <p>Add your teams above.</p>
+        </div>
+        `;
+
+        return;
+
+    }
+
+
+    tournament.teams.forEach(
+        team => {
+
+            let playersHTML="";
+
+
+            team.players.forEach(
+                player => {
+
+                    playersHTML +=
+
+                    `
+                    <div class="player-row">
+
+                        <b>
+                            👤 ${escapeHTML(player.name)}
+                        </b>
+
+                        <div class="player-actions">
+
+                            <button
+                                class="secondary small"
+                                onclick="editPlayer(
+                                    '${team.id}',
+                                    '${player.id}'
+                                )">
+                                ✏️ Edit
+                            </button>
+
+                            <button
+                                class="danger small"
+                                onclick="deletePlayer(
+                                    '${team.id}',
+                                    '${player.id}'
+                                )">
+                                🗑️ Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+                    `;
+
+                }
+            );
+
+
+            box.innerHTML +=
+
+            `
+            <div class="team-card">
+
+                <div class="team-header">
+
+                    ${
+                        team.logo
+
+                        ?
+
+                        `
+                        <img
+                            src="${team.logo}"
+                            class="team-logo-large">
+                        `
+
+                        :
+
+                        `<div
+                            class="team-logo-large"
+                            style="
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:35px;">
+                            🛡️
+                        </div>`
+                    }
+
+                    <div>
+
+                        <h2>
+                            ${escapeHTML(team.name)}
+                        </h2>
+
+                        <p>
+                            ${team.players.length}
+                            player(s)
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="team-actions">
+
+                    <button
+                        class="secondary"
+                        onclick="editTeam('${team.id}')">
+                        ✏️ Edit Team
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="deleteTeam('${team.id}')">
+                        🗑️ Delete Team
+                    </button>
+
+                </div>
+
+
+                <hr>
+
+
+                <h3>➕ Add Player</h3>
+
+                <input
+                    id="playerInput-${team.id}"
+                    placeholder="Enter player name">
+
+                <button
+                    onclick="addPlayer('${team.id}')">
+                    Add Player
+                </button>
+
+
+                <h3>👥 Players</h3>
+
+                ${
+                    playersHTML ||
+                    "<p>No players added yet.</p>"
+                }
+
+            </div>
+            `;
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+CREATE MATCH
+===================================================== */
+
+function createMatch(
+    home,
+    away,
+    stage="League",
+    round=1,
+    group=""
+){
+
+    return {
+
+        id:Date.now()+Math.random(),
+
+        home:home,
+
+        away:away,
+
+        stage:stage,
+
+        round:round,
+
+        group:group,
+
+        date:"",
+
+        time:"",
+
+        venue:"",
+
+        goals:[],
+
+        motm:null,
+
+        homeGoalkeeper:null,
+
+        awayGoalkeeper:null,
+
+        played:false
+
+    };
+
+}
+
+
+/* =====================================================
+GENERATE ROUND ROBIN
+===================================================== */
+
+function generateFixtures(){
+    if(tournament.teams.length < 2){
+        alert("You need at least 2 teams.");
+        return;
+    }
+
+    if(!confirm("Generate new fixtures?\n\nExisting fixtures will be deleted.")) return;
+
+    tournament.fixtures=[];
+
+    const type = tournament.type || "roundrobin";
+
+    if(type === "knockout"){
+        generateDirectKnockout();
+    }else{
+        generateLeaguePhase(type);
+    }
+
+    save();
+    renderAll();
+    showPageByName("fixtures");
+}
+
+/* =====================================================
+TOURNAMENT FORMAT HELPERS
+===================================================== */
+
+function getGroupCount(){
+    const requested = Math.max(
+        2,
+        Math.min(10, parseInt(tournament.leagueGroups || 2, 10))
+    );
+    return Math.min(requested, tournament.teams.length);
+}
+
+function makeGroups(teamIds, count){
+    const groups = Array.from({length:count},()=>[]);
+    teamIds.forEach((id,i)=>groups[i % count].push(id));
+    return groups;
+}
+
+function generateRoundRobinForGroup(teamIds, groupName, stageName){
+    if(teamIds.length < 2) return;
+
+    let teams = teamIds.slice();
+    if(teams.length % 2 !== 0) teams.push(null);
+
+    const rounds = teams.length - 1;
+    const half = teams.length / 2;
+
+    for(let round=1; round<=rounds; round++){
+        for(let i=0;i<half;i++){
+            const home=teams[i];
+            const away=teams[teams.length-1-i];
+
+            if(home !== null && away !== null){
+                tournament.fixtures.push(
+                    createMatch(home,away,stageName,round,groupName)
+                );
+            }
+        }
+        teams.splice(1,0,teams.pop());
+    }
+}
+
+function generateLeaguePhase(type){
+    const groupCount = getGroupCount();
+    const groups = makeGroups(tournament.teams.map(t=>t.id), groupCount);
+
+    groups.forEach((groupTeams,g)=>{
+        const groupName = `Group ${String.fromCharCode(65+g)}`;
+        generateRoundRobinForGroup(groupTeams, groupName, "League");
+
+        // Store the group membership so later knockout generation can
+        // calculate qualifiers from completed results.
+        groupTeams.forEach(teamId=>{
+            const team=getTeam(teamId);
+            if(team) team.tournamentGroup = groupName;
+        });
+    });
+
+    tournament.knockoutReady = (type === "worldcup" || type === "ucl");
+}
+
+function generateDirectKnockout(){
+    let teams=tournament.teams.map(t=>t.id);
+
+    // Seed byes automatically when the number of teams is not a power of two.
+    const nextPower = Math.pow(2, Math.ceil(Math.log2(teams.length)));
+    const byes = nextPower - teams.length;
+
+    const firstRoundPairs=[];
+    let cursor=0;
+
+    for(let i=0;i<byes;i++){
+        firstRoundPairs.push([teams[cursor++], null]);
+    }
+
+    while(cursor < teams.length){
+        firstRoundPairs.push([teams[cursor++], teams[cursor++]]);
+    }
+
+    firstRoundPairs.forEach((pair,i)=>{
+        if(pair[1] === null) return;
+        tournament.fixtures.push(
+            createMatch(pair[0],pair[1],"Round of "+nextPower,1,"Knockout")
+        );
+    });
+
+    tournament.knockoutReady=false;
+}
+
+function getCompletedMatchesForTeam(teamId, fixtureSet){
+    return fixtureSet.filter(m =>
+        String(m.home)===String(teamId) ||
+        String(m.away)===String(teamId)
+    );
+}
+
+function teamPoints(teamId, fixtureSet){
+    let pts=0, gd=0, gf=0;
+
+    getCompletedMatchesForTeam(teamId, fixtureSet)
+    .filter(m=>m.played)
+    .forEach(m=>{
+        const homeScore=m.goals.filter(g=>String(g.teamId)===String(m.home)).length;
+        const awayScore=m.goals.filter(g=>String(g.teamId)===String(m.away)).length;
+        const isHome=String(m.home)===String(teamId);
+        const scored=isHome?homeScore:awayScore;
+        const conceded=isHome?awayScore:homeScore;
+
+        gf += scored;
+        gd += scored-conceded;
+        if(scored>conceded) pts+=3;
+        else if(scored===conceded) pts+=1;
+    });
+
+    return {pts,gd,gf};
+}
+
+function rankedTeams(teamIds, fixtureSet){
+    return teamIds.slice().sort((a,b)=>{
+        const A=teamPoints(a,fixtureSet);
+        const B=teamPoints(b,fixtureSet);
+        return (B.pts-A.pts) || (B.gd-A.gd) || (B.gf-A.gf);
+    });
+}
+
+/*
+ * World Cup model:
+ * - selected number of groups
+ * - round robin in each group
+ * - top 2 from each group qualify
+ * - knockout fixtures are generated only after all group matches are completed
+ *
+ * UCL type:
+ * - selected number of groups act as the league phase
+ * - top half of all teams qualify
+ * - knockout fixtures are generated after the league phase is completed
+ */
+function generateKnockoutStage(){
+    const type=tournament.type || "roundrobin";
+
+    if(type !== "worldcup" && type !== "ucl"){
+        alert("Knockout stage generation is available for World Cup and UCL formats.");
+        return;
+    }
+
+    const leagueFixtures=tournament.fixtures.filter(m=>m.stage==="League");
+    if(!leagueFixtures.length){
+        alert("Generate the league/group fixtures first.");
+        return;
+    }
+
+    if(leagueFixtures.some(m=>!m.played)){
+        alert("Complete all league/group matches before generating the knockout stage.");
+        return;
+    }
+
+    // Do not duplicate the knockout bracket.
+    if(tournament.fixtures.some(m=>m.stage==="Knockout")){
+        alert("The knockout stage has already been generated.");
+        return;
+    }
+
+    let qualifiers=[];
+
+    if(type==="worldcup"){
+        const groupMap={};
+        tournament.teams.forEach(team=>{
+            const group=team.tournamentGroup || "";
+            if(!groupMap[group]) groupMap[group]=[];
+            groupMap[group].push(team.id);
+        });
+
+        Object.keys(groupMap).sort().forEach(groupName=>{
+            const ranked=rankedTeams(groupMap[groupName],leagueFixtures);
+            qualifiers.push(...ranked.slice(0,2));
+        });
+    }else{
+        const allTeams=rankedTeams(
+            tournament.teams.map(t=>t.id),
+            leagueFixtures
+        );
+        const count=Math.max(2,Math.floor(allTeams.length/2));
+        qualifiers=allTeams.slice(0,count);
+    }
+
+    if(qualifiers.length < 2){
+        alert("Not enough qualified teams for a knockout stage.");
+        return;
+    }
+
+    // If needed, trim to the nearest power of two and create byes.
+    const bracketSize=Math.pow(2,Math.floor(Math.log2(qualifiers.length)));
+    qualifiers=qualifiers.slice(0,bracketSize);
+
+    let roundTeams=qualifiers;
+    let roundNumber=1;
+    let roundSize=roundTeams.length;
+
+    while(roundSize >= 2){
+        const stageName =
+            roundSize===2 ? "Final" :
+            roundSize===4 ? "Semi Final" :
+            roundSize===8 ? "Quarter Final" :
+            "Round of "+roundSize;
+
+        for(let i=0;i<roundTeams.length;i+=2){
+            tournament.fixtures.push(
+                createMatch(
+                    roundTeams[i],
+                    roundTeams[i+1],
+                    "Knockout",
+                    roundNumber,
+                    stageName
+                )
+            );
+        }
+
+        // Future rounds are intentionally not created with fake teams.
+        // They can be generated after winners are known.
+        break;
+    }
+
+    tournament.knockoutReady=false;
+    save();
+    renderAll();
+    showPageByName("fixtures");
+    alert("Knockout stage generated from the completed league/group results.");
+}
+
+/* =====================================================
+GET MATCH
+===================================================== */
+
+function getMatch(id){
+
+    return tournament.fixtures.find(
+        match =>
+        String(match.id) ===
+        String(id)
+    );
+
+}
+
+
+/* =====================================================
+PLAYER FINDER
+===================================================== */
+
+function findPlayer(playerId){
+
+    for(
+        const team of tournament.teams
+    ){
+
+        const player =
+            team.players.find(
+                p =>
+                String(p.id) ===
+                String(playerId)
+            );
+
+        if(player){
+
+            return {
+                team:team,
+                player:player
+            };
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+/* =====================================================
+PLAYER OPTIONS
+===================================================== */
+
+function playerOptions(teamId){
+
+    const team =
+        getTeam(teamId);
+
+    if(!team)return "";
+
+    return team.players
+    .map(
+        player =>
+
+        `
+        <option value="${player.id}">
+            ${escapeHTML(player.name)}
+        </option>
+        `
+    )
+    .join("");
+
+}
+
+
+/* =====================================================
+RENDER FIXTURES
+===================================================== */
+
+function renderFixtures(){
+
+    const box =
+        document.getElementById(
+            "fixtureList"
+        );
+
+    box.innerHTML="";
+
+    const typeNames={
+        roundrobin:"Round Robin / League",
+        knockout:"Knockout",
+        worldcup:"World Cup Model",
+        ucl:"UCL Type Tournament"
+    };
+
+    box.innerHTML += `
+        <div class="card">
+            <span class="format-badge">FORMAT: ${escapeHTML(typeNames[tournament.type] || "Round Robin / League")}</span>
+            ${
+                tournament.type!=="knockout"
+                ? `<span class="format-badge">GROUPS: ${tournament.leagueGroups}</span>`
+                : ""
+            }
+        </div>
+    `;
+
+    if(
+        tournament.fixtures.length === 0
+    ){
+
+        box.innerHTML =
+
+        `
+        <div class="card">
+
+            <h3>📅 No fixtures</h3>
+
+            <p>
+                Choose the tournament format in Settings, then click "Generate Fixtures" to create fixtures.
+            </p>
+
+        </div>
+        `;
+
+        return;
+
+    }
+
+
+    tournament.fixtures.forEach(
+        match => {
+
+            const home =
+                getTeam(match.home);
+
+            const away =
+                getTeam(match.away);
+
+            if(!home || !away)return;
+
+
+            const homeScore =
+                match.goals.filter(
+                    goal =>
+                    String(goal.teamId) ===
+                    String(home.id)
+                ).length;
+
+
+            const awayScore =
+                match.goals.filter(
+                    goal =>
+                    String(goal.teamId) ===
+                    String(away.id)
+                ).length;
+
+
+            let goalsHTML="";
+
+
+            match.goals.forEach(
+                goal => {
+
+                    const scorer =
+                        findPlayer(
+                            goal.playerId
+                        );
+
+                    goalsHTML +=
+
+                    `
+                    <div class="player-row">
+
+                        <span>
+                            ⚽
+                            ${
+                                scorer
+                                ?
+                                escapeHTML(
+                                    scorer.player.name
+                                )
+                                :
+                                "Unknown Player"
+                            }
+
+                            ${
+                                goal.minute
+                                ?
+                                " • "+goal.minute+"'"
+                                :
+                                ""
+                            }
+                        </span>
+
+                        <button
+                            class="danger small"
+                            onclick="deleteGoal(
+                                '${match.id}',
+                                '${goal.id}'
+                            )">
+                            🗑️ Remove
+                        </button>
+
+                    </div>
+                    `;
+
+                }
+            );
+
+
+            box.innerHTML +=
+
+            `
+            <div class="fixture">
+
+                <div class="fixture-title">
+
+                    <div>
+
+                        <b>
+                            ${escapeHTML(match.stage)}
+                        </b>
+
+                        ${
+                            match.group
+                            ?
+                            " • "+
+                            escapeHTML(match.group)
+                            :
+                            ""
+                        }
+
+                        • Round
+                        ${match.round}
+
+                    </div>
+
+
+                    <div>
+
+                        ${
+                            match.played
+                            ?
+                            `<span style="
+                            color:#39d864;
+                            font-weight:bold;">
+                            ✅ COMPLETED
+                            </span>`
+                            :
+                            `<span style="
+                            color:#f4c542;
+                            font-weight:bold;">
+                            ⏳ NOT COMPLETED
+                            </span>`
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="fixture-teams">
+
+                    <div class="fixture-team">
+
+                        ${
+                            home.logo
+                            ?
+                            `<img
+                                src="${home.logo}"
+                                class="team-logo">`
+                            :
+                            "🛡️"
+                        }
+
+                        <b>
+                            ${escapeHTML(home.name)}
+                        </b>
+
+                    </div>
+
+
+                    <div class="score">
+
+                        ${homeScore}
+                        -
+                        ${awayScore}
+
+                    </div>
+
+
+                    <div class="fixture-team">
+
+                        <b>
+                            ${escapeHTML(away.name)}
+                        </b>
+
+                        ${
+                            away.logo
+                            ?
+                            `<img
+                                src="${away.logo}"
+                                class="team-logo">`
+                            :
+                            "🛡️"
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="fixture-section">
+
+                    <h3>✏️ Fixture Details</h3>
+
+                    <button
+                        class="secondary"
+                        onclick="openFixtureEditor(
+                            '${match.id}'
+                        )">
+                        ✏️ Edit Fixture
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="deleteFixture(
+                            '${match.id}'
+                        )">
+                        🗑️ Delete Fixture
+                    </button>
+
+                </div>
+
+
+                <div class="fixture-section">
+
+                    <h3>⚽ Goals</h3>
+
+                    <label>Scoring Team</label>
+
+                    <select
+                        id="goalTeam-${match.id}">
+
+                        <option value="${home.id}">
+                            ${escapeHTML(home.name)}
+                        </option>
+
+                        <option value="${away.id}">
+                            ${escapeHTML(away.name)}
+                        </option>
+
+                    </select>
+
+
+                    <label>Goal Scorer</label>
+
+                    <select
+                        id="scorer-${match.id}">
+
+                        <option value="">
+                            Select scorer
+                        </option>
+
+                        ${
+                            home.players.length
+                            ?
+                            `
+                            <optgroup
+                                label="${escapeHTML(home.name)}">
+
+                                ${playerOptions(home.id)}
+
+                            </optgroup>
+                            `
+                            :
+                            ""
+                        }
+
+                        ${
+                            away.players.length
+                            ?
+                            `
+                            <optgroup
+                                label="${escapeHTML(away.name)}">
+
+                                ${playerOptions(away.id)}
+
+                            </optgroup>
+                            `
+                            :
+                            ""
+                        }
+
+                    </select>
+
+
+                    <label>Goal Minute</label>
+
+                    <input
+                        id="minute-${match.id}"
+                        type="number"
+                        min="1"
+                        max="150"
+                        placeholder="Example: 45">
+
+
+                    <button
+                        onclick="addGoal(
+                            '${match.id}'
+                        )">
+                        ⚽ Add Goal
+                    </button>
+
+
+                    ${
+                        goalsHTML ||
+                        "<p>No goals recorded.</p>"
+                    }
+
+                </div>
+
+
+                <div class="fixture-section">
+
+                    <h3>🧤 Goalkeepers</h3>
+
+                    <label>
+                        ${escapeHTML(home.name)}
+                        Goalkeeper
+                    </label>
+
+                    <select
+                        id="homeGK-${match.id}"
+                        onchange="setGoalkeeper(
+                            '${match.id}',
+                            'homeGoalkeeper',
+                            this.value
+                        )">
+
+                        <option value="">
+                            Select goalkeeper
+                        </option>
+
+                        ${playerOptions(home.id)}
+
+                    </select>
+
+
+                    <label>
+                        ${escapeHTML(away.name)}
+                        Goalkeeper
+                    </label>
+
+                    <select
+                        id="awayGK-${match.id}"
+                        onchange="setGoalkeeper(
+                            '${match.id}',
+                            'awayGoalkeeper',
+                            this.value
+                        )">
+
+                        <option value="">
+                            Select goalkeeper
+                        </option>
+
+                        ${playerOptions(away.id)}
+
+                    </select>
+
+                </div>
+
+
+                <div class="fixture-section">
+
+                    <h3>⭐ Man of the Match</h3>
+
+                    <select
+                        id="motm-${match.id}">
+
+                        <option value="">
+                            Select MOTM
+                        </option>
+
+                        ${
+                            home.players.length
+                            ?
+                            `
+                            <optgroup
+                                label="${escapeHTML(home.name)}">
+
+                                ${playerOptions(home.id)}
+
+                            </optgroup>
+                            `
+                            :
+                            ""
+                        }
+
+                        ${
+                            away.players.length
+                            ?
+                            `
+                            <optgroup
+                                label="${escapeHTML(away.name)}">
+
+                                ${playerOptions(away.id)}
+
+                            </optgroup>
+                            `
+                            :
+                            ""
+                        }
+
+                    </select>
+
+
+                    <button
+                        class="secondary"
+                        onclick="saveMOTM(
+                            '${match.id}'
+                        )">
+                        ⭐ Save MOTM
+                    </button>
+
+                </div>
+
+
+                <div class="fixture-section">
+
+                    <h3>🏁 Match Status</h3>
+
+                    <button
+                        class="warning"
+                        onclick="toggleMatchStatus(
+                            '${match.id}'
+                        )">
+
+                        ${
+                            match.played
+                            ?
+                            "↩️ Mark As Not Played"
+                            :
+                            "✅ Mark Match Completed"
+                        }
+
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="clearMatchResult(
+                            '${match.id}'
+                        )">
+                        🧹 Clear Result
+                    </button>
+
+                </div>
+
+            </div>
+            `;
+
+
+            /*
+                Set saved values after rendering.
+            */
+
+            setTimeout(
+                () => {
+
+                    const homeGK =
+                        document.getElementById(
+                            "homeGK-"+match.id
+                        );
+
+                    const awayGK =
+                        document.getElementById(
+                            "awayGK-"+match.id
+                        );
+
+                    const motm =
+                        document.getElementById(
+                            "motm-"+match.id
+                        );
+
+
+                    if(homeGK){
+
+                        homeGK.value =
+                            match.homeGoalkeeper ||
+                            "";
+
+                    }
+
+
+                    if(awayGK){
+
+                        awayGK.value =
+                            match.awayGoalkeeper ||
+                            "";
+
+                    }
+
+
+                    if(motm){
+
+                        motm.value =
+                            match.motm ||
+                            "";
+
+                    }
+
+                },
+                0
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+EDIT FIXTURE
+===================================================== */
+
+function openFixtureEditor(id){
+
+    const match =
+        getMatch(id);
+
+    if(!match)return;
+
+
+    document
+    .getElementById(
+        "editFixtureId"
+    )
+    .value = match.id;
+
+
+    const homeSelect =
+        document.getElementById(
+            "editHomeTeam"
+        );
+
+    const awaySelect =
+        document.getElementById(
+            "editAwayTeam"
+        );
+
+
+    homeSelect.innerHTML =
+        tournament.teams.map(
+            team =>
+
+            `
+            <option value="${team.id}">
+                ${escapeHTML(team.name)}
+            </option>
+            `
+        )
+        .join("");
+
+
+    awaySelect.innerHTML =
+        tournament.teams.map(
+            team =>
+
+            `
+            <option value="${team.id}">
+                ${escapeHTML(team.name)}
+            </option>
+            `
+        )
+        .join("");
+
+
+    homeSelect.value =
+        match.home;
+
+    awaySelect.value =
+        match.away;
+
+
+    document
+    .getElementById("editStage")
+    .value =
+        match.stage || "";
+
+
+    document
+    .getElementById("editRound")
+    .value =
+        match.round || 1;
+
+
+    document
+    .getElementById("editGroup")
+    .value =
+        match.group || "";
+
+
+    document
+    .getElementById("editDate")
+    .value =
+        match.date || "";
+
+
+    document
+    .getElementById("editTime")
+    .value =
+        match.time || "";
+
+
+    document
+    .getElementById("editVenue")
+    .value =
+        match.venue || "";
+
+
+    document
+    .getElementById("fixtureModal")
+    .classList.remove("hidden");
+
+}
+
+
+/* =====================================================
+SAVE FIXTURE EDIT
+===================================================== */
+
+function saveFixtureEdit(){
+
+    const id =
+        document
+        .getElementById(
+            "editFixtureId"
+        )
+        .value;
+
+
+    const match =
+        getMatch(id);
+
+    if(!match)return;
+
+
+    const home =
+        document
+        .getElementById(
+            "editHomeTeam"
+        )
+        .value;
+
+
+    const away =
+        document
+        .getElementById(
+            "editAwayTeam"
+        )
+        .value;
+
+
+    if(home === away){
+
+        alert(
+            "Home team and away team cannot be the same."
+        );
+
+        return;
+
+    }
+
+
+    const teamChanged =
+        String(match.home) !== String(home) ||
+        String(match.away) !== String(away);
+
+
+    /*
+        If teams are changed, old goals/GK/MOTM
+        may no longer be valid.
+    */
+
+    if(
+        teamChanged &&
+        (
+            match.goals.length ||
+            match.motm ||
+            match.homeGoalkeeper ||
+            match.awayGoalkeeper
+        )
+    ){
+
+        const confirmChange =
+            confirm(
+                "Changing the teams will clear the current result, goals, goalkeeper selections and MOTM. Continue?"
+            );
+
+        if(!confirmChange){
+
+            return;
+
+        }
+
+
+        match.goals=[];
+
+        match.motm=null;
+
+        match.homeGoalkeeper=null;
+
+        match.awayGoalkeeper=null;
+
+        match.played=false;
+
+    }
+
+
+    match.home =
+        home;
+
+    match.away =
+        away;
+
+    match.stage =
+        document
+        .getElementById(
+            "editStage"
+        )
+        .value
+        .trim();
+
+
+    match.round =
+        Number(
+            document
+            .getElementById(
+                "editRound"
+            )
+            .value
+        ) || 1;
+
+
+    match.group =
+        document
+        .getElementById(
+            "editGroup"
+        )
+        .value
+        .trim();
+
+
+    match.date =
+        document
+        .getElementById(
+            "editDate"
+        )
+        .value;
+
+
+    match.time =
+        document
+        .getElementById(
+            "editTime"
+        )
+        .value;
+
+
+    match.venue =
+        document
+        .getElementById(
+            "editVenue"
+        )
+        .value
+        .trim();
+
+
+    save();
+
+    closeFixtureModal();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+CLOSE MODAL
+===================================================== */
+
+function closeFixtureModal(){
+
+    document
+    .getElementById(
+        "fixtureModal"
+    )
+    .classList.add("hidden");
+
+}
+
+
+/* =====================================================
+DELETE FIXTURE
+===================================================== */
+
+function deleteFixture(id){
+
+    const match =
+        getMatch(id);
+
+    if(!match)return;
+
+
+    if(
+        !confirm(
+            "Delete this fixture and its result?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    tournament.fixtures =
+        tournament.fixtures.filter(
+            fixture =>
+            String(fixture.id) !==
+            String(id)
+        );
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+ADD GOAL
+===================================================== */
+
+function addGoal(matchId){
+
+    const match =
+        getMatch(matchId);
+
+    if(!match)return;
+
+
+    const teamId =
+        document
+        .getElementById(
+            "goalTeam-"+matchId
+        )
+        .value;
+
+
+    const playerId =
+        document
+        .getElementById(
+            "scorer-"+matchId
+        )
+        .value;
+
+
+    const minute =
+        document
+        .getElementById(
+            "minute-"+matchId
+        )
+        .value;
+
+
+    if(!playerId){
+
+        alert(
+            "Please select the goal scorer."
+        );
+
+        return;
+
+    }
+
+
+    const scorer =
+        findPlayer(playerId);
+
+
+    if(!scorer){
+
+        alert(
+            "Player not found."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        String(scorer.team.id) !==
+        String(teamId)
+    ){
+
+        alert(
+            "The selected player does not belong to the selected team."
+        );
+
+        return;
+
+    }
+
+
+    match.goals.push({
+
+        id:Date.now()+Math.random(),
+
+        teamId:teamId,
+
+        playerId:playerId,
+
+        minute:minute || ""
+
+    });
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+DELETE GOAL
+===================================================== */
+
+function deleteGoal(
+    matchId,
+    goalId
+){
+
+    const match =
+        getMatch(matchId);
+
+    if(!match)return;
+
+
+    match.goals =
+        match.goals.filter(
+            goal =>
+            String(goal.id) !==
+            String(goalId)
+        );
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+GOALKEEPER
+===================================================== */
+
+function setGoalkeeper(
+    matchId,
+    side,
+    playerId
+){
+
+    const match =
+        getMatch(matchId);
+
+    if(!match)return;
+
+
+    match[side] =
+        playerId || null;
+
+
+    save();
+
+}
+
+
+/* =====================================================
+MOTM
+===================================================== */
+
+function saveMOTM(matchId){
+
+    const match =
+        getMatch(matchId);
+
+    if(!match)return;
+
+
+    const playerId =
+        document
+        .getElementById(
+            "motm-"+matchId
+        )
+        .value;
+
+
+    if(!playerId){
+
+        alert(
+            "Please select a player."
+        );
+
+        return;
+
+    }
+
+
+    match.motm =
+        playerId;
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+MATCH STATUS
+===================================================== */
+
+function toggleMatchStatus(id){
+
+    const match =
+        getMatch(id);
+
+    if(!match)return;
+
+
+    match.played =
+        !match.played;
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+CLEAR RESULT
+===================================================== */
+
+function clearMatchResult(id){
+
+    const match =
+        getMatch(id);
+
+    if(!match)return;
+
+
+    if(
+        !confirm(
+            "Clear all goals, MOTM and goalkeeper information for this match?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    match.goals=[];
+
+    match.motm=null;
+
+    match.homeGoalkeeper=null;
+
+    match.awayGoalkeeper=null;
+
+    match.played=false;
+
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+DELETE ALL FIXTURES
+===================================================== */
+
+function deleteAllFixtures(){
+
+    if(
+        !confirm(
+            "Delete ALL fixtures and results?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    tournament.fixtures=[];
+
+    save();
+
+    renderAll();
+
+}
+
+
+/* =====================================================
+SETTINGS
+===================================================== */
+
+function saveSettings(){
+
+    tournament.name =
+        document.getElementById("settingName").value.trim()
+        || "ARROWS DUO TOURNAMENT";
+
+    tournament.season =
+        document.getElementById("settingSeason").value.trim();
+
+    tournament.organizer =
+        document.getElementById("settingOrganizer").value.trim();
+
+    tournament.type =
+        document.getElementById("settingTournamentType").value || "roundrobin";
+
+    tournament.leagueGroups =
+        Math.max(
+            2,
+            Math.min(
+                10,
+                parseInt(document.getElementById("settingGroups").value,10) || 2
+            )
+        );
+
+    // Changing the format/group count should not silently leave an old
+    // fixture set in place.
+    if(tournament.fixtures.length){
+        const changeConfirmed=confirm(
+            "Changing tournament format/settings may make the current fixtures invalid.\n\nDelete the current fixtures and use the new format?"
+        );
+        if(changeConfirmed){
+            tournament.fixtures=[];
+        }
+    }
+
+    tournament.knockoutReady =
+        tournament.type==="worldcup" || tournament.type==="ucl";
+
+    save();
+    renderAll();
+
+    alert("Tournament settings saved.");
+}
+
+function updateTournamentTypeUI(){
+    const type=document.getElementById("settingTournamentType").value;
+    const groupCard=document.getElementById("groupSettingsCard");
+    const help=document.getElementById("formatHelp");
+    const generateButton=document.getElementById("generateFixturesButton");
+
+    const grouped = type!=="knockout";
+    groupCard.classList.toggle("hidden",!grouped);
+
+    const messages={
+        roundrobin:"Teams are divided into the selected number of groups. Every team in a group plays every other team.",
+        knockout:"Direct knockout bracket. Teams are seeded into rounds with automatic byes when required.",
+        worldcup:"Group-stage round robin followed by a knockout stage. Top 2 teams from each group qualify.",
+        ucl:"League-phase round robin followed by a knockout stage. The top half of the league table qualifies."
+    };
+
+    help.textContent=messages[type] || messages.roundrobin;
+    generateButton.textContent =
+        type==="knockout" ? "🏆 Generate Knockout Fixtures" :
+        type==="worldcup" ? "🌍 Generate World Cup Fixtures" :
+        type==="ucl" ? "⭐ Generate UCL Fixtures" :
+        "⚙️ Generate Round Robin Fixtures";
+
+    const knockoutButton=document.getElementById("generateKnockoutButton");
+    knockoutButton.classList.toggle(
+        "hidden",
+        !(type==="worldcup" || type==="ucl")
+    );
+}
+
+/* =====================================================
+RESET TOURNAMENT
+===================================================== */
+
+function resetTournament(){
+
+    if(
+        !confirm(
+            "WARNING!\n\nThis will delete ALL teams, players, fixtures and settings.\n\nContinue?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    localStorage.removeItem(
+        "footballTournament"
+    );
+
+
+    location.reload();
+
+}
+
+
+/* =====================================================
+DASHBOARD
+===================================================== */
+
+function updateDashboard(){
+
+    let playerCount=0;
+
+    let goalCount=0;
+
+    tournament.teams.forEach(
+        team => {
+
+            playerCount +=
+                team.players.length;
+
+        }
+    );
+
+
+    tournament.fixtures.forEach(
+        match => {
+
+            goalCount +=
+                match.goals.length;
+
+        }
+    );
+
+
+    document
+    .getElementById(
+        "statTeams"
+    )
+    .textContent =
+        tournament.teams.length;
+
+
+    document
+    .getElementById(
+        "statPlayers"
+    )
+    .textContent =
+        playerCount;
+
+
+    document
+    .getElementById(
+        "statFixtures"
+    )
+    .textContent =
+        tournament.fixtures.length;
+
+
+    document
+    .getElementById(
+        "statPlayed"
+    )
+    .textContent =
+        tournament.fixtures.filter(
+            match =>
+            match.played
+        ).length;
+
+
+    document
+    .getElementById(
+        "statGoals"
+    )
+    .textContent =
+        goalCount;
+
+
+    document
+    .getElementById(
+        "headerTournamentName"
+    )
+    .textContent =
+        "🏆 "+
+        tournament.name;
+
+
+    const subtitle =
+        [
+            tournament.season,
+            tournament.organizer,
+            "ADMIN PANEL"
+        ]
+        .filter(Boolean)
+        .join(" • ");
+
+
+    document
+    .getElementById(
+        "headerSubtitle"
+    )
+    .textContent =
+        subtitle;
+
+}
+
+
+/* =====================================================
+SETTINGS DISPLAY
+===================================================== */
+
+function renderSettings(){
+
+    document.getElementById("settingName").value =
+        tournament.name || "";
+
+    document.getElementById("settingSeason").value =
+        tournament.season || "";
+
+    document.getElementById("settingOrganizer").value =
+        tournament.organizer || "";
+
+    const type=document.getElementById("settingTournamentType");
+    type.value=tournament.type || "roundrobin";
+
+    const groups=document.getElementById("settingGroups");
+    groups.value=String(
+        Math.max(2,Math.min(10,parseInt(tournament.leagueGroups||2,10)))
+    );
+
+    updateTournamentTypeUI();
+}
+
+/* =====================================================
+ESCAPE HTML
+===================================================== */
+
+function escapeHTML(value){
+
+    return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =====================================================
+RENDER ALL
+===================================================== */
+
+function renderAll(){
+
+    renderTeams();
+
+    renderFixtures();
+
+    updateDashboard();
+
+    renderSettings();
+
+}
+
+
+/* =====================================================
+ENTER KEY LOGIN
+===================================================== */
+
+document
+.getElementById("loginPassword")
+.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Enter"){
+
+            login();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+INITIALIZE
+===================================================== */
+
+checkLogin();
+
+</script>
+
+</body>
+</html>

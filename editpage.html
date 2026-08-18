@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>eFootball Tournament</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #071a12;
+            color: white;
+            text-align: center;
+        }
+
+        header {
+            padding: 40px 20px;
+            background: #0b2e20;
+        }
+
+        h1 {
+            color: #39ff88;
+            font-size: 40px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            padding: 60px 20px;
+        }
+
+        .card {
+            width: 250px;
+            padding: 30px 20px;
+            background: #102f23;
+            border: 1px solid #39ff88;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(57,255,136,0.25);
+        }
+
+        .card h2 {
+            color: #39ff88;
+        }
+
+        .card p {
+            color: #ccc;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: #39ff88;
+            color: #06140d;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .btn:hover {
+            background: white;
+            box-shadow: 0 0 15px #39ff88;
+        }
+    </style>
+
+<script>
+/* ARROWS v5: safe Duo fixture generation fallback */
+window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
+  const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
+  let groups = Math.max(1, parseInt(groupCount, 10) || 1);
+  groups = Math.min(groups, Math.max(1, list.length));
+  const buckets = Array.from({length: groups}, () => []);
+  list.forEach((item, i) => buckets[i % groups].push(item));
+  const fixtures = [];
+  buckets.forEach((bucket, gi) => {
+    if (bucket.length < 2) return;
+    for (let i = 0; i < bucket.length; i++) {
+      for (let j = i + 1; j < bucket.length; j++) {
+        fixtures.push({
+          group: String.fromCharCode(65 + gi),
+          home: bucket[i], away: bucket[j],
+          status: "scheduled", homeScore: null, awayScore: null
+        });
+      }
+    }
+  });
+  return fixtures;
+};
+</script>
+
+</head>
+
+<body>
+<script>if(sessionStorage.getItem("footballAdminLoggedIn")!=="true"){location.href="admin-login.html"}</script>
+
+    <header>
+        <h1>DUO TOURNAMENT</h1>
+        <p>Welcome to the DUO TOURNAMENT</p>
+    </header>
+
+    <div class="container">
+
+        <!-- Duo Tournament -->
+        <div class="card">
+            <h2>🏆 Duo Tournament</h2>
+            <p>View and manage the Duo Tournament.</p>
+
+            <a href="duo.html" class="btn">
+                Open Tournament
+            </a>
+        </div>
+
+
+        <!-- Auction Tournament -->
+        <div class="card">
+            <h2>🔨 Auction Tournament</h2>
+            <p>View the auction tournament and players.</p>
+
+            <a href="auction-Tournaments.html" class="btn">
+                Open Auction
+            </a>
+        </div>
+
+
+        <!-- Player Editing -->
+        <div class="card">
+            <h2>✏️ Player Editing</h2>
+            <p>Add, search and modify the shared clan player database.</p>
+
+            <a href="player-editing.html" class="btn">
+                Edit Players
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>

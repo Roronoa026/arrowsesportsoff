@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ARROWS DUO Tournament - Admin Login</title>
+
+<style>
+:root{
+    --bg:#050b07;
+    --panel:#102218;
+    --green:#39d864;
+    --green-dark:#12612a;
+    --text:#f4fff6;
+    --muted:#9eb3a4;
+    --border:#2d5c3c;
+    --red:#ef5350;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:Arial,sans-serif;
+    background:
+        radial-gradient(
+            circle at top,
+            #12612a 0%,
+            #08120c 45%,
+            #050b07 100%
+        );
+    color:var(--text);
+}
+
+/* LOGIN CONTAINER */
+
+.login-container{
+    width:100%;
+    max-width:430px;
+    padding:20px;
+}
+
+/* LOGIN CARD */
+
+.login-card{
+    background:rgba(16,34,24,.97);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:35px;
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.6);
+}
+
+/* LOGO */
+
+.logo{
+    width:90px;
+    height:90px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        linear-gradient(
+            135deg,
+            var(--green),
+            var(--green-dark)
+        );
+    font-size:45px;
+    box-shadow:
+        0 0 30px rgba(57,216,100,.25);
+}
+
+/* TITLE */
+
+h1{
+    text-align:center;
+    margin:0;
+    font-size:26px;
+}
+
+.subtitle{
+    text-align:center;
+    color:var(--muted);
+    margin:8px 0 30px;
+}
+
+/* FORM */
+
+label{
+    display:block;
+    margin:15px 0 7px;
+    font-weight:bold;
+}
+
+.input-wrapper{
+    position:relative;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    border-radius:9px;
+    border:1px solid var(--border);
+    background:#08120c;
+    color:white;
+    font-size:15px;
+    outline:none;
+}
+
+input:focus{
+    border-color:var(--green);
+    box-shadow:
+        0 0 0 2px rgba(57,216,100,.1);
+}
+
+.password-toggle{
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    background:transparent;
+    color:var(--muted);
+    padding:7px;
+    margin:0;
+    width:auto;
+}
+
+.password-toggle:hover{
+    color:white;
+    opacity:1;
+}
+
+/* LOGIN BUTTON */
+
+.login-button{
+    width:100%;
+    margin-top:25px;
+    padding:14px;
+    border:0;
+    border-radius:9px;
+    background:var(--green);
+    color:#07120a;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.login-button:hover{
+    background:#4ee875;
+}
+
+/* ERROR */
+
+.error-message{
+    display:none;
+    margin-top:15px;
+    padding:12px;
+    border-radius:8px;
+    background:rgba(239,83,80,.12);
+    border:1px solid rgba(239,83,80,.4);
+    color:#ff8582;
+    text-align:center;
+}
+
+/* FOOTER */
+
+.footer{
+    text-align:center;
+    margin-top:25px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.security{
+    margin-top:20px;
+    padding:12px;
+    background:#09140d;
+    border-radius:8px;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+}
+
+/* MOBILE */
+
+@media(max-width:500px){
+
+    .login-card{
+        padding:25px 20px;
+    }
+
+    h1{
+        font-size:23px;
+    }
+
+}
+</style>
+
+<script>
+/* ARROWS v5: safe Duo fixture generation fallback */
+window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
+  const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
+  let groups = Math.max(1, parseInt(groupCount, 10) || 1);
+  groups = Math.min(groups, Math.max(1, list.length));
+  const buckets = Array.from({length: groups}, () => []);
+  list.forEach((item, i) => buckets[i % groups].push(item));
+  const fixtures = [];
+  buckets.forEach((bucket, gi) => {
+    if (bucket.length < 2) return;
+    for (let i = 0; i < bucket.length; i++) {
+      for (let j = i + 1; j < bucket.length; j++) {
+        fixtures.push({
+          group: String.fromCharCode(65 + gi),
+          home: bucket[i], away: bucket[j],
+          status: "scheduled", homeScore: null, awayScore: null
+        });
+      }
+    }
+  });
+  return fixtures;
+};
+</script>
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <div class="logo">
+            🏆
+        </div>
+
+        <h1>
+            ARROWS DUO
+        </h1>
+
+        <p class="subtitle">
+            Tournament Admin Panel
+        </p>
+
+        <form onsubmit="login(event)">
+
+            <label for="username">
+                👤 Username
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Enter admin username"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">
+                🔑 Password
+            </label>
+
+            <div class="input-wrapper">
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter admin password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="password-toggle"
+                    onclick="togglePassword()"
+                    id="passwordToggle"
+                >
+                    👁️
+                </button>
+
+            </div>
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                🔐 Login to Admin Panel
+            </button>
+
+        </form>
+
+        <div
+            id="errorMessage"
+            class="error-message"
+        >
+            ❌ Invalid username or password.
+        </div>
+
+        <div class="security">
+            🔒 Admin access only
+        </div>
+
+    </div>
+
+    <div class="footer">
+        🏆 ARROWS DUO TOURNAMENT<br>
+        Tournament Management System
+    </div>
+
+</div>
+
+
+<script>
+
+/* =================================
+   ADMIN LOGIN
+================================= */
+
+function login(event){
+
+    event.preventDefault();
+
+    const username = 
+        document
+        .getElementById("username")
+        .value
+        .trim();
+
+    const password = 
+        document
+        .getElementById("password")
+        .value;
+
+
+    /*
+        ==============================
+        ADMIN LOGIN DETAILS
+        ==============================
+
+        Username:
+        admin
+
+        Password:
+        Admin123!
+
+        CHANGE THESE TWO VALUES.
+    */
+
+    const ADMIN_USERNAME = "admin";
+
+    const ADMIN_PASSWORD = "Admin123";
+
+
+    if(
+        username === ADMIN_USERNAME &&
+        password === ADMIN_PASSWORD
+    ){
+
+        sessionStorage.setItem(
+            "footballAdminLoggedIn",
+            "true"
+        );
+
+        sessionStorage.setItem(
+            "adminUsername",
+            username
+        );
+
+        window.location.href =
+            "editpage.html";
+
+    }
+
+    else{
+
+        const error =
+            document
+            .getElementById("errorMessage");
+
+        error.style.display = "block";
+
+        document
+        .getElementById("password")
+        .value = "";
+
+    }
+
+}
+
+
+/* =================================
+   SHOW / HIDE PASSWORD
+================================= */
+
+function togglePassword(){
+
+    const password =
+        document
+        .getElementById("password");
+
+    const button =
+        document
+        .getElementById("passwordToggle");
+
+
+    if(password.type === "password"){
+
+        password.type = "text";
+
+        button.textContent = "🙈";
+
+    }
+
+    else{
+
+        password.type = "password";
+
+        button.textContent = "👁️";
+
+    }
+
+}
+
+
+/* =================================
+   ENTER KEY / ERROR RESET
+================================= */
+
+document
+.getElementById("username")
+.addEventListener("input",hideError);
+
+document
+.getElementById("password")
+.addEventListener("input",hideError);
+
+
+function hideError(){
+
+    document
+    .getElementById("errorMessage")
+    .style.display = "none";
+
+}
+
+</script>
+
+</body>
+</html>

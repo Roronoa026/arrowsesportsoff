@@ -1,0 +1,3180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ARROWS DUO Tournament</title>
+
+<style>
+
+:root{
+    --bg:#06100a;
+    --panel:#0e1f15;
+    --panel2:#142b1d;
+    --green:#39d864;
+    --green-dark:#12612a;
+    --blue:#4388ff;
+    --yellow:#f4c542;
+    --red:#ef5350;
+    --text:#f4fff6;
+    --muted:#9eb3a4;
+    --border:#285639;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+
+/* =========================
+HEADER
+========================= */
+
+header{
+    background:
+        linear-gradient(
+            135deg,
+            #082812,
+            #12612a
+        );
+
+    padding:35px 20px;
+
+    text-align:center;
+
+    border-bottom:2px solid var(--green);
+}
+
+.logo{
+    font-size:60px;
+    margin-bottom:10px;
+}
+
+header h1{
+    margin:0;
+    font-size:32px;
+}
+
+header p{
+    margin:10px 0 0;
+    color:#c1d5c7;
+}
+
+
+/* =========================
+NAVIGATION
+========================= */
+
+nav{
+    position:sticky;
+    top:0;
+    z-index:100;
+
+    display:flex;
+    gap:8px;
+
+    overflow-x:auto;
+
+    padding:10px;
+
+    background:#050b07;
+
+    border-bottom:1px solid var(--border);
+}
+
+nav button{
+    white-space:nowrap;
+
+    border:0;
+    border-radius:8px;
+
+    padding:10px 15px;
+
+    background:transparent;
+    color:white;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+nav button:hover{
+    background:var(--green);
+    color:#07120a;
+}
+
+
+/* =========================
+CONTAINER
+========================= */
+
+.container{
+    width:100%;
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:20px;
+}
+
+
+/* =========================
+SECTIONS
+========================= */
+
+.section{
+    display:none;
+}
+
+.section.active{
+    display:block;
+}
+
+
+/* =========================
+CARDS
+========================= */
+
+.card{
+    background:var(--panel);
+
+    border:1px solid var(--border);
+
+    border-radius:14px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+}
+
+.card h2{
+    margin-top:0;
+}
+
+
+/* =========================
+DASHBOARD
+========================= */
+
+.stats-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(170px,1fr)
+        );
+
+    gap:15px;
+
+    margin-bottom:20px;
+}
+
+.stat{
+    background:var(--panel2);
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:20px;
+
+    text-align:center;
+}
+
+.stat-icon{
+    font-size:30px;
+}
+
+.stat-number{
+    display:block;
+
+    color:var(--green);
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    margin:8px 0;
+}
+
+.stat-label{
+    color:var(--muted);
+}
+
+
+/* =========================
+TEAM CARDS
+========================= */
+
+.team-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(260px,1fr)
+        );
+
+    gap:15px;
+}
+
+.team-card{
+    background:var(--panel2);
+
+    border:1px solid var(--border);
+
+    border-radius:14px;
+
+    padding:20px;
+}
+
+.team-header{
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:15px;
+}
+
+.team-logo{
+    width:55px;
+    height:55px;
+
+    border-radius:50%;
+
+    object-fit:contain;
+
+    background:white;
+}
+
+.team-logo-large{
+    width:80px;
+    height:80px;
+
+    border-radius:50%;
+
+    object-fit:contain;
+
+    background:white;
+}
+
+.team-name{
+    margin:0;
+}
+
+.team-count{
+    color:var(--muted);
+    margin:5px 0;
+}
+
+
+/* =========================
+PLAYER LIST
+========================= */
+
+.player-list{
+    margin-top:15px;
+}
+
+.player-row{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:10px;
+
+    margin:5px 0;
+
+    background:#09140d;
+
+    border-radius:8px;
+}
+
+.player-number{
+    width:30px;
+    height:30px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:var(--green);
+
+    color:#07120a;
+
+    font-weight:bold;
+}
+
+
+/* =========================
+FIXTURES
+========================= */
+
+.fixture{
+    background:var(--panel2);
+
+    border:1px solid var(--border);
+
+    border-radius:14px;
+
+    padding:20px;
+
+    margin-bottom:15px;
+}
+
+.fixture-header{
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:15px;
+}
+
+.stage{
+    color:var(--green);
+
+    font-weight:bold;
+}
+
+.group{
+    background:#0b1b10;
+
+    border:1px solid var(--border);
+
+    border-radius:20px;
+
+    padding:5px 10px;
+
+    font-size:12px;
+}
+
+.fixture-teams{
+    display:grid;
+
+    grid-template-columns:
+        1fr
+        auto
+        1fr;
+
+    align-items:center;
+
+    gap:15px;
+
+    text-align:center;
+}
+
+.fixture-team{
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:17px;
+}
+
+.fixture-team img{
+    width:45px;
+    height:45px;
+
+    border-radius:50%;
+
+    object-fit:contain;
+
+    background:white;
+}
+
+.score{
+    font-size:30px;
+
+    font-weight:bold;
+
+    color:var(--green);
+
+    white-space:nowrap;
+}
+
+.fixture-info{
+    margin-top:15px;
+
+    padding-top:15px;
+
+    border-top:1px solid var(--border);
+
+    color:var(--muted);
+
+    text-align:center;
+}
+
+.completed{
+    color:var(--green);
+}
+
+.upcoming{
+    color:var(--yellow);
+}
+
+
+/* =========================
+GOALS
+========================= */
+
+.goal-list{
+    margin-top:15px;
+
+    border-top:1px solid var(--border);
+
+    padding-top:10px;
+}
+
+.goal{
+    display:flex;
+
+    justify-content:center;
+
+    gap:10px;
+
+    padding:5px;
+
+    color:#dcebe0;
+}
+
+
+/* =========================
+TABLE
+========================= */
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+
+    min-width:700px;
+
+    border-collapse:collapse;
+}
+
+th,
+td{
+    padding:12px;
+
+    text-align:center;
+
+    border-bottom:1px solid var(--border);
+}
+
+th{
+    background:#1b5d30;
+
+    color:white;
+}
+
+tr:hover td{
+    background:#102519;
+}
+
+.team-cell{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    text-align:left;
+}
+
+.team-cell img{
+    width:35px;
+    height:35px;
+
+    border-radius:50%;
+
+    object-fit:contain;
+
+    background:white;
+}
+
+
+/* =========================
+AWARDS
+========================= */
+
+.award-card{
+    background:var(--panel2);
+
+    border:1px solid var(--border);
+
+    border-radius:14px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+}
+
+.award-title{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:15px;
+}
+
+.gold{
+    color:var(--yellow);
+}
+
+.award-winner{
+    background:#0b1b10;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:20px;
+
+    text-align:center;
+}
+
+.winner-icon{
+    font-size:45px;
+}
+
+.winner-name{
+    font-size:24px;
+
+    font-weight:bold;
+
+    margin:10px 0;
+}
+
+.winner-team{
+    color:var(--muted);
+}
+
+
+/* =========================
+EMPTY
+========================= */
+
+.empty{
+    padding:40px;
+
+    text-align:center;
+
+    color:var(--muted);
+
+    background:var(--panel2);
+
+    border-radius:12px;
+}
+
+
+/* =========================
+REFRESH
+========================= */
+
+.refresh-button{
+    background:var(--green);
+
+    color:#07120a;
+
+    border:0;
+
+    border-radius:8px;
+
+    padding:10px 15px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.refresh-button:hover{
+    opacity:.85;
+}
+
+
+/* =========================
+FOOTER
+========================= */
+
+footer{
+    margin-top:40px;
+
+    padding:30px 20px;
+
+    text-align:center;
+
+    background:#050b07;
+
+    border-top:1px solid var(--border);
+
+    color:var(--muted);
+}
+
+
+/* =========================
+MOBILE
+========================= */
+
+@media(max-width:650px){
+
+    header{
+        padding:25px 15px;
+    }
+
+    header h1{
+        font-size:24px;
+    }
+
+    .logo{
+        font-size:45px;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+    .fixture-teams{
+        grid-template-columns:1fr;
+    }
+
+    .fixture-team{
+        flex-direction:column;
+    }
+
+    .score{
+        font-size:25px;
+    }
+
+    .stats-grid{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+}
+
+nav ul{
+
+display:flex;
+
+list-style:none;
+
+gap:30px;
+
+}
+
+nav a{
+
+color:white;
+
+text-decoration:none;
+
+font-weight:600;
+
+transition:.3s;
+
+}
+
+nav a:hover{
+
+color:#00ff66;
+
+}
+
+
+/* =========================
+NATIVE BROWSER PDF
+========================= */
+.pdf-download-button{
+    background:var(--green);
+    color:#07120a;
+    border:0;
+    border-radius:8px;
+    padding:10px 15px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.pdf-download-button:hover{opacity:.85;}
+
+@media print{
+    @page{
+        size:A4;
+        margin:12mm;
+    }
+
+    body{
+        background:#fff !important;
+        color:#111 !important;
+        font-family:Arial,sans-serif !important;
+    }
+
+    body *{
+        visibility:hidden !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target,
+    body.native-pdf-printing .native-pdf-print-target *{
+        visibility:visible !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target{
+        display:block !important;
+        position:absolute !important;
+        left:0 !important;
+        top:0 !important;
+        width:100% !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#fff !important;
+        color:#111 !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target .card,
+    body.native-pdf-printing .native-pdf-print-target .award-card,
+    body.native-pdf-printing .native-pdf-print-target .team-card,
+    body.native-pdf-printing .native-pdf-print-target .fixture{
+        background:#fff !important;
+        color:#111 !important;
+        border:1px solid #ccc !important;
+        box-shadow:none !important;
+        break-inside:avoid;
+        page-break-inside:avoid;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target .player-row,
+    body.native-pdf-printing .native-pdf-print-target .award-winner{
+        background:#f5f5f5 !important;
+        color:#111 !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target .team-count,
+    body.native-pdf-printing .native-pdf-print-target .winner-team,
+    body.native-pdf-printing .native-pdf-print-target .fixture-info{
+        color:#555 !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target th{
+        background:#1b5d30 !important;
+        color:#fff !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target td{
+        border-bottom:1px solid #ddd !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target .pdf-print-title{
+        display:block !important;
+        visibility:visible !important;
+        text-align:center;
+        color:#12612a !important;
+        font-size:24px;
+        margin:0 0 18px;
+        padding:0 0 10px;
+        border-bottom:2px solid #12612a;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target .pdf-download-button{
+        display:none !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target img{
+        max-width:100%;
+        break-inside:avoid;
+    }
+
+    /* Keep table headers with their rows where possible. */
+    body.native-pdf-printing .native-pdf-print-target table{
+        width:100%;
+        min-width:0 !important;
+    }
+
+    body.native-pdf-printing .native-pdf-print-target tr{
+        break-inside:avoid;
+        page-break-inside:avoid;
+    }
+}
+
+</style>
+
+
+<script>
+/* ARROWS v5: safe Duo fixture generation fallback */
+window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
+  const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
+  let groups = Math.max(1, parseInt(groupCount, 10) || 1);
+  groups = Math.min(groups, Math.max(1, list.length));
+  const buckets = Array.from({length: groups}, () => []);
+  list.forEach((item, i) => buckets[i % groups].push(item));
+  const fixtures = [];
+  buckets.forEach((bucket, gi) => {
+    if (bucket.length < 2) return;
+    for (let i = 0; i < bucket.length; i++) {
+      for (let j = i + 1; j < bucket.length; j++) {
+        fixtures.push({
+          group: String.fromCharCode(65 + gi),
+          home: bucket[i], away: bucket[j],
+          status: "scheduled", homeScore: null, awayScore: null
+        });
+      }
+    }
+  });
+  return fixtures;
+};
+</script>
+
+</head>
+
+
+<body>
+<script src="player-data.js"></script>
+
+
+<!-- =========================
+HEADER
+========================= -->
+
+<header>
+
+    <div class="logo">
+        🏆
+    </div>
+
+    <h1 id="pageTitle">
+        ARROWS DUO TOURNAMENT
+    </h1>
+
+    <p id="pageSubtitle">
+        Tournament Information
+    </p>
+    <nav>
+    
+        <ul>
+        
+        <li><a href="index.html">Home</a></li>
+        
+        </ul>
+        
+        </nav>
+</header>
+
+
+<!-- =========================
+NAVIGATION
+========================= -->
+
+<nav>
+
+    <button onclick="showPage('dashboard')">
+        🏠 Home
+    </button>
+
+    <button onclick="showPage('teams')">
+        👥 Teams & Players
+    </button>
+
+    <button onclick="showPage('fixtures')">
+        📅 Fixtures
+    </button>
+
+    <button onclick="showPage('points')">
+        📊 Points Table
+    </button>
+
+    <button onclick="showPage('awards')">
+        🏆 Awards
+    </button>
+
+    <button onclick="loadData()">
+        🔄 Refresh
+    </button>
+
+</nav>
+
+
+<div class="container">
+
+
+<!-- =========================
+DASHBOARD
+========================= -->
+
+<section
+    id="dashboard"
+    class="section active"
+>
+
+    <div class="stats-grid">
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                👥
+            </div>
+
+            <span
+                id="teamCount"
+                class="stat-number"
+            >
+                0
+            </span>
+
+            <span class="stat-label">
+                Teams
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                ⚽
+            </div>
+
+            <span
+                id="playerCount"
+                class="stat-number"
+            >
+                0
+            </span>
+
+            <span class="stat-label">
+                Players
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                📅
+            </div>
+
+            <span
+                id="fixtureCount"
+                class="stat-number"
+            >
+                0
+            </span>
+
+            <span class="stat-label">
+                Fixtures
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                ✅
+            </div>
+
+            <span
+                id="playedCount"
+                class="stat-number"
+            >
+                0
+            </span>
+
+            <span class="stat-label">
+                Matches Played
+            </span>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-icon">
+                🥅
+            </div>
+
+            <span
+                id="goalCount"
+                class="stat-number"
+            >
+                0
+            </span>
+
+            <span class="stat-label">
+                Total Goals
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>
+            🏆 Welcome to the Tournament
+        </h2>
+
+        <p id="welcomeText">
+            Follow the tournament fixtures,
+            results, standings and player statistics
+            here.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>
+            📅 Recent Matches
+        </h2>
+
+        <div id="recentFixtures"></div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+TEAMS / PLAYERS
+========================= -->
+
+<section
+    id="teams"
+    class="section"
+>
+
+    <div class="card">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 style="margin:0;">
+            👥 Teams & Players
+        </h2>
+        <button class="pdf-download-button" onclick="printSectionPDF('teams','Teams & Players')">⬇️ Download PDF</button>
+    </div>
+
+        <p>
+            View all registered teams and their players.
+        </p>
+
+    </div>
+
+    <div
+        id="teamList"
+        class="team-grid"
+    ></div>
+
+</section>
+
+
+<!-- =========================
+FIXTURES
+========================= -->
+
+<section
+    id="fixtures"
+    class="section"
+>
+
+    <div class="card">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 style="margin:0;">
+            📅 Tournament Fixtures
+        </h2>
+        <button class="pdf-download-button" onclick="printSectionPDF('fixtures','Fixtures')">⬇️ Download PDF</button>
+    </div>
+
+        <p>
+            Match schedules, results, venues and goal scorers.
+        </p>
+
+    </div>
+
+    <div id="fixtureList"></div>
+
+</section>
+
+
+<!-- =========================
+POINTS
+========================= -->
+
+<section
+    id="points"
+    class="section"
+>
+
+    <div class="card">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 style="margin:0;">
+            📊 Points Table
+        </h2>
+        <button class="pdf-download-button" onclick="printSectionPDF('points','Points Table')">⬇️ Download PDF</button>
+    </div>
+
+        <div id="pointsTable"></div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+AWARDS
+========================= -->
+
+<section
+    id="awards"
+    class="section"
+>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="pdf-download-button" onclick="printSectionPDF('awards','Awards')">⬇️ Download PDF</button>
+    </div>
+
+    <div class="award-card">
+
+        <div class="award-title">
+
+            <span class="gold">
+                🥇
+            </span>
+
+            <h2>
+                Golden Boot
+            </h2>
+
+        </div>
+
+        <div id="goldenBoot"></div>
+
+    </div>
+
+
+    <div class="award-card">
+
+        <div class="award-title">
+
+            <span class="gold">
+                🧤
+            </span>
+
+            <h2>
+                Golden Glove
+            </h2>
+
+        </div>
+
+        <div id="goldenGlove"></div>
+
+    </div>
+
+
+    <div class="award-card">
+
+        <div class="award-title">
+
+            <span class="gold">
+                ⭐
+            </span>
+
+            <h2>
+                Best Player
+            </h2>
+
+        </div>
+
+        <div id="bestPlayer"></div>
+
+    </div>
+
+</section>
+
+
+</div>
+
+
+<!-- =========================
+FOOTER
+========================= -->
+
+<footer>
+
+    <strong>
+        🏆 ARROWS DUO TOURNAMENT
+    </strong>
+
+    <br><br>
+
+    Tournament Management System
+
+    <br><br>
+
+    <span id="footerInfo">
+        Powered by ARROWS DUO
+    </span>
+
+</footer>
+
+
+<script>
+
+/* =========================================
+DATABASE
+========================================= */
+
+let tournament = null;
+
+
+/* =========================================
+LOAD DATABASE
+========================================= */
+
+function loadData(){
+
+    const saved =
+        localStorage.getItem(
+            "footballTournament"
+        );
+
+
+    if(saved){
+
+        try{
+
+            tournament =
+                JSON.parse(saved);
+
+        }
+
+        catch(error){
+
+            console.error(
+                "Tournament data error:",
+                error
+            );
+
+            tournament = {
+                name:"Football Tournament",
+                season:"",
+                organizer:"",
+                teams:[],
+                fixtures:[]
+            };
+
+        }
+
+    }
+
+    else{
+
+        tournament = {
+
+            name:"Football Tournament",
+
+            season:"",
+
+            organizer:"",
+
+            teams:[],
+
+            fixtures:[]
+
+        };
+
+    }
+
+
+    renderAll();
+
+}
+
+
+/* =========================================
+HELPERS
+========================================= */
+
+function getTeam(id){
+
+    if(!tournament ||
+       !tournament.teams){
+
+        return null;
+
+    }
+
+    return tournament.teams.find(
+        team =>
+        String(team.id) === String(id)
+    );
+
+}
+
+
+function findPlayer(playerId){
+
+    if(!tournament ||
+       !tournament.teams){
+
+        return null;
+
+    }
+
+
+    for(
+        const team of tournament.teams
+    ){
+
+        const player =
+            (team.players || []).find(
+                p =>
+                String(p.id) ===
+                String(playerId)
+            );
+
+
+        if(player){
+
+            return {
+                team:team,
+                player:player
+            };
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+function getMatch(id){
+
+    return (
+        tournament.fixtures || []
+    ).find(
+        match =>
+        String(match.id) ===
+        String(id)
+    );
+
+}
+
+
+/* =========================================
+NAVIGATION
+========================================= */
+
+function showPage(page){
+
+    document
+    .querySelectorAll(".section")
+    .forEach(section => {
+
+        section.classList.remove(
+            "active"
+        );
+
+    });
+
+
+    const target =
+        document.getElementById(page);
+
+
+    if(target){
+
+        target.classList.add(
+            "active"
+        );
+
+    }
+
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =========================================
+IMAGE
+========================================= */
+
+function teamImage(
+    team,
+    large = false
+){
+
+    if(
+        team &&
+        team.logo
+    ){
+
+        return `
+            <img
+                src="${team.logo}"
+                class="${
+                    large
+                    ? "team-logo-large"
+                    : "team-logo"
+                }"
+                alt="${escapeHTML(team.name)}"
+            >
+        `;
+
+    }
+
+
+    return `
+        <div
+            class="${
+                large
+                ? "team-logo-large"
+                : "team-logo"
+            }"
+            style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:${
+                    large ? "35px" : "20px"
+                };
+            "
+        >
+            🛡️
+        </div>
+    `;
+
+}
+
+
+/* =========================================
+HTML ESCAPE
+========================================= */
+
+function escapeHTML(value){
+
+    if(value === null ||
+       value === undefined){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================
+DASHBOARD
+========================================= */
+
+function renderDashboard(){
+
+    const teams =
+        tournament.teams || [];
+
+
+    const fixtures =
+        tournament.fixtures || [];
+
+
+    let playerCount = 0;
+
+    teams.forEach(team => {
+
+        playerCount +=
+            (team.players || []).length;
+
+    });
+
+
+    let goalCount = 0;
+
+    fixtures.forEach(match => {
+
+        goalCount +=
+            (match.goals || []).length;
+
+    });
+
+
+    const played =
+        fixtures.filter(
+            match => match.played
+        ).length;
+
+
+    document
+    .getElementById("teamCount")
+    .textContent =
+        teams.length;
+
+
+    document
+    .getElementById("playerCount")
+    .textContent =
+        playerCount;
+
+
+    document
+    .getElementById("fixtureCount")
+    .textContent =
+        fixtures.length;
+
+
+    document
+    .getElementById("playedCount")
+    .textContent =
+        played;
+
+
+    document
+    .getElementById("goalCount")
+    .textContent =
+        goalCount;
+
+
+    document
+    .getElementById("pageTitle")
+    .textContent =
+        "🏆 " +
+        (
+            tournament.name ||
+            "ARROWS DUO TOURNAMENT"
+        );
+
+
+    const subtitle = [
+
+        tournament.season,
+
+        tournament.organizer
+
+    ]
+    .filter(Boolean)
+    .join(" • ");
+
+
+    document
+    .getElementById("pageSubtitle")
+    .textContent =
+        subtitle ||
+        "Tournament Information";
+
+
+    document
+    .getElementById("welcomeText")
+    .textContent =
+        tournament.name
+        ? `Welcome to ${tournament.name}. View fixtures, standings, players and tournament awards.`
+        : "Follow the tournament fixtures, results, standings and player statistics here.";
+
+
+    renderRecentFixtures();
+
+}
+
+
+/* =========================================
+RECENT FIXTURES
+========================================= */
+
+function renderRecentFixtures(){
+
+    const box =
+        document
+        .getElementById(
+            "recentFixtures"
+        );
+
+
+    const fixtures =
+        tournament.fixtures || [];
+
+
+    const recent =
+        [...fixtures]
+        .filter(match => match.played)
+        .reverse()
+        .slice(0,5);
+
+
+    if(!recent.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                No completed matches yet.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+        recent
+        .map(
+            match => fixtureHTML(
+                match,
+                true
+            )
+        )
+        .join("");
+
+}
+
+
+/* =========================================
+TEAMS
+========================================= */
+
+function renderTeams(){
+
+    const box =
+        document
+        .getElementById(
+            "teamList"
+        );
+
+
+    const teams =
+        tournament.teams || [];
+
+
+    if(!teams.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                No teams have been registered yet.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+        teams.map(team => {
+
+            const players =
+                team.players || [];
+
+
+            return `
+
+                <div class="team-card">
+
+                    <div class="team-header">
+
+                        ${teamImage(team)}
+
+                        <div>
+
+                            <h2 class="team-name">
+                                ${escapeHTML(team.name)}
+                            </h2>
+
+                            <p class="team-count">
+                                ${players.length}
+                                Player${
+                                    players.length === 1
+                                    ? ""
+                                    : "s"
+                                }
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="player-list">
+
+                        ${
+                            players.length
+
+                            ?
+
+                            players.map(
+                                (player,index) => `
+
+                                <div class="player-row">
+
+                                    <div class="player-number">
+                                        ${index + 1}
+                                    </div>
+
+                                    <strong>
+                                        ${escapeHTML(
+                                            player.name
+                                        )}
+                                    </strong>
+
+                                </div>
+
+                            `).join("")
+
+                            :
+
+                            `
+                            <p style="
+                                color:var(--muted);
+                            ">
+                                No players registered.
+                            </p>
+                            `
+
+                        }
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================
+FIXTURES
+========================================= */
+
+function renderFixtures(){
+
+    const box =
+        document
+        .getElementById(
+            "fixtureList"
+        );
+
+
+    const fixtures =
+        tournament.fixtures || [];
+
+
+    if(!fixtures.length){
+
+        box.innerHTML = `
+            <div class="empty">
+                No fixtures have been generated yet.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+        fixtures
+        .map(
+            match =>
+            fixtureHTML(
+                match,
+                false
+            )
+        )
+        .join("");
+
+}
+
+
+/* =========================================
+FIXTURE HTML
+========================================= */
+
+function fixtureHTML(
+    match,
+    compact = false
+){
+
+    const home =
+        getTeam(match.home);
+
+
+    const away =
+        getTeam(match.away);
+
+
+    if(!home || !away){
+
+        return "";
+
+    }
+
+
+    const goals =
+        match.goals || [];
+
+
+    const homeScore =
+        goals.filter(
+            goal =>
+            String(goal.teamId) ===
+            String(home.id)
+        ).length;
+
+
+    const awayScore =
+        goals.filter(
+            goal =>
+            String(goal.teamId) ===
+            String(away.id)
+        ).length;
+
+
+    const status =
+        match.played
+        ? "completed"
+        : "upcoming";
+
+
+    const statusText =
+        match.played
+        ? "✓ Completed"
+        : "◷ Upcoming";
+
+
+    let info = [];
+
+
+    if(match.date){
+
+        info.push(
+            "📅 " +
+            escapeHTML(match.date)
+        );
+
+    }
+
+
+    if(match.time){
+
+        info.push(
+            "🕐 " +
+            escapeHTML(match.time)
+        );
+
+    }
+
+
+    if(match.venue){
+
+        info.push(
+            "📍 " +
+            escapeHTML(match.venue)
+        );
+
+    }
+
+
+    const goalList =
+        goals.length
+        ? `
+
+            <div class="goal-list">
+
+                ${
+
+                    goals
+                    .map(goal => {
+
+                        const player =
+                            findPlayer(
+                                goal.playerId
+                            );
+
+
+                        return `
+
+                            <div class="goal">
+
+                                ⚽
+
+                                <strong>
+                                    ${
+                                        player
+                                        ? escapeHTML(
+                                            player.player.name
+                                          )
+                                        : "Unknown Player"
+                                    }
+                                </strong>
+
+                                ${
+                                    goal.minute
+                                    ? `
+
+                                        <span>
+                                            ${escapeHTML(
+                                                goal.minute
+                                            )}'
+                                        </span>
+
+                                    `
+                                    : ""
+                                }
+
+                            </div>
+
+                        `;
+
+                    })
+                    .join("")
+
+                }
+
+            </div>
+
+        `
+        : "";
+
+
+    return `
+
+        <div class="fixture">
+
+            <div class="fixture-header">
+
+                <span class="stage">
+
+                    ${
+                        escapeHTML(
+                            match.stage ||
+                            "Match"
+                        )
+                    }
+
+                    ${
+                        match.round
+                        ? " • Round " +
+                          escapeHTML(match.round)
+                        : ""
+                    }
+
+                </span>
+
+
+                ${
+                    match.group
+                    ? `
+                        <span class="group">
+                            🏆
+                            ${escapeHTML(
+                                match.group
+                            )}
+                        </span>
+                    `
+                    : ""
+                }
+
+
+                <span class="${status}">
+                    ${statusText}
+                </span>
+
+            </div>
+
+
+            <div class="fixture-teams">
+
+                <div class="fixture-team">
+
+                    ${teamImage(home)}
+
+                    <strong>
+                        ${escapeHTML(
+                            home.name
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="score">
+
+                    ${homeScore}
+                    -
+                    ${awayScore}
+
+                </div>
+
+
+                <div class="fixture-team">
+
+                    <strong>
+                        ${escapeHTML(
+                            away.name
+                        )}
+                    </strong>
+
+                    ${teamImage(away)}
+
+                </div>
+
+            </div>
+
+
+            ${
+                info.length
+                ? `
+                    <div class="fixture-info">
+                        ${info.join(" &nbsp; | &nbsp; ")}
+                    </div>
+                `
+                : ""
+            }
+
+
+            ${goalList}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+POINTS TABLE
+========================================= */
+
+function calculateTable(
+    matches,
+    teamIds
+){
+
+    const table = {};
+
+
+    teamIds.forEach(id => {
+
+        table[id] = {
+
+            id:id,
+
+            p:0,
+
+            w:0,
+
+            d:0,
+
+            l:0,
+
+            gf:0,
+
+            ga:0,
+
+            gd:0,
+
+            pts:0
+
+        };
+
+    });
+
+
+    matches
+    .filter(
+        match => match.played
+    )
+    .forEach(match => {
+
+        const homeScore =
+            (match.goals || [])
+            .filter(
+                goal =>
+                String(goal.teamId) ===
+                String(match.home)
+            )
+            .length;
+
+
+        const awayScore =
+            (match.goals || [])
+            .filter(
+                goal =>
+                String(goal.teamId) ===
+                String(match.away)
+            )
+            .length;
+
+
+        const home =
+            table[match.home];
+
+
+        const away =
+            table[match.away];
+
+
+        if(!home || !away){
+
+            return;
+
+        }
+
+
+        home.p++;
+
+        away.p++;
+
+
+        home.gf += homeScore;
+
+        home.ga += awayScore;
+
+
+        away.gf += awayScore;
+
+        away.ga += homeScore;
+
+
+        if(homeScore > awayScore){
+
+            home.w++;
+
+            home.pts += 3;
+
+            away.l++;
+
+        }
+
+        else if(
+            awayScore > homeScore
+        ){
+
+            away.w++;
+
+            away.pts += 3;
+
+            home.l++;
+
+        }
+
+        else{
+
+            home.d++;
+
+            away.d++;
+
+            home.pts++;
+
+            away.pts++;
+
+        }
+
+    });
+
+
+    Object
+    .values(table)
+    .forEach(team => {
+
+        team.gd =
+            team.gf -
+            team.ga;
+
+    });
+
+
+    return Object
+        .values(table)
+        .sort(
+            (a,b) =>
+                b.pts - a.pts ||
+                b.gd - a.gd ||
+                b.gf - a.gf
+        );
+
+}
+
+
+/* =========================================
+CREATE TABLE
+========================================= */
+
+function createTable(
+    title,
+    rows
+){
+
+    let html = `
+
+        <h2>
+            ${escapeHTML(title)}
+        </h2>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Team</th>
+                        <th>P</th>
+                        <th>W</th>
+                        <th>D</th>
+                        <th>L</th>
+                        <th>GF</th>
+                        <th>GA</th>
+                        <th>GD</th>
+                        <th>PTS</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+    `;
+
+
+    rows.forEach(
+        (row,index) => {
+
+            const team =
+                getTeam(row.id);
+
+
+            if(!team){
+
+                return;
+
+            }
+
+
+            html += `
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            ${index + 1}
+                        </strong>
+                    </td>
+
+                    <td>
+
+                        <div class="team-cell">
+
+                            ${teamImage(team)}
+
+                            <strong>
+                                ${escapeHTML(
+                                    team.name
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </td>
+
+                    <td>${row.p}</td>
+
+                    <td>${row.w}</td>
+
+                    <td>${row.d}</td>
+
+                    <td>${row.l}</td>
+
+                    <td>${row.gf}</td>
+
+                    <td>${row.ga}</td>
+
+                    <td>${row.gd}</td>
+
+                    <td>
+                        <strong>
+                            ${row.pts}
+                        </strong>
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <br>
+
+    `;
+
+
+    return html;
+
+}
+
+
+/* =========================================
+RENDER POINTS
+========================================= */
+
+function renderPoints(){
+
+    const box =
+        document
+        .getElementById(
+            "pointsTable"
+        );
+
+
+    box.innerHTML = "";
+
+
+    const fixtures =
+        tournament.fixtures || [];
+
+
+    if(
+        !fixtures.length
+    ){
+
+        box.innerHTML = `
+            <div class="empty">
+                No points table available yet.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const groups =
+        [
+            ...new Set(
+                fixtures
+                .map(
+                    match =>
+                    match.group
+                )
+                .filter(Boolean)
+            )
+        ];
+
+
+    if(groups.length){
+
+        groups.forEach(group => {
+
+            const matches =
+                fixtures.filter(
+                    match =>
+                    match.group === group
+                );
+
+
+            const teamIds =
+                [
+                    ...new Set(
+                        matches.flatMap(
+                            match => [
+                                match.home,
+                                match.away
+                            ]
+                        )
+                    )
+                ];
+
+
+            box.innerHTML +=
+                createTable(
+                    "🏆 " + group,
+                    calculateTable(
+                        matches,
+                        teamIds
+                    )
+                );
+
+        });
+
+
+        return;
+
+    }
+
+
+    const teamIds =
+        tournament.teams
+        .map(
+            team => team.id
+        );
+
+
+    box.innerHTML =
+        createTable(
+            "🏆 League Table",
+            calculateTable(
+                fixtures,
+                teamIds
+            )
+        );
+
+}
+
+
+/* =========================================
+PLAYER STATISTICS
+========================================= */
+
+function getPlayerStats(){
+
+    const stats = {};
+
+
+    tournament.teams
+    .forEach(team => {
+
+        (team.players || [])
+        .forEach(player => {
+
+            const key =
+                team.id +
+                "-" +
+                player.id;
+
+
+            stats[key] = {
+
+                playerId:player.id,
+
+                teamId:team.id,
+
+                player:player.name,
+
+                team:team.name,
+
+                logo:team.logo,
+
+                matches:0,
+
+                wins:0,
+
+                losses:0,
+
+                goals:0,
+
+                motm:0,
+
+                goalkeeperMatches:0,
+
+                goalsConceded:0,
+
+                cleanSheets:0
+
+            };
+
+        });
+
+    });
+
+
+    tournament.fixtures
+    .filter(
+        match => match.played
+    )
+    .forEach(match => {
+
+        const homeTeam =
+            getTeam(match.home);
+
+
+        const awayTeam =
+            getTeam(match.away);
+
+
+        if(
+            !homeTeam ||
+            !awayTeam
+        ){
+
+            return;
+
+        }
+
+
+        const homeScore =
+            (match.goals || [])
+            .filter(
+                goal =>
+                String(goal.teamId) ===
+                String(match.home)
+            )
+            .length;
+
+
+        const awayScore =
+            (match.goals || [])
+            .filter(
+                goal =>
+                String(goal.teamId) ===
+                String(match.away)
+            )
+            .length;
+
+
+        (homeTeam.players || [])
+        .forEach(player => {
+
+            const key =
+                homeTeam.id +
+                "-" +
+                player.id;
+
+
+            if(!stats[key]){
+
+                return;
+
+            }
+
+
+            stats[key].matches++;
+
+
+            if(
+                homeScore >
+                awayScore
+            ){
+
+                stats[key].wins++;
+
+            }
+
+            else if(
+                homeScore <
+                awayScore
+            ){
+
+                stats[key].losses++;
+
+            }
+
+        });
+
+
+        (awayTeam.players || [])
+        .forEach(player => {
+
+            const key =
+                awayTeam.id +
+                "-" +
+                player.id;
+
+
+            if(!stats[key]){
+
+                return;
+
+            }
+
+
+            stats[key].matches++;
+
+
+            if(
+                awayScore >
+                homeScore
+            ){
+
+                stats[key].wins++;
+
+            }
+
+            else if(
+                awayScore <
+                homeScore
+            ){
+
+                stats[key].losses++;
+
+            }
+
+        });
+
+
+        /* GOALS */
+
+        (match.goals || [])
+        .forEach(goal => {
+
+            const key =
+                goal.teamId +
+                "-" +
+                goal.playerId;
+
+
+            if(stats[key]){
+
+                stats[key].goals++;
+
+            }
+
+        });
+
+
+        /* MOTM */
+
+        if(match.motm){
+
+            const data =
+                findPlayer(
+                    match.motm
+                );
+
+
+            if(data){
+
+                const key =
+                    data.team.id +
+                    "-" +
+                    data.player.id;
+
+
+                if(stats[key]){
+
+                    stats[key].motm++;
+
+                }
+
+            }
+
+        }
+
+
+        /* HOME GK */
+
+        if(match.homeGoalkeeper){
+
+            const key =
+                match.home +
+                "-" +
+                match.homeGoalkeeper;
+
+
+            if(stats[key]){
+
+                stats[key].goalkeeperMatches++;
+
+                stats[key].goalsConceded +=
+                    awayScore;
+
+
+                if(
+                    awayScore === 0
+                ){
+
+                    stats[key].cleanSheets++;
+
+                }
+
+            }
+
+        }
+
+
+        /* AWAY GK */
+
+        if(match.awayGoalkeeper){
+
+            const key =
+                match.away +
+                "-" +
+                match.awayGoalkeeper;
+
+
+            if(stats[key]){
+
+                stats[key].goalkeeperMatches++;
+
+                stats[key].goalsConceded +=
+                    homeScore;
+
+
+                if(
+                    homeScore === 0
+                ){
+
+                    stats[key].cleanSheets++;
+
+                }
+
+            }
+
+        }
+
+    });
+
+
+    return Object.values(stats);
+
+}
+
+
+/* =========================================
+AWARDS
+========================================= */
+
+function renderAwards(){
+
+    const stats =
+        getPlayerStats();
+
+
+    /* GOLDEN BOOT */
+
+    const scorers =
+        [...stats]
+        .filter(
+            player =>
+            player.goals > 0
+        )
+        .sort(
+            (a,b) =>
+            b.goals -
+            a.goals
+        );
+
+
+    const boot =
+        document
+        .getElementById(
+            "goldenBoot"
+        );
+
+
+    if(!scorers.length){
+
+        boot.innerHTML = `
+            <div class="empty">
+                No goals have been recorded yet.
+            </div>
+        `;
+
+    }
+
+    else{
+
+        boot.innerHTML =
+            createAwardTable(
+                scorers,
+                "goals"
+            );
+
+    }
+
+
+    /* GOLDEN GLOVE */
+
+    const keepers =
+        [...stats]
+        .filter(
+            player =>
+            player.goalkeeperMatches > 0
+        )
+        .sort(
+            (a,b) =>
+            b.cleanSheets -
+            a.cleanSheets ||
+            a.goalsConceded -
+            b.goalsConceded
+        );
+
+
+    const glove =
+        document
+        .getElementById(
+            "goldenGlove"
+        );
+
+
+    if(!keepers.length){
+
+        glove.innerHTML = `
+            <div class="empty">
+                Goalkeeper statistics are not available yet.
+            </div>
+        `;
+
+    }
+
+    else{
+
+        const winner =
+            keepers[0];
+
+
+        glove.innerHTML =
+            awardWinnerHTML(
+                "🧤",
+                winner.player,
+                winner.team,
+                `${winner.cleanSheets} Clean Sheet${
+                    winner.cleanSheets === 1
+                    ? ""
+                    : "s"
+                }`
+            );
+
+    }
+
+
+    /* BEST PLAYER */
+
+    const best =
+        [...stats]
+        .map(player => {
+
+            return {
+
+                ...player,
+
+                rating:
+                    player.goals * 5 +
+                    player.motm * 4 +
+                    player.wins * 2
+
+            };
+
+        })
+        .sort(
+            (a,b) =>
+            b.rating -
+            a.rating
+        );
+
+
+    const bestBox =
+        document
+        .getElementById(
+            "bestPlayer"
+        );
+
+
+    if(!best.length){
+
+        bestBox.innerHTML = `
+            <div class="empty">
+                Player awards will appear after matches are played.
+            </div>
+        `;
+
+    }
+
+    else{
+
+        const winner =
+            best[0];
+
+
+        bestBox.innerHTML =
+            awardWinnerHTML(
+                "⭐",
+                winner.player,
+                winner.team,
+                `Rating: ${winner.rating}`
+            );
+
+    }
+
+}
+
+
+/* =========================================
+AWARD TABLE
+========================================= */
+
+function createAwardTable(
+    players,
+    type
+){
+
+    return `
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Player</th>
+
+                        <th>Team</th>
+
+                        <th>
+                            ${
+                                type === "goals"
+                                ? "Goals"
+                                : "Value"
+                            }
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${
+                        players.map(
+                            (player,index) => `
+
+                            <tr>
+
+                                <td>
+                                    ${
+                                        index === 0
+                                        ? "🥇"
+                                        : index + 1
+                                    }
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        ${escapeHTML(
+                                            player.player
+                                        )}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(
+                                        player.team
+                                    )}
+                                </td>
+
+                                <td>
+                                    ⚽
+                                    ${player.goals}
+                                </td>
+
+                            </tr>
+
+                        `).join("")
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+AWARD WINNER
+========================================= */
+
+function awardWinnerHTML(
+icon,
+player,
+team,
+value
+){
+
+    return `
+
+        <div class="award-winner">
+
+            <div class="winner-icon">
+                ${icon}
+            </div>
+
+            <div class="winner-name">
+                ${escapeHTML(player)}
+            </div>
+
+            <div class="winner-team">
+                ${escapeHTML(team)}
+            </div>
+
+            <br>
+
+            <strong>
+                ${escapeHTML(value)}
+            </strong>
+
+        </div>
+
+    `;
+
+}
+
+
+
+/* =========================================
+NATIVE BROWSER PDF / PRINT
+========================================= */
+let nativePdfPrintCleanup = null;
+
+function printSectionPDF(sectionId, label){
+    const section = document.getElementById(sectionId);
+
+    if(!section){
+        alert("The selected section could not be found.");
+        return;
+    }
+
+    // Remove any previous print state.
+    if(nativePdfPrintCleanup){
+        nativePdfPrintCleanup();
+        nativePdfPrintCleanup = null;
+    }
+
+    // Clone the section so normal navigation/page state is never changed.
+    const clone = section.cloneNode(true);
+    clone.classList.add("native-pdf-print-target");
+    clone.style.display = "block";
+
+    // Remove download controls from the printable copy.
+    clone.querySelectorAll(".pdf-download-button").forEach(btn => btn.remove());
+
+    // Add a clean PDF title.
+    const title = document.createElement("div");
+    title.className = "pdf-print-title";
+    title.textContent =
+        (tournament && tournament.name ? tournament.name : "Football Tournament")
+        + " — " + label;
+    clone.prepend(title);
+
+    document.body.appendChild(clone);
+    document.body.classList.add("native-pdf-printing");
+
+    const cleanup = () => {
+        document.body.classList.remove("native-pdf-printing");
+        clone.remove();
+        window.removeEventListener("afterprint", cleanup);
+        nativePdfPrintCleanup = null;
+    };
+
+    nativePdfPrintCleanup = cleanup;
+    window.addEventListener("afterprint", cleanup);
+
+    // Give the browser a moment to lay out images/tables before opening
+    // its native print dialog.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.print();
+        });
+    });
+}
+
+
+/* =========================================
+RENDER EVERYTHING
+========================================= */
+
+function renderAll(){
+
+    renderDashboard();
+
+    renderTeams();
+
+    renderFixtures();
+
+    renderPoints();
+
+    renderAwards();
+
+}
+
+
+/* =========================================
+AUTO REFRESH
+========================================= */
+
+loadData();
+
+
+/*
+    Automatically check localStorage
+    every 5 seconds.
+
+    This means viewers can keep the
+    page open while the administrator
+    updates the tournament.
+*/
+
+setInterval(
+    loadData,
+    5000
+);
+
+</script>
+
+
+</body>
+</html>
+```
