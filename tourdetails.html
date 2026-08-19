@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -731,101 +730,24 @@ NATIVE BROWSER PDF
 }
 .pdf-download-button:hover{opacity:.85;}
 
-@media print{
-    @page{
-        size:A4;
-        margin:12mm;
-    }
+/* =========================
+MATCHDAY FIXTURES
+========================= */
+.matchday-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+.matchday-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px;}
+.matchday-title{margin:0;color:var(--green);}
+.matchday-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.matchday-card .fixture{margin-bottom:12px;}
+.matchday-card .fixture:last-child{margin-bottom:0;}
 
+@media print{
+    /*
+     * PDF generation is handled by beginNativePrint() in an
+     * isolated iframe. This rule intentionally does not hide
+     * the main page, preventing blank/black print pages.
+     */
     body{
         background:#fff !important;
-        color:#111 !important;
-        font-family:Arial,sans-serif !important;
-    }
-
-    body *{
-        visibility:hidden !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target,
-    body.native-pdf-printing .native-pdf-print-target *{
-        visibility:visible !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target{
-        display:block !important;
-        position:absolute !important;
-        left:0 !important;
-        top:0 !important;
-        width:100% !important;
-        margin:0 !important;
-        padding:0 !important;
-        background:#fff !important;
-        color:#111 !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target .card,
-    body.native-pdf-printing .native-pdf-print-target .award-card,
-    body.native-pdf-printing .native-pdf-print-target .team-card,
-    body.native-pdf-printing .native-pdf-print-target .fixture{
-        background:#fff !important;
-        color:#111 !important;
-        border:1px solid #ccc !important;
-        box-shadow:none !important;
-        break-inside:avoid;
-        page-break-inside:avoid;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target .player-row,
-    body.native-pdf-printing .native-pdf-print-target .award-winner{
-        background:#f5f5f5 !important;
-        color:#111 !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target .team-count,
-    body.native-pdf-printing .native-pdf-print-target .winner-team,
-    body.native-pdf-printing .native-pdf-print-target .fixture-info{
-        color:#555 !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target th{
-        background:#1b5d30 !important;
-        color:#fff !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target td{
-        border-bottom:1px solid #ddd !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target .pdf-print-title{
-        display:block !important;
-        visibility:visible !important;
-        text-align:center;
-        color:#12612a !important;
-        font-size:24px;
-        margin:0 0 18px;
-        padding:0 0 10px;
-        border-bottom:2px solid #12612a;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target .pdf-download-button{
-        display:none !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target img{
-        max-width:100%;
-        break-inside:avoid;
-    }
-
-    /* Keep table headers with their rows where possible. */
-    body.native-pdf-printing .native-pdf-print-target table{
-        width:100%;
-        min-width:0 !important;
-    }
-
-    body.native-pdf-printing .native-pdf-print-target tr{
-        break-inside:avoid;
-        page-break-inside:avoid;
     }
 }
 
@@ -841,18 +763,30 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
   const buckets = Array.from({length: groups}, () => []);
   list.forEach((item, i) => buckets[i % groups].push(item));
   const fixtures = [];
+
   buckets.forEach((bucket, gi) => {
     if (bucket.length < 2) return;
-    for (let i = 0; i < bucket.length; i++) {
-      for (let j = i + 1; j < bucket.length; j++) {
-        fixtures.push({
-          group: String.fromCharCode(65 + gi),
-          home: bucket[i], away: bucket[j],
-          status: "scheduled", homeScore: null, awayScore: null
-        });
+    let teams = bucket.slice();
+    if (teams.length % 2 !== 0) teams.push(null);
+    const n = teams.length;
+
+    for (let round = 0; round < n - 1; round++) {
+      for (let i = 0; i < n / 2; i++) {
+        const home = teams[i];
+        const away = teams[n - 1 - i];
+        if (home && away) {
+          fixtures.push({
+            group: String.fromCharCode(65 + gi),
+            matchday: round + 1,
+            home, away, status: "scheduled",
+            homeScore: null, awayScore: null
+          });
+        }
       }
+      teams = [teams[0], teams[n - 1], ...teams.slice(1, n - 1)];
     }
   });
+
   return fixtures;
 };
 </script>
@@ -885,7 +819,7 @@ HEADER
     
         <ul>
         
-        <li><a href="index.html">Home</a></li>
+        <li><a href="home.html">Home</a></li>
         
         </ul>
         
@@ -1794,42 +1728,40 @@ FIXTURES
 
 function renderFixtures(){
 
-    const box =
-        document
-        .getElementById(
-            "fixtureList"
-        );
-
-
-    const fixtures =
-        tournament.fixtures || [];
-
+    const box = document.getElementById("fixtureList");
+    const fixtures = tournament.fixtures || [];
 
     if(!fixtures.length){
-
-        box.innerHTML = `
-            <div class="empty">
-                No fixtures have been generated yet.
-            </div>
-        `;
-
+        box.innerHTML = `<div class="empty">No fixtures have been generated yet.</div>`;
         return;
-
     }
 
+    const matchdays = {};
+    fixtures.forEach(match => {
+        const rawDay = match.matchday ?? match.matchDay ?? match.round ?? 1;
+        const day = Number(rawDay) > 0 ? Number(rawDay) : 1;
+        if(!matchdays[day]) matchdays[day] = [];
+        matchdays[day].push(match);
+    });
 
-    box.innerHTML =
-        fixtures
-        .map(
-            match =>
-            fixtureHTML(
-                match,
-                false
-            )
-        )
-        .join("");
+    const days = Object.keys(matchdays).map(Number).sort((a,b)=>a-b);
+
+    box.innerHTML = days.map(day => `
+        <div class="matchday-card">
+            <div class="matchday-header">
+                <h2 class="matchday-title">📅 Matchday ${day}</h2>
+                <div class="matchday-actions">
+                    <button class="pdf-download-button" onclick="printMatchdayPDF(${day})">
+                        ⬇️ Matchday ${day} PDF
+                    </button>
+                </div>
+            </div>
+            ${matchdays[day].map(match => fixtureHTML(match,false)).join("")}
+        </div>
+    `).join("");
 
 }
+
 
 
 /* =========================================
@@ -3079,57 +3011,231 @@ NATIVE BROWSER PDF / PRINT
 ========================================= */
 let nativePdfPrintCleanup = null;
 
-function printSectionPDF(sectionId, label){
-    const section = document.getElementById(sectionId);
+function beginNativePrint(target, titleText){
 
-    if(!section){
-        alert("The selected section could not be found.");
+    // Print in a completely isolated iframe so the website's dark
+    // background and screen-only CSS cannot create a black/blank page.
+
+    if(nativePdfPrintCleanup){
+        nativePdfPrintCleanup();
+        nativePdfPrintCleanup=null;
+    }
+
+    const iframe=document.createElement("iframe");
+
+    iframe.style.position="fixed";
+    iframe.style.width="1px";
+    iframe.style.height="1px";
+    iframe.style.right="0";
+    iframe.style.bottom="0";
+    iframe.style.border="0";
+    iframe.style.opacity="0";
+
+    document.body.appendChild(iframe);
+
+    const printDoc =
+        iframe.contentDocument ||
+        iframe.contentWindow.document;
+
+    const styles =
+        Array.from(
+            document.querySelectorAll(
+                'link[rel="stylesheet"], style'
+            )
+        )
+        .map(node => node.outerHTML)
+        .join("\n");
+
+    const printable =
+        target.cloneNode(true);
+
+    printable
+        .querySelectorAll(".pdf-download-button")
+        .forEach(btn => btn.remove());
+
+    printable.style.display="block";
+    printable.style.visibility="visible";
+    printable.style.position="static";
+    printable.style.width="100%";
+    printable.style.background="#fff";
+    printable.style.color="#111";
+    printable.style.boxShadow="none";
+
+    printDoc.open();
+
+    printDoc.write(`
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<base href="${document.baseURI}">
+${styles}
+<style>
+html,body{
+    margin:0!important;
+    padding:0!important;
+    width:100%!important;
+    min-height:100%!important;
+    background:#fff!important;
+    color:#111!important;
+    font-family:Arial,sans-serif!important;
+}
+body{overflow:visible!important}
+
+.pdf-print-title{
+    display:block!important;
+    visibility:visible!important;
+    position:static!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    text-align:center!important;
+    color:#12612a!important;
+    background:#fff!important;
+    font-size:24px!important;
+    font-weight:bold!important;
+    margin:0 0 18px!important;
+    padding:0 0 10px!important;
+    border-bottom:2px solid #12612a!important;
+}
+
+.print-root{
+    display:block!important;
+    position:static!important;
+    width:100%!important;
+    background:#fff!important;
+    color:#111!important;
+}
+
+.print-root *{
+    box-shadow:none!important;
+}
+
+.print-root .pdf-download-button{
+    display:none!important;
+}
+
+.print-root table{
+    width:100%!important;
+    min-width:0!important;
+    border-collapse:collapse!important;
+}
+
+.print-root tr{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+}
+
+.print-root th{
+    background:#1b5d30!important;
+    color:#fff!important;
+}
+
+.print-root td{
+    color:#111!important;
+    background:#fff!important;
+}
+
+@page{
+    size:A4;
+    margin:12mm;
+}
+
+@media print{
+    html,body,.print-root{
+        background:#fff!important;
+    }
+}
+</style>
+</head>
+<body>
+<div class="pdf-print-title" id="printTitle"></div>
+<div class="print-root" id="printRoot"></div>
+</body>
+</html>`);
+
+    printDoc.close();
+
+    printDoc.getElementById("printTitle")
+        .textContent=titleText;
+
+    printDoc.getElementById("printRoot")
+        .appendChild(printable);
+
+    let cleaned=false;
+
+    const cleanup=()=>{
+        if(cleaned) return;
+        cleaned=true;
+
+        if(iframe.parentNode){
+            iframe.parentNode.removeChild(iframe);
+        }
+
+        nativePdfPrintCleanup=null;
+    };
+
+    nativePdfPrintCleanup=cleanup;
+
+    const doPrint=()=>{
+        if(cleaned) return;
+
+        try{
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }catch(error){
+            console.error("PDF print error:",error);
+            cleanup();
+        }
+    };
+
+    // Allow the table/images to finish layout first.
+    setTimeout(doPrint,500);
+
+    // Safety cleanup after the print dialog has been open for a while.
+    setTimeout(cleanup,120000);
+}
+function printSectionPDF(sectionId,label){
+    const section=document.getElementById(sectionId);
+    if(!section){ alert("The selected section could not be found."); return; }
+
+    const clone=section.cloneNode(true);
+    clone.style.display="block";
+    clone.querySelectorAll(".pdf-download-button").forEach(btn=>btn.remove());
+
+    beginNativePrint(
+        clone,
+        (tournament && tournament.name ? tournament.name : "Football Tournament")+" — "+label
+    );
+}
+
+function printMatchdayPDF(matchday){
+    const fixtures=tournament.fixtures || [];
+    const day=Number(matchday);
+    const dayFixtures=fixtures.filter(match=>{
+        const rawDay=match.matchday ?? match.matchDay ?? match.round ?? 1;
+        return Number(rawDay)===day;
+    });
+
+    if(!dayFixtures.length){
+        alert("No fixtures found for Matchday "+day+".");
         return;
     }
 
-    // Remove any previous print state.
-    if(nativePdfPrintCleanup){
-        nativePdfPrintCleanup();
-        nativePdfPrintCleanup = null;
-    }
+    const content=document.createElement("div");
+    content.className="matchday-card";
+    content.style.background="#fff";
+    content.style.color="#111";
+    content.style.border="0";
+    content.style.padding="0";
+    content.style.margin="0";
+    content.innerHTML=dayFixtures.map(match=>fixtureHTML(match,false)).join("");
 
-    // Clone the section so normal navigation/page state is never changed.
-    const clone = section.cloneNode(true);
-    clone.classList.add("native-pdf-print-target");
-    clone.style.display = "block";
-
-    // Remove download controls from the printable copy.
-    clone.querySelectorAll(".pdf-download-button").forEach(btn => btn.remove());
-
-    // Add a clean PDF title.
-    const title = document.createElement("div");
-    title.className = "pdf-print-title";
-    title.textContent =
-        (tournament && tournament.name ? tournament.name : "Football Tournament")
-        + " — " + label;
-    clone.prepend(title);
-
-    document.body.appendChild(clone);
-    document.body.classList.add("native-pdf-printing");
-
-    const cleanup = () => {
-        document.body.classList.remove("native-pdf-printing");
-        clone.remove();
-        window.removeEventListener("afterprint", cleanup);
-        nativePdfPrintCleanup = null;
-    };
-
-    nativePdfPrintCleanup = cleanup;
-    window.addEventListener("afterprint", cleanup);
-
-    // Give the browser a moment to lay out images/tables before opening
-    // its native print dialog.
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            window.print();
-        });
-    });
+    beginNativePrint(
+        content,
+        (tournament && tournament.name ? tournament.name : "Football Tournament")+" — Matchday "+day
+    );
 }
+
 
 
 /* =========================================
