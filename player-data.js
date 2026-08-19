@@ -82,3 +82,4 @@ function arrowsPlayerStats(playerId){
  out.winRate=out.matches?Math.round(out.wins/out.matches*100):0;return out;
 }
 arrowsSyncDuoPlayers();
+ 
