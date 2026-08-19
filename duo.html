@@ -797,14 +797,24 @@ TEAMS
             id="newTeamName"
             placeholder="Example: Arrows FC">
 
-        <label>Team Logo</label>
+        <label>Team Logo Path</label>
 
         <input
-            type="file"
-            id="newTeamLogo"
-            accept="image/*">
+            type="text"
+            id="newTeamLogoPath"
+            placeholder="Example: images/logo.jpeg"
+            autocomplete="off">
+
+        <small style="color:var(--muted);display:block;margin:-5px 0 12px;">
+            Enter the image path relative to this HTML file, for example:
+            <b>images/logo.jpeg</b>
+        </small>
 
         <div id="newLogoPreview"></div>
+
+        <button onclick="previewNewTeamLogo()" class="secondary">
+            👁️ Preview Logo
+        </button>
 
         <button onclick="addTeam()">
             ➕ Add Team
@@ -944,6 +954,59 @@ SETTINGS
 <!-- =====================================================
 EDIT FIXTURE MODAL
 ===================================================== -->
+
+<!-- =====================================================
+EDIT TEAM MODAL
+===================================================== -->
+
+<div
+    id="teamModal"
+    class="modal hidden">
+
+    <div class="modal-box">
+
+        <h2>✏️ Edit Team</h2>
+
+        <input
+            type="hidden"
+            id="editTeamId">
+
+        <label>Team Name</label>
+        <input
+            id="editTeamName"
+            placeholder="Team name">
+
+        <label>Team Logo Path</label>
+        <input
+            id="editTeamLogoPath"
+            placeholder="Example: images/logo.jpeg"
+            autocomplete="off">
+
+        <small style="color:var(--muted);display:block;margin:-5px 0 12px;">
+            Example: <b>images/logo.jpeg</b>
+        </small>
+
+        <div id="editTeamLogoPreview" style="margin:10px 0;"></div>
+
+        <button
+            class="secondary"
+            onclick="previewEditTeamLogo()">
+            👁️ Preview Logo
+        </button>
+
+        <button onclick="saveTeamEdit()">
+            💾 Save Team
+        </button>
+
+        <button
+            class="dark"
+            onclick="closeTeamModal()">
+            Cancel
+        </button>
+
+    </div>
+</div>
+
 
 <div
     id="fixtureModal"
@@ -1108,6 +1171,17 @@ function logout(){
 }
 
 
+document.addEventListener("click", function(event){
+
+    const modal = document.getElementById("teamModal");
+
+    if(modal && event.target === modal){
+        closeTeamModal();
+    }
+
+});
+
+
 function checkLogin(){
 
     if(
@@ -1241,51 +1315,57 @@ function openViewer(){
 
 
 /* =====================================================
-TEAM LOGO
+TEAM LOGO PATH
 ===================================================== */
 
-let selectedLogo = "";
+/*
+    Team logos are stored as normal relative paths.
 
-document
-.getElementById("newTeamLogo")
-.addEventListener(
-    "change",
-    function(event){
+    Examples:
+        images/logo.jpeg
+        images/teams/arrows.png
+        assets/logos/team1.webp
 
-        const file =
-            event.target.files[0];
+    The path is saved in localStorage, so you can edit it later.
+*/
 
-        if(!file)return;
+let selectedLogoPath = "";
 
-        const reader =
-            new FileReader();
+function normalizeLogoPath(path){
+    return String(path || "").trim().replace(/\\/g, "/");
+}
 
-        reader.onload =
-            function(e){
+function previewLogo(path, targetId){
+    const logoPath = normalizeLogoPath(path);
+    const target = document.getElementById(targetId);
 
-                selectedLogo =
-                    e.target.result;
+    if(!target) return;
 
-                document
-                .getElementById(
-                    "newLogoPreview"
-                )
-                .innerHTML =
-
-                `
-                <br>
-
-                <img
-                    src="${selectedLogo}"
-                    class="team-logo-large">
-                `;
-
-            };
-
-        reader.readAsDataURL(file);
-
+    if(!logoPath){
+        target.innerHTML = "<p style=\"color:var(--muted);\">No logo path entered.</p>";
+        return;
     }
-);
+
+    target.innerHTML = `
+        <div style="margin-top:8px;">
+            <img
+                src="${escapeHTML(logoPath)}"
+                class="team-logo-large"
+                alt="Team logo preview"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <p style="display:none;color:#ff6b6b;">
+                ❌ Logo could not be loaded. Check the path:
+                <b>${escapeHTML(logoPath)}</b>
+            </p>
+        </div>
+    `;
+}
+
+function previewNewTeamLogo(){
+    const path = document.getElementById("newTeamLogoPath").value;
+    selectedLogoPath = normalizeLogoPath(path);
+    previewLogo(selectedLogoPath, "newLogoPreview");
+}
 
 
 /* =====================================================
@@ -1323,13 +1403,18 @@ function addTeam(){
     }
 
 
+    const logoPath =
+        normalizeLogoPath(
+            document.getElementById("newTeamLogoPath").value
+        );
+
     tournament.teams.push({
 
         id:Date.now()+Math.random(),
 
         name:name,
 
-        logo:selectedLogo,
+        logo:logoPath,
 
         players:[]
 
@@ -1341,7 +1426,7 @@ function addTeam(){
     .value="";
 
     document
-    .getElementById("newTeamLogo")
+    .getElementById("newTeamLogoPath")
     .value="";
 
     document
@@ -1350,7 +1435,7 @@ function addTeam(){
     )
     .innerHTML="";
 
-    selectedLogo="";
+    selectedLogoPath="";
 
     save();
 
@@ -1370,28 +1455,89 @@ function editTeam(id){
 
     if(!team)return;
 
-    const newName =
-        prompt(
-            "Enter new team name:",
-            team.name
+    document
+        .getElementById("editTeamId")
+        .value = team.id;
+
+    document
+        .getElementById("editTeamName")
+        .value = team.name || "";
+
+    document
+        .getElementById("editTeamLogoPath")
+        .value = team.logo || "";
+
+    previewLogo(
+        team.logo || "",
+        "editTeamLogoPreview"
+    );
+
+    document
+        .getElementById("teamModal")
+        .classList.remove("hidden");
+}
+
+
+function previewEditTeamLogo(){
+
+    const path =
+        document
+        .getElementById("editTeamLogoPath")
+        .value;
+
+    previewLogo(
+        path,
+        "editTeamLogoPreview"
+    );
+}
+
+
+function saveTeamEdit(){
+
+    const id =
+        document
+        .getElementById("editTeamId")
+        .value;
+
+    const team =
+        getTeam(id);
+
+    if(!team)return;
+
+    const name =
+        document
+        .getElementById("editTeamName")
+        .value
+        .trim();
+
+    const logoPath =
+        normalizeLogoPath(
+            document
+            .getElementById("editTeamLogoPath")
+            .value
         );
 
-    if(
-        newName === null ||
-        !newName.trim()
-    ){
-
+    if(!name){
+        alert("Please enter team name.");
         return;
-
     }
 
-    team.name =
-        newName.trim();
+    team.name = name;
+    team.logo = logoPath;
 
     save();
 
-    renderAll();
+    closeTeamModal();
 
+    renderAll();
+}
+
+
+function closeTeamModal(){
+
+    document
+        .getElementById("teamModal")
+        .classList.add("hidden");
 }
 
 
@@ -1755,6 +1901,18 @@ function renderTeams(){
                             player(s)
                         </p>
 
+                        ${
+                            team.logo
+                            ?
+                            `<small style="color:var(--muted);">
+                                📷 ${escapeHTML(team.logo)}
+                            </small>`
+                            :
+                            `<small style="color:var(--muted);">
+                                📷 No logo path set
+                            </small>`
+                        }
+
                     </div>
 
                 </div>
@@ -1765,7 +1923,7 @@ function renderTeams(){
                     <button
                         class="secondary"
                         onclick="editTeam('${team.id}')">
-                        ✏️ Edit Team
+                        ✏️ Edit Team / Logo
                     </button>
 
                     <button
