@@ -96,7 +96,28 @@ window.createPost=async()=>{
 }
 window.toggleLike=async id=>{const p=posts.find(x=>x.id===id);if(!p)return;try{await patch('community_posts','id=eq.'+encodeURIComponent(id),{likes:Number(p.likes||0)+1});await load()}catch(e){toast('Like failed')}}
 window.addComment=async id=>{const input=document.getElementById('c-'+id),text=input.value.trim();if(!text)return;try{await post('comments',{post_id:id,author_name:displayName(),content:text});input.value='';await render();toast('Comment added')}catch(e){toast('Comment failed: '+e.message)}}
-window.deletePost=async id=>{if(!confirm('Delete this post?'))return;try{await del('community_posts','id=eq.'+encodeURIComponent(id));await del('comments','post_id=eq.'+encodeURIComponent(id));await load();toast('Post deleted')}catch(e){toast('Delete failed')}}
+window.deletePost=async id=>{
+  if(!confirm('Delete this post?'))return;
+  try{
+    // Delete child comments first so the comments.post_id foreign key
+    // cannot block deletion of the parent post.
+    await del('comments','post_id=eq.'+encodeURIComponent(id));
+    const deleted=await del('community_posts','id=eq.'+encodeURIComponent(id));
+
+    // With Supabase RLS, a blocked DELETE can sometimes return success
+    // but delete zero rows. Verify that the post is actually gone.
+    const remaining=await get('community_posts','id=eq.'+encodeURIComponent(id)+'&select=id');
+    if(Array.isArray(remaining)&&remaining.length){
+      throw new Error('Supabase RLS blocked this delete. Add a DELETE policy for community_posts.');
+    }
+
+    await load();
+    toast('Post deleted');
+  }catch(e){
+    console.error('Delete post failed:',e);
+    toast('Delete failed: '+(e.message||'Unknown error'));
+  }
+}
 window.openEditPost=id=>{const p=posts.find(x=>x.id===id);if(!p)return;document.getElementById('editText').value=p.content||'';editingPostId=id;document.getElementById('editModal').classList.add('show')};
 window.closeEdit=()=>document.getElementById('editModal').classList.remove('show');
 window.saveEditPost=async()=>{if(!editingPostId)return;try{await patch('community_posts','id=eq.'+encodeURIComponent(editingPostId),{content:document.getElementById('editText').value.trim()});closeEdit();await load();toast('Post updated')}catch(e){toast('Edit failed')}};
