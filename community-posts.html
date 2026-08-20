@@ -99,22 +99,31 @@ window.addComment=async id=>{const input=document.getElementById('c-'+id),text=i
 window.deletePost=async id=>{
   if(!confirm('Delete this post?'))return;
   try{
-    // Delete child comments first so the comments.post_id foreign key
-    // cannot block deletion of the parent post.
+    // Delete child comments first so a foreign-key constraint cannot block
+    // deletion of the parent post.
     await del('comments','post_id=eq.'+encodeURIComponent(id));
-    const deleted=await del('community_posts','id=eq.'+encodeURIComponent(id));
 
-    // With Supabase RLS, a blocked DELETE can sometimes return success
-    // but delete zero rows. Verify that the post is actually gone.
-    const remaining=await get('community_posts','id=eq.'+encodeURIComponent(id)+'&select=id');
-    if(Array.isArray(remaining)&&remaining.length){
-      throw new Error('Supabase RLS blocked this delete. Add a DELETE policy for community_posts.');
+    // H includes Prefer: return=representation, so a real DELETE returns
+    // the deleted row. If RLS blocks it, Supabase commonly returns [].
+    const deleted=await del('community_posts','id=eq.'+encodeURIComponent(id));
+    if(!Array.isArray(deleted) || deleted.length===0){
+      throw new Error('Supabase did not delete this row. Add a DELETE RLS policy for community_posts.');
     }
 
-    await load();
+    posts=posts.filter(p=>String(p.id)!==String(id));
+    await render();
+
+    // Verify from Supabase with a cache-buster.
+    const remaining=await get('community_posts','id=eq.'+encodeURIComponent(id)+'&select=id&_t='+Date.now());
+    if(Array.isArray(remaining)&&remaining.length){
+      await load();
+      throw new Error('The post still exists in Supabase after DELETE. Check the DELETE RLS policy.');
+    }
+
     toast('Post deleted');
   }catch(e){
     console.error('Delete post failed:',e);
+    await load();
     toast('Delete failed: '+(e.message||'Unknown error'));
   }
 }
