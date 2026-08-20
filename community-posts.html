@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Arrows Esports • Community</title> 
+<title>Arrows Esports • Community</title>
 <style>
 :root{--bg:#061009;--panel:#0d1b12;--panel2:#13271a;--green:#39d864;--green2:#20a84c;--text:#f4fff6;--muted:#9eb3a4;--border:#244d31;--danger:#ef5350;--shadow:0 18px 55px rgba(0,0,0,.35)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at 20% 0%,#123c20 0,#061009 34%),#061009;color:var(--text)}
@@ -31,6 +31,7 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}.top{position:
 (function(){
 const BASE=window.ARROWS_SUPABASE.url.replace(/\/$/,'');
 const KEY=window.ARROWS_SUPABASE.publishableKey;
+const sb=window.supabase.createClient(BASE,KEY);
 const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',Prefer:'return=representation'};
 let posts=[],selectedImage=null,editingPostId=null;
 const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -46,46 +47,53 @@ function time(v){if(!v)return'just now';const t=new Date(v).getTime(),d=Date.now
 function displayName(){return localStorage.getItem(profileKey)||'Arrows Fan'}
 async function load(){try{posts=await get('community_posts','select=*&order=created_at.desc');document.getElementById('authNotice').textContent='Connected to Supabase community database.';await render()}catch(e){console.error(e);document.getElementById('authNotice').textContent='Supabase community connection failed. Check Table Editor → RLS policies.';toast('Could not load community posts')}}
 async function commentsFor(id){try{return await get('comments','post_id=eq.'+encodeURIComponent(id)+'&select=*&order=created_at.asc')}catch(e){return[]}}
-window.createPost=async()=>{const text=document.getElementById('postText').value.trim();if(!text&&!selectedImage)return toast('Write something or add a photo.');
+window.createPost=async()=>{
+  const text=document.getElementById('postText').value.trim();
+  const btn=document.getElementById('postBtn');
+  if(!text&&!selectedImage)return toast('Write something or add a photo.');
 
-let imageUrl = null;
+  btn.disabled=true;
+  btn.textContent='Posting…';
 
-if (selectedImage) {
-  const fileName =
-    Date.now() + '-' +
-    Math.random().toString(36).substring(2) +
-    '-' + selectedImage.name;
+  try{
+    let imageUrl=null;
 
-  const { error: uploadError } =
-    await supabase.storage
-      .from('community-images')
-      .upload(fileName, selectedImage);
+    if(selectedImage){
+      const safeName=(selectedImage.name||'image').replace(/[^a-zA-Z0-9._-]/g,'-');
+      const fileName=Date.now()+'-'+Math.random().toString(36).substring(2)+'-'+safeName;
 
-  if (uploadError) {
-    toast('Image upload failed');
-    console.error(uploadError);
-    return;
+      const {error:uploadError}=await sb.storage
+        .from('community-images')
+        .upload(fileName,selectedImage,{cacheControl:'3600',upsert:false});
+
+      if(uploadError)throw new Error('Image upload failed: '+uploadError.message);
+
+      const {data}=sb.storage
+        .from('community-images')
+        .getPublicUrl(fileName);
+
+      if(!data||!data.publicUrl)throw new Error('Could not create image URL.');
+      imageUrl=data.publicUrl;
+    }
+
+    await post('community_posts',{
+      author_name:displayName(),
+      content:text,
+      image_url:imageUrl,
+      likes:0
+    });
+
+    clearComposer();
+    await load();
+    toast('Post published!');
+  }catch(e){
+    console.error('Create post failed:',e);
+    toast('Post failed: '+(e&&e.message?e.message:'Unknown error'));
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Post';
   }
-
-  const { data } =
-    supabase.storage
-      .from('community-images')
-      .getPublicUrl(fileName);
-
-  imageUrl = data.publicUrl;
 }
-
-try{document.getElementById('postBtn').disabled=true;
-
-await post('community_posts',{
-  author_name:displayName(),
-  content:text,
-  image_url:imageUrl,
-  likes:0
-});
-
-
-clearComposer();await load();toast('Post published!')}catch(e){console.error(e);toast('Post failed: '+e.message)}finally{document.getElementById('postBtn').disabled=false}}
 window.toggleLike=async id=>{const p=posts.find(x=>x.id===id);if(!p)return;try{await patch('community_posts','id=eq.'+encodeURIComponent(id),{likes:Number(p.likes||0)+1});await load()}catch(e){toast('Like failed')}}
 window.addComment=async id=>{const input=document.getElementById('c-'+id),text=input.value.trim();if(!text)return;try{await post('comments',{post_id:id,author_name:displayName(),content:text});input.value='';await render();toast('Comment added')}catch(e){toast('Comment failed: '+e.message)}}
 window.deletePost=async id=>{if(!confirm('Delete this post?'))return;try{await del('community_posts','id=eq.'+encodeURIComponent(id));await del('comments','post_id=eq.'+encodeURIComponent(id));await load();toast('Post deleted')}catch(e){toast('Delete failed')}}
