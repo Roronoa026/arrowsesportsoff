@@ -24,6 +24,7 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}.top{position:
 <div id="profileModal" class="modal"><div class="modalbox"><h3>Display name</h3><input id="profileName" maxlength="30" placeholder="Your name"><button class="btn" onclick="saveProfile()">Save</button><button class="btn secondary" onclick="closeProfile()">Cancel</button></div></div>
 <div id="editModal" class="modal"><div class="modalbox"><h3>Edit post</h3><textarea id="editText" rows="6"></textarea><div class="compose-row"><button class="btn" onclick="saveEditPost()">Save changes</button><button class="btn secondary" onclick="closeEdit()">Cancel</button></div></div></div>
 <div id="toast" class="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
 /* ARROWS ESPORTS - Supabase Community */
@@ -45,7 +46,46 @@ function time(v){if(!v)return'just now';const t=new Date(v).getTime(),d=Date.now
 function displayName(){return localStorage.getItem(profileKey)||'Arrows Fan'}
 async function load(){try{posts=await get('community_posts','select=*&order=created_at.desc');document.getElementById('authNotice').textContent='Connected to Supabase community database.';await render()}catch(e){console.error(e);document.getElementById('authNotice').textContent='Supabase community connection failed. Check Table Editor → RLS policies.';toast('Could not load community posts')}}
 async function commentsFor(id){try{return await get('comments','post_id=eq.'+encodeURIComponent(id)+'&select=*&order=created_at.asc')}catch(e){return[]}}
-window.createPost=async()=>{const text=document.getElementById('postText').value.trim();if(!text&&!selectedImage)return toast('Write something or add a photo.');if(selectedImage)return toast('Image upload needs a Supabase Storage bucket. Add one named community-images, then try again.');try{document.getElementById('postBtn').disabled=true;await post('community_posts',{author_name:displayName(),content:text,image_url:null,likes:0});clearComposer();await load();toast('Post published!')}catch(e){console.error(e);toast('Post failed: '+e.message)}finally{document.getElementById('postBtn').disabled=false}}
+window.createPost=async()=>{const text=document.getElementById('postText').value.trim();if(!text&&!selectedImage)return toast('Write something or add a photo.');
+
+let imageUrl = null;
+
+if (selectedImage) {
+  const fileName =
+    Date.now() + '-' +
+    Math.random().toString(36).substring(2) +
+    '-' + selectedImage.name;
+
+  const { error: uploadError } =
+    await supabase.storage
+      .from('community-images')
+      .upload(fileName, selectedImage);
+
+  if (uploadError) {
+    toast('Image upload failed');
+    console.error(uploadError);
+    return;
+  }
+
+  const { data } =
+    supabase.storage
+      .from('community-images')
+      .getPublicUrl(fileName);
+
+  imageUrl = data.publicUrl;
+}
+
+try{document.getElementById('postBtn').disabled=true;
+
+await post('community_posts',{
+  author_name:displayName(),
+  content:text,
+  image_url:imageUrl,
+  likes:0
+});
+
+
+clearComposer();await load();toast('Post published!')}catch(e){console.error(e);toast('Post failed: '+e.message)}finally{document.getElementById('postBtn').disabled=false}}
 window.toggleLike=async id=>{const p=posts.find(x=>x.id===id);if(!p)return;try{await patch('community_posts','id=eq.'+encodeURIComponent(id),{likes:Number(p.likes||0)+1});await load()}catch(e){toast('Like failed')}}
 window.addComment=async id=>{const input=document.getElementById('c-'+id),text=input.value.trim();if(!text)return;try{await post('comments',{post_id:id,author_name:displayName(),content:text});input.value='';await render();toast('Comment added')}catch(e){toast('Comment failed: '+e.message)}}
 window.deletePost=async id=>{if(!confirm('Delete this post?'))return;try{await del('community_posts','id=eq.'+encodeURIComponent(id));await del('comments','post_id=eq.'+encodeURIComponent(id));await load();toast('Post deleted')}catch(e){toast('Delete failed')}}
