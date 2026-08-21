@@ -561,12 +561,21 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260821-relational1"></script>
-<script src="supabase-data.js?v=20260821-relational1"></script>
+<script src="supabase-config.js?v=20260821-relational3"></script>
+
+<script>
+/* Shared cache API fallback must exist before the app/data scripts use it. */
+window.__ARROWS_TOURNAMENT_CACHE = window.__ARROWS_TOURNAMENT_CACHE || null;
+window.arrowsSetTournamentCache = window.arrowsSetTournamentCache || function(t){
+  window.__ARROWS_TOURNAMENT_CACHE = (t && typeof t === "object") ? t : null;
+};
+</script>
+
+<script src="supabase-data.js?v=20260821-relational3"></script>
+<script src="player-data.js?v=20260821-relational3"></script>
 </head>
 
 <body>
-<script src="player-data.js?v=20260821-relational1"></script>
 
 
 <!-- =====================================================
@@ -1236,7 +1245,7 @@ function normalizeTournament(){
     tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
     tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
     tournament.teams.forEach(team=>{team.players=Array.isArray(team.players)?team.players:[]});
-    arrowsSetTournamentCache(tournament);
+    window.arrowsSetTournamentCache(tournament);
 }
 
 async function loadTournamentFromSupabase(){
@@ -1280,7 +1289,7 @@ async function save(){
         const confirmed = await ARROWS_DB.saveTournament(tournament);
         tournament = confirmed;
         normalizeTournament();
-        arrowsSetTournamentCache(tournament);
+        window.arrowsSetTournamentCache(tournament);
         window.ARROWS_CLOUD_OK = true;
         return tournament;
     }catch(error){
@@ -3838,5 +3847,16 @@ INITIALIZE
 
 </script>
 
+
+<script>
+window.addEventListener("load", function(){
+  if(typeof window.ARROWS_DB === "undefined"){
+    console.error("ARROWS_DB missing: supabase-data.js did not load.");
+  }
+  if(typeof window.arrowsReady === "undefined"){
+    console.error("arrowsReady missing: player-data.js did not load.");
+  }
+});
+</script>
 </body>
 </html>
