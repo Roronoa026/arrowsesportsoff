@@ -1470,7 +1470,7 @@ async function addTeam(){
         selectedLogoPath="";
 
         renderAll();
-        alert("Team saved to Supabase and is now public.");
+        alert("Team Added Successfully");
     }catch(error){
         // Remove the unsaved UI change and reload the real cloud state.
         tournament.teams = tournament.teams.filter(
