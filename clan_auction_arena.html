@@ -514,6 +514,18 @@
     .site-nav .home-link{border:1px solid rgba(92,255,114,.28);color:#5cff72}
     .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     @media(max-width:900px){.topbar{align-items:flex-start!important;flex-wrap:wrap}.site-nav{order:3;width:100%;margin-left:0}.site-nav a{padding:9px 10px}}
+
+    .empty-state{
+      grid-column:1/-1;
+      padding:22px 16px;
+      border:1px dashed var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      text-align:center;
+      font-size:12px;
+    }
+
 </style>
 </head>
 <body>
@@ -534,14 +546,7 @@
       <div class="pill live"><span class="dot"></span> Live Auction</div>
       <select class="select" id="role">
         <option value="viewer">Viewer</option>
-        <optgroup label="Captains">
-          <option value="captain-0">Captain Falcon — Falcon Force</option>
-          <option value="captain-1">Captain Nova — Night Wolves</option>
-          <option value="captain-2">Captain Rex — Titan Core</option>
-          <option value="captain-3">Captain Zen — Void Raiders</option>
-          <option value="captain-4">Captain Kai — Storm Unit</option>
-          <option value="captain-5">Captain Ash — Iron Legion</option>
-        </optgroup>
+        <optgroup label="Captains"></optgroup>
         <option value="admin">Admin</option>
       </select>
     </div>
@@ -553,10 +558,10 @@
       <p>Performance-based pricing, division context, captain-only bidding, public live viewing and full admin controls.</p>
     </div>
     <div class="hero-stats">
-      <div class="mini"><strong>60</strong><span>Total Players</span></div>
-      <div class="mini"><strong>6</strong><span>Captains</span></div>
-      <div class="mini"><strong id="soldCount">24</strong><span>Sold</span></div>
-      <div class="mini"><strong id="remainingCount">36</strong><span>Remaining</span></div>
+      <div class="mini"><strong id="totalPlayerCount">0</strong><span>Total Players</span></div>
+      <div class="mini"><strong id="captainCount">0</strong><span>Captains</span></div>
+      <div class="mini"><strong id="soldCount">0</strong><span>Sold</span></div>
+      <div class="mini"><strong id="remainingCount">0</strong><span>Remaining</span></div>
     </div>
   </section>
 
@@ -568,29 +573,29 @@
       </div>
 
       <div class="player-main">
-        <div class="avatar" id="avatar">SX</div>
+        <div class="avatar" id="avatar">—</div>
         <div>
           <div class="player-title-row">
-            <h3 id="playerName">ShadowX</h3>
-            <div class="division" id="division">Diamond Division</div>
+            <h3 id="playerName">No Player</h3>
+            <div class="division" id="division">Unassigned</div>
           </div>
-          <div class="meta" id="playerMeta">Rank #7 • Clan performance profile</div>
+          <div class="meta" id="playerMeta">Add a player to begin the auction.</div>
 
           <div class="price-row">
-            <div class="price"><span>Base Price</span><strong id="basePrice">8</strong></div>
-            <div class="price current"><span>Current Price</span><strong id="currentPrice">8</strong></div>
-            <div class="price"><span>Performance Score</span><strong id="performance">87</strong></div>
+            <div class="price"><span>Base Price</span><strong id="basePrice">0</strong></div>
+            <div class="price current"><span>Current Price</span><strong id="currentPrice">0</strong></div>
+            <div class="price"><span>Performance Score</span><strong id="performance">0</strong></div>
           </div>
         </div>
       </div>
 
       <div class="stats">
-        <div class="stat"><strong id="matches">42</strong><span>Matches</span></div>
-        <div class="stat"><strong id="wins">29</strong><span>Wins</span></div>
-        <div class="stat"><strong id="losses">13</strong><span>Losses</span></div>
-        <div class="stat"><strong id="goals">54</strong><span>Goals</span></div>
-        <div class="stat"><strong id="mvp">14</strong><span>MVP</span></div>
-        <div class="stat"><strong id="winPct">69%</strong><span>Win Percentage</span></div>
+        <div class="stat"><strong id="matches">0</strong><span>Matches</span></div>
+        <div class="stat"><strong id="wins">0</strong><span>Wins</span></div>
+        <div class="stat"><strong id="losses">0</strong><span>Losses</span></div>
+        <div class="stat"><strong id="goals">0</strong><span>Goals</span></div>
+        <div class="stat"><strong id="mvp">0</strong><span>MVP</span></div>
+        <div class="stat"><strong id="winPct">0%</strong><span>Win Percentage</span></div>
       </div>
 
       <div class="form-card">
@@ -599,7 +604,7 @@
       </div>
 
       <div class="performance">
-        <div class="perf-head"><span>Overall auction performance score</span><strong><span id="perfText">87</span> / 100</strong></div>
+        <div class="perf-head"><span>Overall auction performance score</span><strong><span id="perfText">0</span> / 100</strong></div>
         <div class="bar"><span id="perfBar"></span></div>
       </div>
     </section>
@@ -609,7 +614,7 @@
         <div class="head">
           <div>
             <div class="eyebrow">Live Auction</div>
-            <div style="font-size:20px;font-weight:900;margin-top:5px">Bid for <span id="bidPlayer">ShadowX</span></div>
+            <div style="font-size:20px;font-weight:900;margin-top:5px">Bid for <span id="bidPlayer">No Player</span></div>
           </div>
           <div class="badge">Round <span id="round">25</span></div>
         </div>
@@ -661,7 +666,7 @@
   </section>
 
   <section class="card players-card" id="playersCard">
-    <div class="section-title"><h4>Players List</h4><span id="playerCountLabel">60 registered players</span></div>
+    <div class="section-title"><h4>Players List</h4><span id="playerCountLabel">0 registered players</span></div>
     <div class="players-toolbar">
       <input id="playerSearch" type="search" placeholder="Search player, division or status...">
       <div class="pill">Admin can load any available player</div>
@@ -684,9 +689,9 @@
 <div class="modal" id="soldModal">
   <div class="sold-card">
     <div class="sold-label">SOLD</div>
-    <h2><span id="soldPlayer">ShadowX</span> sold to <span id="soldTeam">Falcon Force</span></h2>
+    <h2><span id="soldPlayer">No Player</span> sold to <span id="soldTeam">No Team</span></h2>
     <p>The bidding round has ended successfully.</p>
-    <div class="sold-price">Final Price: <span id="soldPrice">18</span></div>
+    <div class="sold-price">Final Price: <span id="soldPrice">0</span></div>
     <button class="success" id="closeSold">Continue Auction</button>
   </div>
 </div>
@@ -694,70 +699,58 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const players = [
-  {name:"ShadowX", rank:7, division:"Diamond", matches:42, wins:29, losses:13, goals:54, mvp:14, winPct:69, perf:87, base:8, form:["W","W","L","W","W"]},
-  {name:"NovaKing", rank:11, division:"Platinum", matches:36, wins:23, losses:13, goals:47, mvp:10, winPct:64, perf:81, base:7, form:["W","L","W","W","L"]},
-  {name:"Blaze", rank:18, division:"Gold", matches:31, wins:18, losses:13, goals:39, mvp:8, winPct:58, perf:74, base:5, form:["L","W","W","L","W"]},
-  {name:"RogueOne", rank:23, division:"Gold", matches:29, wins:16, losses:13, goals:31, mvp:6, winPct:55, perf:69, base:5, form:["W","L","L","W","W"]},
-  {name:"Viper", rank:5, division:"Elite", matches:48, wins:35, losses:13, goals:66, mvp:16, winPct:73, perf:92, base:15, form:["W","W","W","L","W"]},
-  {name:"Echo", rank:28, division:"Silver", matches:25, wins:13, losses:12, goals:26, mvp:4, winPct:52, perf:61, base:3, form:["L","W","L","W","L"]},
-  {name:"Titan", rank:14, division:"Platinum", matches:38, wins:25, losses:13, goals:45, mvp:9, winPct:66, perf:79, base:7, form:["W","W","L","W","L"]},
-  {name:"Phantom", rank:9, division:"Diamond", matches:41, wins:28, losses:13, goals:58, mvp:12, winPct:68, perf:88, base:10, form:["W","W","W","L","W"]}
-];
-players.forEach(p => p.status = "available");
-
+/* Empty starting dataset. Add teams and players before running an auction. */
+const players = [];
 const maxPlayersPerTeam = 10;
-const teams = [
-  {name:"Falcon Force", captain:"Captain Falcon", budget:100, players:6, code:"A"},
-  {name:"Night Wolves", captain:"Captain Nova", budget:100, players:5, code:"B"},
-  {name:"Titan Core", captain:"Captain Rex", budget:100, players:7, code:"C"},
-  {name:"Void Raiders", captain:"Captain Zen", budget:100, players:6, code:"D"},
-  {name:"Storm Unit", captain:"Captain Kai", budget:100, players:5, code:"E"},
-  {name:"Iron Legion", captain:"Captain Ash", budget:100, players:6, code:"F"}
-];
-const initialTeams = teams.map(t => ({...t}));
+const teams = [];
+const initialTeams = [];
 
-let currentIndex = 0;
-let currentPrice = players[0].base;
+let currentIndex = -1;
+let currentPrice = 0;
 let highestTeam = null;
 let seconds = 20;
 let interval = null;
-let soldCount = 24;
-let round = 25;
-let auctionOpen = true;
+let soldCount = 0;
+let round = 1;
+let auctionOpen = false;
 
 const $ = id => document.getElementById(id);
-function initials(name){return name.replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase()}
+function initials(name){return String(name || "").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase() || "—"}
 
 function renderTeams(){
-  $("teams").innerHTML = teams.map(t => {
-    const slots = Math.max(0,maxPlayersPerTeam - t.players);
-    const pct = Math.min(100,(t.players/maxPlayersPerTeam)*100);
+  $("teams").innerHTML = teams.length ? teams.map(t => {
+    const count = Number(t.players || 0);
+    const slots = Math.max(0,maxPlayersPerTeam-count);
+    const pct = Math.min(100,(count/maxPlayersPerTeam)*100);
     return `
     <div class="team">
-      <div class="team-top"><div class="team-icon">${t.code}</div><strong>${t.budget}</strong></div>
-      <div class="team-name">${t.name}</div>
-      <div class="team-meta">${t.players}/${maxPlayersPerTeam} players • ${slots} slots left<br>${t.captain}</div>
+      <div class="team-top"><div class="team-icon">${t.code || initials(t.name)}</div><strong>${t.budget || 0}</strong></div>
+      <div class="team-name">${t.name || "Unnamed Team"}</div>
+      <div class="team-meta">${count}/${maxPlayersPerTeam} players • ${slots} slots left<br>${t.captain || "No captain"}</div>
       <div class="slotbar"><span style="width:${pct}%"></span></div>
     </div>`;
-  }).join("");
+  }).join("") : '<div class="empty-state">No teams added yet.</div>';
+  if($("captainCount")) $("captainCount").textContent = teams.length;
 }
-
 
 function renderPlayers(filter=""){
   const q = filter.trim().toLowerCase();
   const rows = players.map((p,i)=>({p,i})).filter(({p})=>
-    !q || p.name.toLowerCase().includes(q) || p.division.toLowerCase().includes(q) || p.status.toLowerCase().includes(q)
+    !q || String(p.name||"").toLowerCase().includes(q) ||
+    String(p.division||"").toLowerCase().includes(q) ||
+    String(p.status||"").toLowerCase().includes(q)
   );
-  $("playersList").innerHTML = rows.map(({p,i})=>`
+  $("playersList").innerHTML = rows.length ? rows.map(({p,i})=>`
     <div class="player-row">
-      <div><div class="name">${p.name}</div><small>Rank #${p.rank} • ${p.division} Division</small></div>
-      <div><div class="name">${p.winPct}%</div><small>Win %</small></div>
-      <div><div class="name">${p.goals}</div><small>Goals</small></div>
-      <div><span class="status-chip ${p.status}">${p.status.toUpperCase()}</span></div>
+      <div><div class="name">${p.name}</div><small>Rank #${p.rank || 0} • ${p.division || "Unranked"} Division</small></div>
+      <div><div class="name">${p.winPct || 0}%</div><small>Win %</small></div>
+      <div><div class="name">${p.goals || 0}</div><small>Goals</small></div>
+      <div><span class="status-chip ${p.status || "available"}">${String(p.status || "available").toUpperCase()}</span></div>
       <button class="load-mini" data-load-player="${i}" ${p.status==="sold"?"disabled":""}>Load</button>
-    </div>`).join("");
+    </div>`).join("") : '<div class="empty-state">No players added yet.</div>';
   $("playerCountLabel").textContent = `${players.length} registered players • ${rows.length} shown`;
+  if($("totalPlayerCount")) $("totalPlayerCount").textContent = players.length;
+  $("remainingCount").textContent = Math.max(0, players.length - soldCount);
   document.querySelectorAll('[data-load-player]').forEach(btn=>{
     btn.addEventListener('click',()=>{
       if($("role").value!=="admin"){ toast("Switch to Admin mode to load players"); return; }
@@ -769,15 +762,17 @@ function renderPlayers(filter=""){
 }
 
 function renderQueue(){
-  $("queue").innerHTML = players.map((p,i)=>`
+  $("queue").innerHTML = players.length ? players.map((p,i)=>`
     <div class="queue-item">
-      <div><strong>${p.name}</strong><br><span>${p.division} Division • ${p.winPct}% wins • Perf ${p.perf}</span></div>
-      <span>${i===currentIndex ? "CURRENT" : "Base "+p.base}</span>
-    </div>`).join("");
+      <div><strong>${p.name}</strong><br><span>${p.division || "Unranked"} Division • ${p.winPct || 0}% wins • Perf ${p.perf || 0}</span></div>
+      <span>${i===currentIndex ? "CURRENT" : "Base "+(p.base || 0)}</span>
+    </div>`).join("") : '<div class="empty-state">No players in the queue.</div>';
 }
 
 function renderForm(form){
-  $("recentForm").innerHTML = form.map(v => `<div class="form-chip ${v==="W"?"w":"l"}">${v}</div>`).join("");
+  $("recentForm").innerHTML = Array.isArray(form) && form.length
+    ? form.map(v => `<div class="form-chip ${v==="W"?"w":"l"}">${v}</div>`).join("")
+    : '<span style="color:var(--muted);font-size:11px">No form data</span>';
 }
 
 function addFeed(text){
@@ -787,46 +782,68 @@ function addFeed(text){
   $("feed").prepend(div);
 }
 
+function showNoPlayer(){
+  currentIndex = -1;
+  currentPrice = 0;
+  highestTeam = null;
+  auctionOpen = false;
+  $("avatar").textContent = "—";
+  $("playerName").textContent = "No Player";
+  $("division").textContent = "Unassigned";
+  $("bidPlayer").textContent = "No Player";
+  $("playerMeta").textContent = "Add a player to begin the auction.";
+  ["basePrice","currentPrice","performance","matches","wins","losses","goals","mvp","perfText"].forEach(id=>$(id).textContent="0");
+  $("winPct").textContent = "0%";
+  $("perfBar").style.width = "0%";
+  $("highestBidder").textContent = "No bids yet";
+  $("nextBid").textContent = "0";
+  $("timer").textContent = "00:00";
+  $("auctionStatus").textContent = "● Waiting for players";
+  renderForm([]);
+}
+
 function loadPlayer(index){
+  const p = players[Number(index)];
+  if(!p){ showNoPlayer(); syncRole(); return; }
   currentIndex = Number(index);
-  const p = players[currentIndex];
-  currentPrice = p.base;
+  currentPrice = Number(p.base || 0);
   highestTeam = null;
   auctionOpen = true;
   seconds = Number($("timeInput").value || 20);
 
   $("avatar").textContent = initials(p.name);
   $("playerName").textContent = p.name;
-  $("division").textContent = p.division + " Division";
+  $("division").textContent = (p.division || "Unranked") + " Division";
   $("bidPlayer").textContent = p.name;
-  $("playerMeta").textContent = `Rank #${p.rank} • Clan performance profile`;
-  $("basePrice").textContent = p.base;
-  $("currentPrice").textContent = p.base;
-  $("performance").textContent = p.perf;
-  $("matches").textContent = p.matches;
-  $("wins").textContent = p.wins;
-  $("losses").textContent = p.losses;
-  $("goals").textContent = p.goals;
-  $("mvp").textContent = p.mvp;
-  $("winPct").textContent = p.winPct + "%";
-  $("perfText").textContent = p.perf;
-  $("perfBar").style.width = p.perf + "%";
-  renderForm(p.form);
+  $("playerMeta").textContent = `Rank #${p.rank || 0} • Clan performance profile`;
+  $("basePrice").textContent = p.base || 0;
+  $("currentPrice").textContent = p.base || 0;
+  $("performance").textContent = p.perf || 0;
+  $("matches").textContent = p.matches || 0;
+  $("wins").textContent = p.wins || 0;
+  $("losses").textContent = p.losses || 0;
+  $("goals").textContent = p.goals || 0;
+  $("mvp").textContent = p.mvp || 0;
+  $("winPct").textContent = (p.winPct || 0) + "%";
+  $("perfText").textContent = p.perf || 0;
+  $("perfBar").style.width = (p.perf || 0) + "%";
+  renderForm(p.form || []);
 
   $("highestBidder").textContent = "No bids yet";
-  $("nextBid").textContent = p.base;
+  $("nextBid").textContent = p.base || 0;
   $("timer").textContent = `00:${String(seconds).padStart(2,"0")}`;
   $("auctionStatus").textContent = "● Open for bidding";
   $("round").textContent = round;
   syncRole();
   renderQueue();
-  addFeed(`<strong>Admin</strong> called ${p.name} at base price ${p.base}`);
+  addFeed(`<strong>Admin</strong> called ${p.name} at base price ${p.base || 0}`);
 }
 
 function selectedCaptainIndex(){
   const role = $("role").value;
   if(!role.startsWith("captain-")) return null;
-  return Number(role.split("-")[1]);
+  const index = Number(role.split("-")[1]);
+  return teams[index] ? index : null;
 }
 
 function syncRole(){
@@ -836,24 +853,25 @@ function syncRole(){
 
   if(captainIndex !== null){
     const team = teams[captainIndex];
-    $("bidBtn").disabled = !auctionOpen;
-    $("bidBtn").textContent = auctionOpen ? `Place Bid ${highestTeam ? currentPrice+1 : currentPrice}` : "Auction closed";
-    $("roleNotice").textContent = `${team.captain} • ${team.name} • ${Math.max(0,maxPlayersPerTeam-team.players)} squad slots remaining`;
-    $("budget").textContent = team.budget;
+    $("bidBtn").disabled = !auctionOpen || currentIndex < 0;
+    $("bidBtn").textContent = auctionOpen && currentIndex >= 0 ? `Place Bid ${highestTeam ? currentPrice+1 : currentPrice}` : "Auction closed";
+    $("roleNotice").textContent = `${team.captain || "Captain"} • ${team.name || "Team"} • ${Math.max(0,maxPlayersPerTeam-(team.players||0))} squad slots remaining`;
+    $("budget").textContent = team.budget || 0;
   } else if(role==="admin"){
     $("bidBtn").disabled = true;
     $("bidBtn").textContent = "Admin cannot bid";
-    $("roleNotice").textContent = "Admin mode: change players, control the timer and finalize the round.";
+    $("roleNotice").textContent = players.length ? "Admin mode: select a player and control the auction." : "Admin mode: no players or teams have been added yet.";
     $("budget").textContent = "—";
   } else {
     $("bidBtn").disabled = true;
     $("bidBtn").textContent = "Captain access required";
-    $("roleNotice").textContent = "Viewer mode: you can watch the auction live.";
+    $("roleNotice").textContent = teams.length ? "Viewer mode: you can watch the auction live." : "Viewer mode: waiting for teams and players to be added.";
     $("budget").textContent = "—";
   }
 }
 
 function startTimer(){
+  if(currentIndex < 0 || !players[currentIndex]){ toast("Add and load a player first"); return; }
   clearInterval(interval);
   seconds = Number($("timeInput").value || 20);
   auctionOpen = true;
@@ -864,7 +882,6 @@ function startTimer(){
     seconds--;
     $("timer").textContent = `00:${String(Math.max(0,seconds)).padStart(2,"0")}`;
     $("timer").style.color = seconds <= 5 ? "#ff8093" : "";
-
     if(seconds <= 0){
       clearInterval(interval);
       auctionOpen = false;
@@ -880,55 +897,42 @@ function startTimer(){
 }
 
 function bid(){
+  if(currentIndex < 0 || !players[currentIndex]) return;
   const captainIndex = selectedCaptainIndex();
   if(captainIndex === null || !auctionOpen) return;
-
   const team = teams[captainIndex];
   const bidValue = highestTeam ? currentPrice + 1 : currentPrice;
-  const slotsLeftAfter = Math.max(0,maxPlayersPerTeam-team.players-1);
+  const count = Number(team.players || 0);
+  const slotsLeftAfter = Math.max(0,maxPlayersPerTeam-count-1);
   const reserveNeeded = slotsLeftAfter;
 
-  if(team.players >= maxPlayersPerTeam){
-    toast(`${team.name} squad is already full`);
-    return;
-  }
-
-  if(team.budget - bidValue < reserveNeeded){
-    toast(`Bid blocked — reserve at least ${reserveNeeded} for remaining slots`);
-    return;
-  }
-
-  if(highestTeam === team){
-    toast(`${team.name} already has the highest bid`);
-    return;
-  }
+  if(count >= maxPlayersPerTeam){ toast(`${team.name} squad is already full`); return; }
+  if((Number(team.budget || 0) - bidValue) < reserveNeeded){ toast(`Bid blocked — reserve at least ${reserveNeeded} for remaining slots`); return; }
+  if(highestTeam === team){ toast(`${team.name} already has the highest bid`); return; }
 
   currentPrice = bidValue;
   highestTeam = team;
   $("currentPrice").textContent = currentPrice;
   $("nextBid").textContent = currentPrice + 1;
-  $("highestBidder").textContent = `${team.captain} · ${team.name}`;
+  $("highestBidder").textContent = `${team.captain || "Captain"} · ${team.name}`;
   $("bidBtn").textContent = `Place Bid ${currentPrice + 1}`;
-  addFeed(`<strong>${team.captain}</strong> bid ${currentPrice} for ${players[currentIndex].name}`);
+  addFeed(`<strong>${team.captain || "Captain"}</strong> bid ${currentPrice} for ${players[currentIndex].name}`);
 }
 
 function finalizeSold(){
+  if(currentIndex < 0 || !players[currentIndex]){ toast("No player loaded"); return; }
   clearInterval(interval);
   auctionOpen = false;
+  if(!highestTeam){ toast("Cannot mark sold — no highest bidder"); return; }
 
-  if(!highestTeam){
-    toast("Cannot mark sold — no highest bidder");
-    return;
-  }
-
-  highestTeam.budget -= currentPrice;
-  highestTeam.players += 1;
+  highestTeam.budget = Number(highestTeam.budget || 0) - currentPrice;
+  highestTeam.players = Number(highestTeam.players || 0) + 1;
   players[currentIndex].status = "sold";
   soldCount++;
   round++;
 
   $("soldCount").textContent = soldCount;
-  $("remainingCount").textContent = Math.max(0,60-soldCount);
+  $("remainingCount").textContent = Math.max(0,players.length-soldCount);
   $("auctionStatus").textContent = "● SOLD";
   $("soldPlayer").textContent = players[currentIndex].name;
   $("soldTeam").textContent = highestTeam.name;
@@ -936,13 +940,11 @@ function finalizeSold(){
   $("soldModal").classList.add("show");
 
   addFeed(`<strong>${players[currentIndex].name}</strong> SOLD to <strong>${highestTeam.name}</strong> for ${currentPrice}`);
-  renderTeams();
-  renderPlayers($("playerSearch").value);
-  renderQueue();
-  syncRole();
+  renderTeams(); renderPlayers($("playerSearch").value); renderQueue(); syncRole();
 }
 
 function markUnsold(){
+  if(currentIndex < 0 || !players[currentIndex]){ toast("No player loaded"); return; }
   clearInterval(interval);
   auctionOpen = false;
   $("auctionStatus").textContent = "● UNSOLD";
@@ -954,29 +956,16 @@ function markUnsold(){
   toast(players[currentIndex].name + " marked unsold");
 }
 
-
 function resetAuction(){
   if($("role").value!=="admin"){ toast("Admin access required"); return; }
-  if(!confirm("Reset the entire auction demo? This will clear sold/unsold statuses, bids and restore team budgets.")) return;
   clearInterval(interval);
-  teams.forEach((t,i)=>Object.assign(t, initialTeams[i]));
-  players.forEach(p=>p.status="available");
-  soldCount = 0;
-  round = 1;
-  currentIndex = 0;
-  currentPrice = players[0].base;
-  highestTeam = null;
-  auctionOpen = true;
-  seconds = Number($("timeInput").value || 20);
-  $("soldCount").textContent = soldCount;
+  soldCount = 0; round = 1; currentIndex = -1; currentPrice = 0;
+  highestTeam = null; auctionOpen = false;
+  $("soldCount").textContent = "0";
   $("remainingCount").textContent = players.length;
   $("feed").innerHTML = "";
   $("soldModal").classList.remove("show");
-  $("playerSelect").value = 0;
-  renderTeams();
-  renderPlayers($("playerSearch").value);
-  loadPlayer(0);
-  addFeed("<strong>Auction reset</strong> by Admin. All players are available again.");
+  renderTeams(); renderPlayers($("playerSearch").value); renderQueue(); showNoPlayer(); syncRole();
   toast("Auction reset complete");
 }
 
@@ -987,9 +976,10 @@ function toast(msg){
 }
 
 players.forEach((p,i)=>{
+  p.status = p.status || "available";
   const opt = document.createElement("option");
   opt.value = i;
-  opt.textContent = `${p.name} — ${p.division} — Base ${p.base}`;
+  opt.textContent = `${p.name} — ${p.division || "Unranked"} — Base ${p.base || 0}`;
   $("playerSelect").appendChild(opt);
 });
 
@@ -1006,9 +996,9 @@ $("playerSearch").addEventListener("input",e=>renderPlayers(e.target.value));
 renderTeams();
 renderPlayers();
 renderQueue();
-renderForm(players[0].form);
+showNoPlayer();
 syncRole();
-addFeed("<strong>Auction system</strong> ready. Admin can select the next player.");
+$("feed").innerHTML = '<div class="empty-state">No auction activity yet.</div>';
 </script>
 </body>
 </html>

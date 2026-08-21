@@ -173,6 +173,18 @@
     .site-nav .home-link{border:1px solid rgba(92,255,114,.28);color:#5cff72}
     .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     @media(max-width:900px){.topbar{align-items:flex-start!important;flex-wrap:wrap}.site-nav{order:3;width:100%;margin-left:0}.site-nav a{padding:9px 10px}}
+
+    .empty-state{
+      grid-column:1/-1;
+      padding:28px 18px;
+      border:1px dashed var(--line);
+      border-radius:16px;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      text-align:center;
+      font-size:12px;
+    }
+
 </style>
 </head>
 <body>
@@ -196,10 +208,10 @@
     <h2>Follow every team.<br>Track every performance.</h2>
     <p>Everything spectators need in one public page — squads, fixtures, standings, player performance and season awards.</p>
     <div class="hero-stats">
-      <div class="mini"><strong>6</strong><span>Teams</span></div>
-      <div class="mini"><strong>60</strong><span>Players</span></div>
-      <div class="mini"><strong>15</strong><span>League Matches</span></div>
-      <div class="mini"><strong>Live</strong><span>Stats</span></div>
+      <div class="mini"><strong>0</strong><span>Teams</span></div>
+      <div class="mini"><strong>0</strong><span>Players</span></div>
+      <div class="mini"><strong>0</strong><span>League Matches</span></div>
+      <div class="mini"><strong>0</strong><span>Stats</span></div>
     </div>
   </section>
 
@@ -211,22 +223,7 @@
   <section class="section" id="fixtures">
     <div class="section-head"><div><div class="eyebrow">Schedule</div><h3>Fixtures & Results</h3></div><span>Latest tournament matches</span></div>
     <div class="fixtures">
-      <div class="fixture live">
-        <div class="fixture-top"><span>Round 3 • LIVE</span><span>18:30</span></div>
-        <div class="match"><div class="left"><div class="club">Falcon Force</div></div><div class="score">2 - 1</div><div class="right"><div class="club">Night Wolves</div></div></div>
-      </div>
-      <div class="fixture">
-        <div class="fixture-top"><span>Round 3</span><span>20:00</span></div>
-        <div class="match"><div class="left"><div class="club">Titan Core</div></div><div class="score">vs</div><div class="right"><div class="club">Void Raiders</div></div></div>
-      </div>
-      <div class="fixture">
-        <div class="fixture-top"><span>Round 3</span><span>21:30</span></div>
-        <div class="match"><div class="left"><div class="club">Storm Unit</div></div><div class="score">vs</div><div class="right"><div class="club">Iron Legion</div></div></div>
-      </div>
-      <div class="fixture">
-        <div class="fixture-top"><span>Round 2 • FT</span><span>Completed</span></div>
-        <div class="match"><div class="left"><div class="club">Falcon Force</div></div><div class="score">3 - 2</div><div class="right"><div class="club">Titan Core</div></div></div>
-      </div>
+      <div class="empty-state">No fixtures added yet.</div>
     </div>
   </section>
 
@@ -238,12 +235,7 @@
           <tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Form</th></tr>
         </thead>
         <tbody>
-          <tr><td><span class="rank">1</span> Falcon Force</td><td>3</td><td>3</td><td>0</td><td>0</td><td>8</td><td>4</td><td>+4</td><td><strong>9</strong></td><td><div class="form"><span class="f fw">W</span><span class="f fw">W</span><span class="f fw">W</span></div></td></tr>
-          <tr><td><span class="rank">2</span> Titan Core</td><td>3</td><td>2</td><td>0</td><td>1</td><td>7</td><td>5</td><td>+2</td><td><strong>6</strong></td><td><div class="form"><span class="f fw">W</span><span class="f fw">W</span><span class="f fl">L</span></div></td></tr>
-          <tr><td><span class="rank">3</span> Storm Unit</td><td>3</td><td>1</td><td>1</td><td>1</td><td>5</td><td>4</td><td>+1</td><td><strong>4</strong></td><td><div class="form"><span class="f fd">D</span><span class="f fw">W</span><span class="f fl">L</span></div></td></tr>
-          <tr><td><span class="rank">4</span> Night Wolves</td><td>3</td><td>1</td><td>0</td><td>2</td><td>4</td><td>5</td><td>-1</td><td><strong>3</strong></td><td><div class="form"><span class="f fw">W</span><span class="f fl">L</span><span class="f fl">L</span></div></td></tr>
-          <tr><td><span class="rank">5</span> Void Raiders</td><td>3</td><td>0</td><td>2</td><td>1</td><td>3</td><td>5</td><td>-2</td><td><strong>2</strong></td><td><div class="form"><span class="f fd">D</span><span class="f fd">D</span><span class="f fl">L</span></div></td></tr>
-          <tr><td><span class="rank">6</span> Iron Legion</td><td>3</td><td>0</td><td>1</td><td>2</td><td>2</td><td>6</td><td>-4</td><td><strong>1</strong></td><td><div class="form"><span class="f fl">L</span><span class="f fd">D</span><span class="f fl">L</span></div></td></tr>
+          <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No teams or results added yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -257,9 +249,9 @@
       <div>
         <div class="eyebrow">Leaderboards</div>
         <div class="leaders">
-          <div class="leader"><strong>Top Scorer</strong><span>Viper • 7 goals</span></div>
-          <div class="leader"><strong>Most MVP</strong><span>ShadowX • 3 MVP</span></div>
-          <div class="leader"><strong>Best Win %</strong><span>Viper • 75%</span></div>
+          <div class="leader"><strong>Top Scorer</strong><span>No data yet</span></div>
+          <div class="leader"><strong>Most MVP</strong><span>No data yet</span></div>
+          <div class="leader"><strong>Best Win %</strong><span>No data yet</span></div>
         </div>
       </div>
     </div>
@@ -271,23 +263,23 @@
       <div class="award">
         <div class="award-icon">🥇</div>
         <div class="label">Golden Boot</div>
-        <h4>Viper</h4>
-        <p>Falcon Force • Tournament top scorer</p>
-        <strong>7 Goals</strong>
+        <h4>No data yet</h4>
+        <p>Add players and completed matches to generate awards.</p>
+        <strong>0</strong>
       </div>
       <div class="award">
         <div class="award-icon">⭐</div>
         <div class="label">Golden Ball</div>
-        <h4>ShadowX</h4>
-        <p>Falcon Force • Best overall tournament player</p>
-        <strong>3 MVP • 6 Goals</strong>
+        <h4>No data yet</h4>
+        <p>Add players and completed matches to generate awards.</p>
+        <strong>0</strong>
       </div>
       <div class="award">
         <div class="award-icon">🧤</div>
         <div class="label">Golden Glove</div>
-        <h4>ZeroWall</h4>
-        <p>Titan Core • Best goalkeeper</p>
-        <strong>2 Clean Sheets</strong>
+        <h4>No data yet</h4>
+        <p>Add players and completed matches to generate awards.</p>
+        <strong>0</strong>
       </div>
     </div>
   </section>
@@ -297,79 +289,67 @@
   <div class="modal-card">
     <button class="close" id="closeModal">×</button>
     <div class="eyebrow">Team Profile</div>
-    <h2 id="modalTeamName">Falcon Force</h2>
+    <h2 id="modalTeamName">No Team</h2>
     <p id="modalCaptain" style="color:var(--muted);margin-top:-8px"></p>
     <div class="roster" id="roster"></div>
   </div>
 </div>
 
 <script>
-const teams = [
-  {name:"Falcon Force",captain:"Captain Falcon",code:"A"},
-  {name:"Night Wolves",captain:"Captain Nova",code:"B"},
-  {name:"Titan Core",captain:"Captain Rex",code:"C"},
-  {name:"Void Raiders",captain:"Captain Zen",code:"D"},
-  {name:"Storm Unit",captain:"Captain Kai",code:"E"},
-  {name:"Iron Legion",captain:"Captain Ash",code:"F"}
-];
+const teams = [];
+const rosterNames = [];
+const topPlayers = [];
 
-const rosterNames = [
-  ["ShadowX","Viper","FalconAce","Bolt","Raven","Aero","Maverick","Pulse","Jet","NovaFox"],
-  ["NovaKing","Lunar","Frost","Howl","Drift","Nightfall","WolfX","Moon","Ice","Echo"],
-  ["Titan","Atlas","Crush","Stone","Axel","Brute","Prime","Forge","ZeroWall","CoreX"],
-  ["RogueOne","Zero","Shade","Orbit","Cipher","Flux","Ghost","VoidX","Dark","Raid"],
-  ["Blaze","Thunder","Rain","Cyclone","Spark","Tempest","StormX","Flash","Cloud","Volt"],
-  ["Phantom","Steel","Rhino","Knight","Armor","Cannon","Blade","IronX","Tank","Legion"]
-];
+const initials = name => String(name || "").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase();
 
-const topPlayers = [
-  {name:"Viper",team:"Falcon Force",matches:3,wins:3,goals:7,mvp:2,win:100,division:"Elite"},
-  {name:"ShadowX",team:"Falcon Force",matches:3,wins:3,goals:6,mvp:3,win:100,division:"Diamond"},
-  {name:"Titan",team:"Titan Core",matches:3,wins:2,goals:5,mvp:2,win:67,division:"Platinum"},
-  {name:"Blaze",team:"Storm Unit",matches:3,wins:1,goals:4,mvp:1,win:33,division:"Gold"},
-  {name:"NovaKing",team:"Night Wolves",matches:3,wins:1,goals:4,mvp:1,win:33,division:"Platinum"},
-  {name:"Phantom",team:"Iron Legion",matches:3,wins:0,goals:3,mvp:1,win:0,division:"Diamond"}
-];
+const teamGrid = document.getElementById("teamGrid");
+const playerStats = document.getElementById("playerStats");
 
-const initials = name => name.replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase();
+teamGrid.innerHTML = teams.length
+  ? teams.map((t,i)=>`
+      <div class="team-card" data-team="${i}">
+        <div class="team-icon">${t.code || initials(t.name)}</div>
+        <strong>${t.name}</strong>
+        <span>${t.captain || "No captain"}</span>
+        <span>${(rosterNames[i] || []).length} Player Squad</span>
+      </div>
+    `).join("")
+  : '<div class="empty-state">No teams added yet.</div>';
 
-document.getElementById("teamGrid").innerHTML = teams.map((t,i)=>`
-  <div class="team-card" data-team="${i}">
-    <div class="team-icon">${t.code}</div>
-    <strong>${t.name}</strong>
-    <span>${t.captain}</span>
-    <span>10 Player Squad</span>
-  </div>
-`).join("");
-
-document.getElementById("playerStats").innerHTML = topPlayers.map(p=>`
-  <div class="player-row">
-    <div class="p-main">
-      <div class="p-avatar">${initials(p.name)}</div>
-      <div><strong>${p.name}</strong><span>${p.team} • ${p.division}</span></div>
-    </div>
-    <div class="pstat"><strong>${p.matches}</strong><span>Matches</span></div>
-    <div class="pstat"><strong>${p.wins}</strong><span>Wins</span></div>
-    <div class="pstat"><strong>${p.goals}</strong><span>Goals</span></div>
-    <div class="pstat"><strong>${p.mvp}</strong><span>MVP</span></div>
-    <div class="pstat"><strong>${p.win}%</strong><span>Win %</span></div>
-    <div class="pstat"><strong>${p.division}</strong><span>Division</span></div>
-  </div>
-`).join("");
+playerStats.innerHTML = topPlayers.length
+  ? topPlayers.map(p=>`
+      <div class="player-row">
+        <div class="p-main">
+          <div class="p-avatar">${initials(p.name)}</div>
+          <div><strong>${p.name}</strong><span>${p.team || "No team"} • ${p.division || "Unranked"}</span></div>
+        </div>
+        <div class="pstat"><strong>${p.matches || 0}</strong><span>Matches</span></div>
+        <div class="pstat"><strong>${p.wins || 0}</strong><span>Wins</span></div>
+        <div class="pstat"><strong>${p.goals || 0}</strong><span>Goals</span></div>
+        <div class="pstat"><strong>${p.mvp || 0}</strong><span>MVP</span></div>
+        <div class="pstat"><strong>${p.win || 0}%</strong><span>Win %</span></div>
+        <div class="pstat"><strong>${p.division || "—"}</strong><span>Division</span></div>
+      </div>
+    `).join("")
+  : '<div class="empty-state">No players added yet.</div>';
 
 function openTeam(i){
   const t = teams[i];
-  document.getElementById("modalTeamName").textContent = t.name;
-  document.getElementById("modalCaptain").textContent = t.captain;
-  document.getElementById("roster").innerHTML = rosterNames[i].map((name,idx)=>`
-    <div class="roster-row">
-      <strong>${idx+1}. ${name}</strong>
-      <span>Matches ${Math.max(1,3-(idx%2))}</span>
-      <span>Goals ${Math.max(0,5-(idx%5))}</span>
-      <span>MVP ${idx%3}</span>
-      <span>${["Gold","Platinum","Diamond","Elite"][idx%4]}</span>
-    </div>
-  `).join("");
+  if(!t) return;
+  document.getElementById("modalTeamName").textContent = t.name || "Unnamed Team";
+  document.getElementById("modalCaptain").textContent = t.captain || "No captain assigned";
+  const roster = rosterNames[i] || [];
+  document.getElementById("roster").innerHTML = roster.length
+    ? roster.map((name,idx)=>`
+        <div class="roster-row">
+          <strong>${idx+1}. ${name}</strong>
+          <span>Matches 0</span>
+          <span>Goals 0</span>
+          <span>MVP 0</span>
+          <span>Unranked</span>
+        </div>
+      `).join("")
+    : '<div class="empty-state">No players added to this team yet.</div>';
   document.getElementById("teamModal").classList.add("show");
 }
 
