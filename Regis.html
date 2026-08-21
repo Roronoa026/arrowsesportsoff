@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Registration</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#0d1117;
+color:white;
+}
+
+header{
+background:#111827;
+padding:20px;
+text-align:center;
+font-size:32px;
+font-weight:bold;
+color:#39FF14;
+box-shadow:0 0 10px #39FF14;
+}
+
+.container{
+width:90%;
+max-width:800px;
+margin:30px auto;
+background:#161b22;
+padding:30px;
+border-radius:15px;
+box-shadow:0 0 20px rgba(57,255,20,.2);
+}
+
+.container h2{
+text-align:center;
+margin-bottom:20px;
+color:#39FF14;
+}
+
+label{
+display:block;
+margin-top:15px;
+margin-bottom:5px;
+font-weight:bold;
+}
+
+input,select{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+background:#1f2937;
+color:white;
+font-size:15px;
+}
+
+input:focus,select:focus{
+outline:none;
+box-shadow:0 0 10px #39FF14;
+}
+
+button{
+width:100%;
+margin-top:25px;
+padding:15px;
+background:#39FF14;
+color:black;
+font-size:18px;
+font-weight:bold;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2fd312;
+}
+
+footer{
+margin-top:40px;
+padding:20px;
+background:#111827;
+text-align:center;
+color:#aaa;
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260821-relational2"></script>
+</head>
+
+<body>
+
+<header>
+ARROWS ESPORTS PLAYER REGISTRATION
+</header>
+
+
+
+<div class="container">
+
+<nav>
+
+<a href="Playerdetails.html">Back</a>
+
+<a href="index.html">Home</a>
+</nav>
+
+<h2>Register Player</h2>
+
+<form id="playerForm">
+
+<label>Player Type</label>
+
+<select id="type">
+<option>New Player</option>
+<option>Clan Player</option>
+</select>
+
+<label>Player Name</label>
+<input type="text" id="name" required>
+
+<label>Player Photo</label>
+<input type="file" id="photo">
+
+<label>eFootball ID</label>
+<input type="text" id="gameid" required>
+
+<label>Mobile Number</label>
+<input type="tel" id="mobile">
+
+<label>Country</label>
+<input type="text" id="country">
+
+<label>Clan Name</label>
+<input type="text" id="clan">
+
+<label>Playing Style</label>
+
+<select id="style">
+<option>Possession Game</option>
+<option>Quick Counter</option>
+<option>Long Ball Counter</option>
+<option>Out Wide</option>
+</select>
+
+<button type="submit">
+REGISTER PLAYER
+</button>
+
+</form>
+
+</div>
+
+<footer>
+
+© 2026 Arrows Esports Tournament
+
+</footer>
+
+<script>
+
+document.getElementById("playerForm").addEventListener("submit",function(e){
+
+e.preventDefault();
+
+let player={
+
+type:document.getElementById("type").value,
+
+name:document.getElementById("name").value,
+
+gameid:document.getElementById("gameid").value,
+
+mobile:document.getElementById("mobile").value,
+
+country:document.getElementById("country").value,
+
+clan:document.getElementById("clan").value,
+
+position:document.getElementById("position").value,
+
+style:document.getElementById("style").value,
+
+overall:document.getElementById("overall").value
+
+};
+
+let players=JSON.parse(localStorage.getItem("players")) || [];
+
+players.push(player);
+
+localStorage.setItem("players",JSON.stringify(players));
+
+alert("Player Registered Successfully!");
+
+document.getElementById("playerForm").reset();
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arrows eSports Login</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top, rgba(70,255,120,.12), transparent 35%),
+        #0b0f0d;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+    }
+
+    .auth-card {
+      width: min(420px, 100%);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      backdrop-filter: blur(18px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    .accent {
+      color: #59f77e;
+    }
+
+    .sub {
+      color: #aeb7b1;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .tab {
+      border: 0;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: #161b18;
+      color: white;
+    }
+
+    .tab.active {
+      background: #59f77e;
+      color: #071009;
+      font-weight: bold;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #d8ded9;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #111614;
+      color: white;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #59f77e;
+      box-shadow: 0 0 0 3px rgba(89,247,126,.12);
+    }
+
+    .primary {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #59f77e;
+      color: #071009;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-top: 16px;
+      min-height: 22px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #ff8585;
+    }
+
+    .success {
+      color: #65f58a;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .guest-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #bfc8c1;
+      text-decoration: none;
+    }
+
+    .guest-link:hover {
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="auth-card">
+
+    <h1>
+      ARROWS <span class="accent">ESPORTS</span>
+    </h1>
+
+    <p class="sub">
+      Login to post, comment and join the community.
+    </p>
+
+    <div class="tabs">
+      <button
+        id="loginTab"
+        class="tab active"
+        onclick="showLogin()"
+      >
+        Login
+      </button>
+
+      <button
+        id="registerTab"
+        class="tab"
+        onclick="showRegister()"
+      >
+        Create Account
+      </button>
+    </div>
+
+    <!-- LOGIN -->
+
+    <div id="loginPanel">
+
+      <div class="field">
+        <label>Username</label>
+        <input
+          id="loginUsername"
+          type="text"
+          placeholder="Enter username"
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button class="primary" onclick="login()">
+        Login
+      </button>
+
+    </div>
+
+    <!-- REGISTER -->
+
+    <div id="registerPanel" class="hidden">
+
+      <div class="field">
+        <label>Choose username</label>
+        <input
+          id="registerUsername"
+          type="text"
+          placeholder="3–20 characters"
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input
+          id="registerPassword"
+          type="password"
+          placeholder="Minimum 8 characters"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="field">
+        <label>Confirm password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          placeholder="Repeat password"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button class="primary" onclick="register()">
+        Create Account
+      </button>
+
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <a class="guest-link" href="community-posts-auth.html">
+      Continue as guest
+    </a>
+
+  </div>
+
+  <script>
+
+    // REPLACE THESE TWO VALUES
+    const SUPABASE_URL = "https://fvcavhcpprzxcbnixtta.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_5Ec83iiQuqs52Bg2z1z9jg_ksAgh626";
+
+    const sb = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    function setMessage(text, type = "") {
+      const el = document.getElementById("message");
+
+      el.textContent = text;
+      el.className = "message " + type;
+    }
+
+    function showLogin() {
+      document
+        .getElementById("loginPanel")
+        .classList.remove("hidden");
+
+      document
+        .getElementById("registerPanel")
+        .classList.add("hidden");
+
+      document
+        .getElementById("loginTab")
+        .classList.add("active");
+
+      document
+        .getElementById("registerTab")
+        .classList.remove("active");
+
+      setMessage("");
+    }
+
+    function showRegister() {
+      document
+        .getElementById("registerPanel")
+        .classList.remove("hidden");
+
+      document
+        .getElementById("loginPanel")
+        .classList.add("hidden");
+
+      document
+        .getElementById("registerTab")
+        .classList.add("active");
+
+      document
+        .getElementById("loginTab")
+        .classList.remove("active");
+
+      setMessage("");
+    }
+
+    function normalizeUsername(value) {
+      return value
+        .trim()
+        .toLowerCase();
+    }
+
+    function usernameToInternalEmail(username) {
+      return `${username}@users.arrows.local`;
+    }
+
+    async function login() {
+
+      const username =
+        normalizeUsername(
+          document
+            .getElementById("loginUsername")
+            .value
+        );
+
+      const password =
+        document
+          .getElementById("loginPassword")
+          .value;
+
+      if (!username || !password) {
+        setMessage(
+          "Enter your username and password.",
+          "error"
+        );
+        return;
+      }
+
+      const internalEmail =
+        usernameToInternalEmail(username);
+
+      setMessage("Logging in...");
+
+      const { data, error } =
+        await sb.auth.signInWithPassword({
+          email: internalEmail,
+          password: password
+        });
+
+      if (error) {
+        setMessage(
+          "Incorrect username or password.",
+          "error"
+        );
+        return;
+      }
+
+      setMessage(
+        "Login successful.",
+        "success"
+      );
+
+      setTimeout(() => {
+        window.location.href =
+          "community-posts-auth.html";
+      }, 500);
+    }
+
+    async function register() {
+
+      const username =
+        normalizeUsername(
+          document
+            .getElementById("registerUsername")
+            .value
+        );
+
+      const password =
+        document
+          .getElementById("registerPassword")
+          .value;
+
+      const confirmPassword =
+        document
+          .getElementById("confirmPassword")
+          .value;
+
+      if (
+        !/^[a-z0-9_]{3,20}$/.test(username)
+      ) {
+        setMessage(
+          "Username must be 3–20 characters and contain only letters, numbers or underscores.",
+          "error"
+        );
+        return;
+      }
+
+      if (password.length < 8) {
+        setMessage(
+          "Password must be at least 8 characters.",
+          "error"
+        );
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setMessage(
+          "Passwords do not match.",
+          "error"
+        );
+        return;
+      }
+
+      const internalEmail =
+        usernameToInternalEmail(username);
+
+      setMessage("Creating account...");
+
+      const { data, error } =
+        await sb.auth.signUp({
+          email: internalEmail,
+          password: password
+        });
+
+      if (error) {
+        setMessage(
+          error.message,
+          "error"
+        );
+        return;
+      }
+
+      const user = data.user;
+
+      if (!user) {
+        setMessage(
+          "Account could not be created.",
+          "error"
+        );
+        return;
+      }
+
+      const { error: profileError } =
+        await sb
+          .from("profiles")
+          .insert({
+            id: user.id,
+            username: username
+          });
+
+      if (profileError) {
+
+        setMessage(
+          profileError.message,
+          "error"
+        );
+
+        return;
+      }
+
+      setMessage(
+        "Account created successfully.",
+        "success"
+      );
+
+      setTimeout(() => {
+        window.location.href =
+          "community-posts-auth.html";
+      }, 700);
+    }
+
+    // Open the registration tab when arriving from "Create Account" links.
+    if (window.location.hash === "#register") {
+      showRegister();
+    }
+
+  </script>
+
+</body>
+</html>

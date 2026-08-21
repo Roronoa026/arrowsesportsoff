@@ -1,4 +1,3 @@
-
 /* ARROWS ESPORTS - Supabase configuration */
 window.ARROWS_SUPABASE = {
   url: "https://fvcavhcpprzxcbnixtta.supabase.co",

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auction Tour | Arrows Esports</title>
+  <style>
+    :root{
+      --bg:#050806;
+      --panel:#0b110d;
+      --panel2:#0f1711;
+      --line:rgba(255,255,255,.09);
+      --text:#f7fbff;
+      --muted:#91a198;
+      --purple:#5cff72;
+      --blue:#00d94f;
+      --cyan:#5cff72;
+      --green:#5cff72;
+      --yellow:#ffd166;
+      --shadow:0 30px 90px rgba(0,0,0,.38);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 12% 5%,rgba(92,255,114,.22),transparent 28%),
+        radial-gradient(circle at 88% 10%,rgba(92,255,114,.10),transparent 24%),
+        linear-gradient(180deg,#050806 0%,#08110b 55%,#050806 100%);
+    }
+
+    body:before{
+      content:"";
+      position:fixed;inset:0;pointer-events:none;opacity:.2;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+      background-size:42px 42px;
+      mask-image:linear-gradient(to bottom,black,transparent 80%);
+    }
+
+    a{text-decoration:none;color:inherit}
+    .wrap{max-width:1380px;margin:0 auto;padding:28px}
+
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:13px 15px;border-radius:20px;border:1px solid var(--line);
+      background:rgba(7,14,25,.72);backdrop-filter:blur(18px);
+      box-shadow:0 20px 50px rgba(0,0,0,.22);
+      position:sticky;top:14px;z-index:20;
+    }
+
+    .brand{display:flex;align-items:center;gap:13px}
+    .logo{
+      width:50px;height:50px;border-radius:16px;display:grid;place-items:center;
+      font-weight:1000;letter-spacing:-.04em;
+      background:linear-gradient(135deg,var(--purple),#00d94f 52%,var(--cyan));
+      box-shadow:0 16px 40px rgba(0,217,79,.3);
+    }
+    .brand h1{margin:0;font-size:20px;letter-spacing:-.03em}
+    .brand p{margin:4px 0 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+
+    .status{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:9px 12px;border-radius:999px;
+      border:1px solid rgba(92,255,114,.17);
+      background:rgba(92,255,114,.08);
+      color:#8dff9d;font-size:11px;font-weight:900;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;background:var(--green);
+      box-shadow:0 0 0 5px rgba(92,255,114,.10);
+    }
+
+    .hero{
+      margin-top:22px;padding:48px 42px;border-radius:30px;position:relative;overflow:hidden;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(circle at 80% 20%,rgba(92,255,114,.09),transparent 30%),
+        linear-gradient(120deg,rgba(92,255,114,.18),rgba(0,217,79,.07) 45%,rgba(92,255,114,.045)),
+        rgba(255,255,255,.02);
+      box-shadow:var(--shadow);
+    }
+
+    .hero:before{
+      content:"AUCTION TOUR";
+      position:absolute;right:24px;top:14px;
+      font-size:92px;font-weight:1000;letter-spacing:.09em;
+      color:rgba(255,255,255,.026);white-space:nowrap;
+    }
+
+    .kicker{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:900;
+      color:#5cff72;margin-bottom:15px;
+    }
+
+    .hero h2{
+      margin:0;max-width:780px;font-size:58px;line-height:.96;letter-spacing:-.055em;
+      background:linear-gradient(90deg,#fff 0%,#eaffee 58%,#8dff9d 100%);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+    }
+
+    .hero p{
+      max-width:760px;margin:18px 0 0;color:var(--muted);line-height:1.7;font-size:15px
+    }
+
+    .quick-stats{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:28px
+    }
+    .mini{
+      min-width:120px;padding:13px 15px;border-radius:16px;
+      border:1px solid var(--line);background:rgba(255,255,255,.035)
+    }
+    .mini strong{display:block;font-size:22px}
+    .mini span{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+    .choice-grid{
+      display:grid;grid-template-columns:1.25fr .85fr;gap:18px;margin-top:20px
+    }
+
+    .portal{
+      min-height:420px;padding:28px;border-radius:26px;border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(15,29,49,.94),rgba(8,18,31,.97));
+      box-shadow:var(--shadow);position:relative;overflow:hidden;
+      transition:.24s ease;
+    }
+
+    .portal:hover{
+      transform:translateY(-4px);
+      border-color:rgba(92,255,114,.24);
+      box-shadow:0 34px 100px rgba(0,0,0,.45);
+    }
+
+    .portal.tournament{
+      background:
+        radial-gradient(circle at 85% 10%,rgba(92,255,114,.18),transparent 30%),
+        linear-gradient(180deg,rgba(15,29,49,.96),rgba(8,18,31,.97));
+    }
+
+    .portal.auction{
+      background:
+        radial-gradient(circle at 90% 8%,rgba(92,255,114,.13),transparent 30%),
+        linear-gradient(180deg,rgba(13,31,43,.96),rgba(7,18,28,.97));
+    }
+
+    .portal-icon{
+      width:58px;height:58px;border-radius:18px;display:grid;place-items:center;
+      font-size:24px;font-weight:1000;margin-bottom:24px;
+      border:1px solid rgba(255,255,255,.1);
+    }
+    .tournament .portal-icon{
+      background:linear-gradient(135deg,rgba(92,255,114,.5),rgba(0,217,79,.25))
+    }
+    .auction .portal-icon{
+      background:linear-gradient(135deg,rgba(92,255,114,.4),rgba(0,217,79,.18))
+    }
+
+    .portal .eyebrow{
+      font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#aebdd0;font-weight:900
+    }
+    .portal h3{
+      margin:7px 0 10px;font-size:32px;letter-spacing:-.04em
+    }
+    .portal>p{
+      margin:0;color:var(--muted);font-size:13px;line-height:1.65;max-width:600px
+    }
+
+    .features{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:23px
+    }
+    .feature{
+      padding:13px 14px;border-radius:14px;
+      border:1px solid var(--line);background:rgba(255,255,255,.027)
+    }
+    .feature strong{display:block;font-size:12px}
+    .feature span{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+
+    .portal-button{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-top:24px;padding:15px 17px;border-radius:15px;font-weight:900;
+      border:1px solid rgba(255,255,255,.08)
+    }
+    .tournament .portal-button{
+      background:linear-gradient(135deg,var(--purple),#00b943);
+      box-shadow:0 16px 36px rgba(0,217,79,.25)
+    }
+    .auction .portal-button{
+      background:linear-gradient(135deg,#00b943,var(--green));
+      box-shadow:0 16px 36px rgba(92,255,114,.18)
+    }
+
+    .arrow{font-size:22px}
+
+    .preview-section{
+      margin-top:20px;padding:24px;border-radius:24px;border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(14,27,46,.9),rgba(8,18,31,.94));
+      box-shadow:0 24px 70px rgba(0,0,0,.28)
+    }
+    .section-head{
+      display:flex;justify-content:space-between;align-items:end;gap:14px;margin-bottom:15px
+    }
+    .section-head h4{margin:4px 0 0;font-size:18px}
+    .section-head span{font-size:10px;color:var(--muted)}
+
+    .preview-grid{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:10px
+    }
+    .preview-card{
+      padding:15px;border-radius:16px;border:1px solid var(--line);
+      background:rgba(255,255,255,.025)
+    }
+    .preview-card strong{font-size:13px}
+    .preview-card p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+    .preview-icon{
+      width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+      background:rgba(92,255,114,.14);font-size:13px;margin-bottom:10px
+    }
+
+    .footer{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:22px 4px 8px;color:var(--muted);font-size:10px
+    }
+
+    @media(max-width:1000px){
+      .choice-grid{grid-template-columns:1fr}
+      .preview-grid{grid-template-columns:repeat(3,1fr)}
+    }
+
+    @media(max-width:680px){
+      .wrap{padding:14px}
+      .topbar{top:8px}
+      .hero{padding:30px 20px}
+      .hero h2{font-size:42px}
+      .hero:before{font-size:48px;right:10px}
+      .features{grid-template-columns:1fr}
+      .preview-grid{grid-template-columns:repeat(2,1fr)}
+      .footer{flex-direction:column;align-items:flex-start}
+    }
+  
+    /* ===== ARROWS SITE-WIDE NAV + VISUAL ALIGNMENT ===== */
+    .topbar{background:rgba(5,8,6,.84)!important;border-color:rgba(255,255,255,.08)!important}
+    .brand-logo{width:48px;height:48px;object-fit:cover;border-radius:12px;border:1px solid rgba(92,255,114,.24);box-shadow:0 0 24px rgba(92,255,114,.12)}
+    .site-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+    .site-nav a{padding:10px 12px;border-radius:999px;color:#dce8df;font-size:11px;font-weight:800;letter-spacing:.02em;transition:.2s}
+    .site-nav a:hover,.site-nav a.active{background:rgba(92,255,114,.10);color:#5cff72}
+    .site-nav .home-link{border:1px solid rgba(92,255,114,.28);color:#5cff72}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    @media(max-width:900px){.topbar{align-items:flex-start!important;flex-wrap:wrap}.site-nav{order:3;width:100%;margin-left:0}.site-nav a{padding:9px 10px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <a href="index.html" aria-label="Arrows Esports home"><img class="brand-logo" src="images/arrowslogo.jpeg" alt="Arrows Esports"></a>
+        <div>
+          <h1>AUCTION TOUR</h1>
+          <p>Arrows Tournament & Live Auction Gateway</p>
+        </div>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="home-link" href="index.html">Home</a>
+        <a href="Tournaments.html">Tournaments</a>
+        <a class="active" href="auction_tour.html">Auction Tour</a>
+        <a href="tournament_hub.html">Tournament Hub</a>
+        <a href="clan_auction_arena.html">Auction Arena</a>
+      </nav>
+      <div class="status"><span class="dot"></span> Tournament Portal</div>
+    </header>
+
+    <section class="hero">
+      <div class="kicker">One place. Two experiences.</div>
+      <h2>Follow the tournament.<br>Enter the auction.</h2>
+      <p>
+        AUCTION TOUR is the main gateway for your community. Everyone can explore the tournament,
+        fixtures, squads, player profiles, individual statistics and the points table — while the
+        auction portal connects directly to the live player auction experience.
+      </p>
+
+      <div class="quick-stats">
+        <div class="mini"><strong>6</strong><span>Teams</span></div>
+        <div class="mini"><strong>60</strong><span>Players</span></div>
+        <div class="mini"><strong>Live</strong><span>Auction Access</span></div>
+        <div class="mini"><strong>All</strong><span>Public Stats</span></div>
+      </div>
+    </section>
+
+    <section class="choice-grid">
+      <a class="portal tournament" href="tournament_hub.html">
+        <div class="portal-icon">🏆</div>
+        <div class="eyebrow">Public Tournament Site</div>
+        <h3>Tournament Hub</h3>
+        <p>
+          The public side of AUCTION TOUR. Anyone can open this area and follow the full tournament
+          without needing captain or admin access.
+        </p>
+
+        <div class="features">
+          <div class="feature"><strong>Fixtures</strong><span>Upcoming & completed matches</span></div>
+          <div class="feature"><strong>Teams</strong><span>Squads, captains & team details</span></div>
+          <div class="feature"><strong>Players</strong><span>Browse every registered player</span></div>
+          <div class="feature"><strong>Player Stats</strong><span>Matches, wins, goals, MVP & more</span></div>
+          <div class="feature"><strong>Points Table</strong><span>Live tournament standings</span></div>
+          <div class="feature"><strong>Results</strong><span>Match scores and recent form</span></div>
+        </div>
+
+        <div class="portal-button">
+          <span>Enter Tournament Site</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="portal auction" href="clan_auction_arena.html">
+        <div class="portal-icon">⚡</div>
+        <div class="eyebrow">Live Auction Portal</div>
+        <h3>Player Auction</h3>
+        <p>
+          Enter the live auction area for player bidding, captain access, admin controls,
+          team budgets and live SOLD announcements.
+        </p>
+
+        <div class="features">
+          <div class="feature"><strong>Live Bidding</strong><span>Captain-only player bidding</span></div>
+          <div class="feature"><strong>Player Call</strong><span>Admin-controlled auction rounds</span></div>
+          <div class="feature"><strong>Team Budgets</strong><span>Track spending and squad slots</span></div>
+          <div class="feature"><strong>Live View</strong><span>Everyone can watch the auction</span></div>
+        </div>
+
+        <div class="portal-button">
+          <span>Open Auction Site</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="preview-section">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Tournament Hub Preview</div>
+          <h4>Everything your community needs to follow the season</h4>
+        </div>
+        <span>Public viewing</span>
+      </div>
+
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="preview-icon">📅</div>
+          <strong>Fixtures</strong>
+          <p>Round schedule, dates, match status and results.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-icon">🛡️</div>
+          <strong>Teams</strong>
+          <p>Captain, full roster, budget history and squad information.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-icon">👤</div>
+          <strong>Players</strong>
+          <p>Search players and open individual profiles.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-icon">📊</div>
+          <strong>Player Stats</strong>
+          <p>Matches, wins, losses, goals, MVP and win percentage.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-icon">🏅</div>
+          <strong>Points Table</strong>
+          <p>Rank, played, wins, losses, goal difference and points.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>AUCTION TOUR • Tournament & Auction Platform</span>
+      <span>Built for players, captains and viewers</span>
+    </footer>
+  </div>
+</body>
+</html>

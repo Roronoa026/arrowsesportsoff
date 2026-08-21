@@ -752,6 +752,303 @@ MATCHDAY FIXTURES
     }
 }
 
+
+
+/* =========================================================
+   2026 VISUAL REFRESH — premium tournament dashboard
+   ========================================================= */
+:root{
+    --bg:#07110d;
+    --panel:#0d1b15;
+    --panel2:#12241b;
+    --green:#53e58a;
+    --green-dark:#1d8b4c;
+    --blue:#5b8cff;
+    --yellow:#ffd166;
+    --red:#ff6b6b;
+    --text:#f5fff9;
+    --muted:#9db7a8;
+    --border:rgba(132,214,166,.18);
+    --glass:rgba(13,27,21,.76);
+    --shadow:0 24px 70px rgba(0,0,0,.30);
+}
+
+html{background:var(--bg);}
+body{
+    min-height:100vh;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(83,229,138,.13), transparent 28%),
+      radial-gradient(circle at 88% 20%, rgba(91,140,255,.10), transparent 24%),
+      linear-gradient(180deg,#07110d 0%,#08140f 45%,#06100c 100%);
+    color:var(--text);
+    letter-spacing:.01em;
+}
+
+body:before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.18;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:38px 38px;
+    mask-image:linear-gradient(to bottom,black,transparent 78%);
+}
+
+header{
+    position:relative;
+    overflow:hidden;
+    padding:56px 24px 46px;
+    background:
+      radial-gradient(circle at 50% -15%,rgba(83,229,138,.28),transparent 42%),
+      linear-gradient(135deg,#0a2016 0%,#0f3a22 52%,#0c2418 100%);
+    border-bottom:1px solid rgba(83,229,138,.3);
+    box-shadow:0 18px 50px rgba(0,0,0,.20);
+}
+header:before,header:after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter:blur(2px);
+    pointer-events:none;
+}
+header:before{width:280px;height:280px;right:-100px;top:-130px;background:rgba(91,140,255,.12);}
+header:after{width:220px;height:220px;left:-90px;bottom:-130px;background:rgba(83,229,138,.12);}
+.logo{
+    position:relative;
+    z-index:1;
+    width:86px;height:86px;
+    display:grid;place-items:center;
+    margin:0 auto 18px;
+    font-size:42px;
+    border-radius:26px;
+    background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 18px 45px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.14);
+    backdrop-filter:blur(12px);
+}
+header h1{
+    position:relative;z-index:1;
+    max-width:900px;margin:0 auto;
+    font-size:clamp(28px,4vw,48px);
+    line-height:1.08;
+    font-weight:900;
+    letter-spacing:-.035em;
+    text-shadow:0 6px 22px rgba(0,0,0,.28);
+}
+header p{
+    position:relative;z-index:1;
+    margin:13px auto 0;
+    max-width:720px;
+    color:#c3d8ca;
+    font-size:15px;
+}
+header nav{
+    position:absolute;
+    top:18px;right:22px;
+    left:auto;
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none;
+}
+header nav ul{margin:0;padding:0;gap:10px;}
+header nav a{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(10px);
+    font-size:13px;
+}
+header nav a:hover{background:rgba(83,229,138,.14);color:#b7ffd0;}
+
+body > nav{
+    top:0;
+    justify-content:center;
+    gap:7px;
+    padding:11px 16px;
+    background:rgba(5,13,9,.80);
+    border-bottom:1px solid rgba(255,255,255,.07);
+    backdrop-filter:blur(18px) saturate(140%);
+    box-shadow:0 10px 35px rgba(0,0,0,.18);
+}
+body > nav button{
+    position:relative;
+    border:1px solid transparent;
+    border-radius:12px;
+    padding:11px 15px;
+    color:#d8e9df;
+    font-size:13px;
+    font-weight:750;
+    transition:transform .2s ease,background .2s ease,color .2s ease,border-color .2s ease;
+}
+body > nav button:hover{
+    transform:translateY(-1px);
+    background:rgba(83,229,138,.10);
+    color:#c9ffda;
+    border-color:rgba(83,229,138,.18);
+}
+body > nav button.active-nav{
+    color:#07120a;
+    background:linear-gradient(135deg,#66f09a,#42ce78);
+    box-shadow:0 7px 22px rgba(83,229,138,.22);
+}
+
+.container{max-width:1240px;padding:34px 22px 64px;}
+.section.active{animation:pageIn .32s ease both;}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.card,.team-card,.fixture,.award-card,.matchday-card,.stat{
+    border-color:rgba(149,214,173,.14);
+    box-shadow:0 16px 44px rgba(0,0,0,.16);
+}
+.card{
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(145deg,rgba(17,36,27,.91),rgba(11,27,20,.91));
+    border-radius:20px;
+    padding:24px;
+    margin-bottom:22px;
+    backdrop-filter:blur(10px);
+}
+.card:before{
+    content:"";position:absolute;inset:0 auto auto 0;width:100%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(83,229,138,.40),transparent);
+}
+.card h2,.award-title h2,.matchday-title{letter-spacing:-.02em;}
+.card p{color:#b7cabf;line-height:1.7;}
+
+.stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:24px;}
+.stat{
+    position:relative;
+    overflow:hidden;
+    min-height:150px;
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+    padding:22px;
+    text-align:left;
+    border-radius:19px;
+    background:linear-gradient(160deg,rgba(22,49,35,.96),rgba(12,31,22,.96));
+    transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+.stat:hover{transform:translateY(-4px);border-color:rgba(83,229,138,.34);box-shadow:0 22px 52px rgba(0,0,0,.24);}
+.stat:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-28px;bottom:-34px;background:rgba(83,229,138,.08);}
+.stat-icon{font-size:24px;width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.07);}
+.stat-number{font-size:34px;line-height:1;margin:16px 0 8px;color:#76f5a5;letter-spacing:-.04em;}
+.stat-label{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8fa99a;}
+
+.team-grid{grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;}
+.team-card{
+    background:linear-gradient(150deg,rgba(19,42,30,.96),rgba(11,29,20,.96));
+    border-radius:20px;padding:22px;
+    transition:transform .22s ease,border-color .22s ease;
+}
+.team-card:hover{transform:translateY(-3px);border-color:rgba(83,229,138,.30);}
+.team-logo,.team-logo-large,.fixture-team img,.team-cell img{
+    padding:4px;
+    background:#f7fff9;
+    border:2px solid rgba(255,255,255,.25);
+    box-shadow:0 8px 18px rgba(0,0,0,.20);
+}
+.team-name{font-size:20px;letter-spacing:-.02em;}
+.player-row{
+    background:rgba(5,17,11,.62);
+    border:1px solid rgba(255,255,255,.04);
+    border-radius:11px;
+    padding:11px 12px;
+}
+.player-number{width:28px;height:28px;font-size:12px;background:rgba(83,229,138,.15);color:#82f4aa;border:1px solid rgba(83,229,138,.25);}
+
+.matchday-card{
+    background:linear-gradient(145deg,rgba(16,34,25,.94),rgba(9,24,17,.94));
+    border-radius:22px;padding:22px;margin-bottom:24px;
+}
+.matchday-header{padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);}
+.matchday-title{font-size:20px;color:#dfffea;}
+.fixture{
+    background:linear-gradient(145deg,rgba(21,45,32,.92),rgba(12,31,22,.92));
+    border-radius:18px;padding:20px;margin-bottom:13px;
+}
+.fixture-header{font-size:12px;margin-bottom:18px;}
+.stage{font-size:12px;letter-spacing:.065em;text-transform:uppercase;color:#7aefa4;}
+.group{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.08);padding:6px 10px;}
+.fixture-teams{gap:24px;}
+.fixture-team{font-size:15px;font-weight:700;}
+.score{
+    min-width:92px;
+    padding:10px 14px;
+    border-radius:14px;
+    background:rgba(5,15,10,.58);
+    border:1px solid rgba(83,229,138,.15);
+    font-size:27px;
+    color:#8cf5b2;
+}
+.fixture-info{font-size:12px;border-top-color:rgba(255,255,255,.06);}
+.completed,.upcoming{font-weight:800;font-size:11px;padding:6px 10px;border-radius:999px;}
+.completed{background:rgba(83,229,138,.10);}
+.upcoming{background:rgba(255,209,102,.10);}
+.goal{background:rgba(255,255,255,.035);border-radius:9px;margin-top:6px;}
+
+.table-wrap{border:1px solid rgba(255,255,255,.06);border-radius:16px;overflow:auto;background:rgba(5,16,10,.30);}
+table{border-collapse:separate;border-spacing:0;}
+th{position:sticky;top:0;background:#17472b;padding:13px 12px;font-size:11px;letter-spacing:.055em;text-transform:uppercase;}
+th:first-child{border-top-left-radius:12px;} th:last-child{border-top-right-radius:12px;}
+td{padding:13px 12px;border-bottom-color:rgba(255,255,255,.055);}
+tr:last-child td{border-bottom:0;}
+tr:hover td{background:rgba(83,229,138,.045);}
+.team-cell{min-width:180px;}
+
+.award-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(21,43,31,.96),rgba(10,28,19,.96));border-radius:22px;padding:24px;}
+.award-card:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;top:-70px;background:rgba(255,209,102,.07);}
+.award-title{position:relative;z-index:1;}
+.award-winner{background:linear-gradient(145deg,rgba(5,17,11,.58),rgba(18,40,28,.72));border-radius:18px;padding:28px;}
+.winner-icon{font-size:52px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.25));}
+.winner-name{font-size:26px;letter-spacing:-.025em;}
+
+.empty{border:1px dashed rgba(149,214,173,.18);background:rgba(255,255,255,.025);border-radius:16px;padding:42px 22px;}
+.pdf-download-button,.refresh-button{
+    border-radius:11px;padding:10px 14px;
+    background:linear-gradient(135deg,#66f09a,#42ce78);
+    box-shadow:0 8px 20px rgba(83,229,138,.16);
+    transition:transform .2s ease,box-shadow .2s ease;
+}
+.pdf-download-button:hover,.refresh-button:hover{opacity:1;transform:translateY(-1px);box-shadow:0 11px 26px rgba(83,229,138,.22);}
+
+footer{
+    margin-top:0;
+    padding:38px 20px 42px;
+    background:linear-gradient(180deg,#06100c,#040b08);
+    border-top:1px solid rgba(255,255,255,.06);
+    color:#82998b;
+    font-size:13px;
+}
+footer strong{color:#dfffea;letter-spacing:.05em;}
+
+@media(max-width:1000px){.stats-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){
+    header{padding:76px 18px 36px;}
+    header nav{top:14px;right:14px;}
+    .logo{width:72px;height:72px;border-radius:22px;font-size:35px;}
+    body > nav{justify-content:flex-start;padding:9px 10px;}
+    body > nav button{padding:10px 12px;font-size:12px;}
+    .container{padding:22px 12px 48px;}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .stat{min-height:132px;padding:17px;}
+    .stat-number{font-size:29px;}
+    .card,.team-card,.fixture,.award-card,.matchday-card{border-radius:16px;padding:17px;}
+    .fixture-teams{grid-template-columns:1fr;gap:12px;}
+    .fixture-team{flex-direction:row;}
+    .score{justify-self:center;}
+}
+@media(max-width:420px){
+    .stats-grid{grid-template-columns:1fr 1fr;}
+    .stat{min-height:120px;}
+    .stat-icon{width:38px;height:38px;}
+    header h1{font-size:26px;}
+}
 </style>
 
 
@@ -793,13 +1090,21 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=20260821-relational1"></script>
-<script src="supabase-data.js?v=20260821-relational1"></script>
+<script src="supabase-config.js?v=20260821-relational2"></script>
+<script src="supabase-data.js?v=20260821-relational2"></script>
 </head>
 
 
 <body>
-<script src="player-data.js?v=20260821-relational1"></script>
+<script>
+/* Shared cache API fallback.
+   This prevents stale/missing player-data.js from stopping Supabase startup. */
+window.__ARROWS_TOURNAMENT_CACHE = window.__ARROWS_TOURNAMENT_CACHE || null;
+window.arrowsSetTournamentCache = window.arrowsSetTournamentCache || function(t){
+  window.__ARROWS_TOURNAMENT_CACHE = (t && typeof t === "object") ? t : null;
+};
+</script>
+<script src="player-data.js?v=20260821-relational2"></script>
 
 
 <!-- =========================
@@ -812,7 +1117,7 @@ HEADER
         🏆
     </div>
 
-    <h1 id="pageTitle">
+    <h1 >
         ARROWS DUO TOURNAMENT
     </h1>
 
@@ -823,7 +1128,7 @@ HEADER
     
         <ul>
         
-        <li><a href="home.html">Home</a></li>
+        <li><a href="index.html">Home</a></li>
         
         </ul>
         
@@ -837,7 +1142,7 @@ NAVIGATION
 
 <nav>
 
-    <button onclick="showPage('dashboard')">
+    <button class="active-nav" onclick="showPage('dashboard')">
         🏠 Home
     </button>
 
@@ -1305,6 +1610,12 @@ NAVIGATION
 ========================================= */
 
 function showPage(page){
+
+    document.querySelectorAll("body > nav button").forEach(btn => {
+        btn.classList.remove("active-nav");
+        const click = btn.getAttribute("onclick") || "";
+        if(click.includes("showPage('" + page + "')")) btn.classList.add("active-nav");
+    });
 
     document
     .querySelectorAll(".section")
