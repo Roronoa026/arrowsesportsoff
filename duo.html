@@ -560,10 +560,13 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 };
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260821-relational1"></script>
+<script src="supabase-data.js?v=20260821-relational1"></script>
 </head>
 
 <body>
-<script src="player-data.js"></script>
+<script src="player-data.js?v=20260821-relational1"></script>
 
 
 <!-- =====================================================
@@ -628,7 +631,7 @@ ADMIN APP
     
         <ul>
         
-        <li><a href="index.html">Home</a></li>
+        <li><a href="home.html">Home</a></li>
 
 
     <div class="header-content">
@@ -1209,14 +1212,7 @@ function checkLogin(){
 DATABASE
 ===================================================== */
 
-let tournament =
-JSON.parse(
-    localStorage.getItem(
-        "footballTournament"
-    )
-)
-||
-{
+let tournament = {
     name:"ARROWS DUO TOURNAMENT",
     season:"",
     organizer:"",
@@ -1228,32 +1224,75 @@ JSON.parse(
     fixtures:[]
 };
 
+function normalizeTournament(){
+    tournament = tournament && typeof tournament === "object" ? tournament : {};
+    tournament.name = tournament.name || "ARROWS DUO TOURNAMENT";
+    tournament.season = tournament.season || "";
+    tournament.organizer = tournament.organizer || "";
+    tournament.type = tournament.type || "roundrobin";
+    tournament.leagueFormat = tournament.leagueFormat || "single";
+    tournament.leagueGroups = Math.max(2,Math.min(10,parseInt(tournament.leagueGroups || 2,10)));
+    tournament.knockoutReady = !!tournament.knockoutReady;
+    tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
+    tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
+    tournament.teams.forEach(team=>{team.players=Array.isArray(team.players)?team.players:[]});
+    arrowsSetTournamentCache(tournament);
+}
 
-/* =====================================================
-NORMALIZE SAVED TOURNAMENT SETTINGS
-===================================================== */
+async function loadTournamentFromSupabase(){
+    try{
+        await ARROWS_DB.healthCheck();
+        const cloud = await ARROWS_DB.getTournament();
 
-tournament.type = tournament.type || "roundrobin";
-tournament.leagueGroups = Math.max(
-    2,
-    Math.min(10, parseInt(tournament.leagueGroups || 2, 10))
-);
-tournament.knockoutReady = !!tournament.knockoutReady;
+        if(cloud){
+            tournament = cloud;
+        }else{
+            normalizeTournament();
+            tournament = await ARROWS_DB.saveTournament(tournament);
+        }
 
-tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
-tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
+        normalizeTournament();
+        await arrowsReady(true);
+        await arrowsSyncDuoPlayers(tournament);
+        window.ARROWS_CLOUD_OK = true;
+    }catch(error){
+        window.ARROWS_CLOUD_OK = false;
+        console.error("Could not load tournament from Supabase:",error);
+        alert(
+          "SUPABASE CONNECTION FAILED.\n\n" +
+          (error.message || error) +
+          "\n\nNo team changes will be treated as saved until Supabase is working."
+        );
+        throw error;
+    }
+}
 
 /* =====================================================
 SAVE
 ===================================================== */
 
-function save(){
+async function save(){
+    if(window.ARROWS_CLOUD_OK === false){
+        throw new Error("Supabase is not connected. Refresh after fixing the database connection.");
+    }
 
-    localStorage.setItem(
-        "footballTournament",
-        JSON.stringify(tournament)
-    );
-
+    try{
+        const confirmed = await ARROWS_DB.saveTournament(tournament);
+        tournament = confirmed;
+        normalizeTournament();
+        arrowsSetTournamentCache(tournament);
+        window.ARROWS_CLOUD_OK = true;
+        return tournament;
+    }catch(error){
+        window.ARROWS_CLOUD_OK = false;
+        console.error("Tournament save failed:",error);
+        alert(
+          "NOT SAVED TO SUPABASE.\n\n" +
+          (error.message || "Supabase error") +
+          "\n\nThe change is not public."
+        );
+        throw error;
+    }
 }
 
 
@@ -1326,7 +1365,7 @@ TEAM LOGO PATH
         images/teams/arrows.png
         assets/logos/team1.webp
 
-    The path is saved in localStorage, so you can edit it later.
+    The path is saved in Supabase, so you can edit it later.
 */
 
 let selectedLogoPath = "";
@@ -1386,7 +1425,7 @@ function getTeam(id){
 ADD TEAM
 ===================================================== */
 
-function addTeam(){
+async function addTeam(){
 
     const name =
         document
@@ -1395,52 +1434,46 @@ function addTeam(){
         .trim();
 
     if(!name){
-
         alert("Please enter team name.");
-
         return;
-
     }
-
 
     const logoPath =
         normalizeLogoPath(
             document.getElementById("newTeamLogoPath").value
         );
 
-    tournament.teams.push({
-
-        id:Date.now()+Math.random(),
-
+    const newTeam = {
+        id:crypto.randomUUID(),
         name:name,
-
         logo:logoPath,
-
         players:[]
+    };
 
-    });
+    tournament.teams.push(newTeam);
 
+    try{
+        await save();
 
-    document
-    .getElementById("newTeamName")
-    .value="";
+        document.getElementById("newTeamName").value="";
+        document.getElementById("newTeamLogoPath").value="";
+        document.getElementById("newLogoPreview").innerHTML="";
+        selectedLogoPath="";
 
-    document
-    .getElementById("newTeamLogoPath")
-    .value="";
-
-    document
-    .getElementById(
-        "newLogoPreview"
-    )
-    .innerHTML="";
-
-    selectedLogoPath="";
-
-    save();
-
-    renderAll();
-
+        renderAll();
+        alert("Team saved to Supabase and is now public.");
+    }catch(error){
+        // Remove the unsaved UI change and reload the real cloud state.
+        tournament.teams = tournament.teams.filter(
+          team => String(team.id) !== String(newTeam.id)
+        );
+        try{
+          const cloud = await ARROWS_DB.getTournament();
+          if(cloud) tournament = cloud;
+        }catch(_){}
+        normalizeTournament();
+        renderAll();
+    }
 }
 
 
@@ -1545,7 +1578,7 @@ function closeTeamModal(){
 DELETE TEAM
 ===================================================== */
 
-function deleteTeam(id){
+async function deleteTeam(id){
 
     const team =
         getTeam(id);
@@ -1562,6 +1595,8 @@ function deleteTeam(id){
 
     }
 
+
+    try{ await ARROWS_DB.deleteTeam(id); }catch(error){ alert("Delete failed: "+error.message); return; }
 
     tournament.teams =
         tournament.teams.filter(
@@ -1589,7 +1624,7 @@ function deleteTeam(id){
 ADD PLAYER
 ===================================================== */
 
-function addPlayer(teamId){
+async function addPlayer(teamId){
 
     const input =
         document.getElementById(
@@ -1614,11 +1649,11 @@ function addPlayer(teamId){
     if(!team)return;
 
 
-    const clanPlayer = arrowsRegisterPlayer({name:name});
+    const clanPlayer = await arrowsRegisterPlayer({name:name});
 
     team.players.push({
 
-        id:Date.now()+Math.random(),
+        id:crypto.randomUUID(),
 
         name:name,
 
@@ -1629,7 +1664,7 @@ function addPlayer(teamId){
 
     input.value="";
 
-    save();
+    await save();
 
     renderAll();
 
@@ -1640,7 +1675,7 @@ function addPlayer(teamId){
 EDIT PLAYER
 ===================================================== */
 
-function editPlayer(
+async function editPlayer(
     teamId,
     playerId
 ){
@@ -1680,13 +1715,13 @@ function editPlayer(
     player.name =
         name.trim();
 
-    const clanPlayer = arrowsRegisterPlayer({
+    const clanPlayer = await arrowsRegisterPlayer({
         name: player.name,
         clanPlayerId: player.clanPlayerId
     });
     if(clanPlayer) player.clanPlayerId = clanPlayer.id;
 
-    save();
+    await save();
 
     renderAll();
 
@@ -1980,7 +2015,7 @@ function createMatch(
 
     return {
 
-        id:Date.now()+Math.random(),
+        id:crypto.randomUUID(),
 
         home:home,
 
@@ -3174,7 +3209,7 @@ function closeFixtureModal(){
 DELETE FIXTURE
 ===================================================== */
 
-function deleteFixture(id){
+async function deleteFixture(id){
 
     const match =
         getMatch(id);
@@ -3192,6 +3227,8 @@ function deleteFixture(id){
 
     }
 
+
+    try{ await ARROWS_DB.deleteMatch(id); }catch(error){ alert("Delete failed: "+error.message); return; }
 
     tournament.fixtures =
         tournament.fixtures.filter(
@@ -3286,7 +3323,7 @@ function addGoal(matchId){
 
     match.goals.push({
 
-        id:Date.now()+Math.random(),
+        id:crypto.randomUUID(),
 
         teamId:teamId,
 
@@ -3573,25 +3610,34 @@ function updateTournamentTypeUI(){
 RESET TOURNAMENT
 ===================================================== */
 
-function resetTournament(){
+async function resetTournament(){
 
     if(
         !confirm(
-            "WARNING!\n\nThis will delete ALL teams, players, fixtures and settings.\n\nContinue?"
+            "WARNING!\n\nThis will delete ALL teams, tournament players, fixtures and settings.\n\nContinue?"
         )
     ){
-
         return;
-
     }
 
-
-    localStorage.removeItem(
-        "footballTournament"
-    );
-
-
-    location.reload();
+    tournament = {
+        name:"ARROWS DUO TOURNAMENT",
+        season:"",
+        organizer:"",
+        type:"roundrobin",
+        leagueFormat:"single",
+        leagueGroups:2,
+        groupSize:4,
+        teams:[],
+        fixtures:[]
+    };
+    normalizeTournament();
+    try{
+        await save();
+        location.reload();
+    }catch(error){
+        console.error(error);
+    }
 
 }
 
@@ -3781,10 +3827,16 @@ document
 INITIALIZE
 ===================================================== */
 
-checkLogin();
+(async function initializeSupabaseTournament(){
+    try{
+        await loadTournamentFromSupabase();
+        checkLogin();
+    }catch(error){
+        console.error("Initialization stopped because Supabase is unavailable.", error);
+    }
+})();
 
 </script>
 
-<script src="supabase-config.js"></script><script src="supabase-sync.js"></script>
 </body>
 </html>
