@@ -1117,7 +1117,7 @@ HEADER
         🏆
     </div>
 
-    <h1 >
+    <h1 id="pageTitle">
         ARROWS DUO TOURNAMENT
     </h1>
 
@@ -1523,7 +1523,9 @@ async function loadData(){
         };
         tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
         tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
-        arrowsSetTournamentCache(tournament);
+        if (typeof window.arrowsSetTournamentCache === "function") {
+            window.arrowsSetTournamentCache(tournament);
+        }
         renderAll();
     }catch(error){
         console.error("Tournament Supabase load error:",error);
