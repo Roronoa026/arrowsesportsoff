@@ -26,7 +26,55 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 };
 </script>
 
-</head><body><header class="top"><div><h2 style="margin:0">✏️ Player Management</h2><small>ARROWS ESPORTS ADMIN</small></div><div><a href="editpage.html">Admin</a><a href="Playerdetails.html">View Players</a><a href="duo.html">Tournament</a></div></header><main class="wrap"><div class="grid"><section class="panel"><h2 id="formTitle">➕ Add Clan Player</h2><p class="note">Add a player once here. Tournament pages can then link that same player to different teams and tournaments.</p><input id="name" placeholder="Player name"><input id="eid" placeholder="eFootball ID"><input id="country" placeholder="Country"><input id="photo" placeholder="Photo path, e.g. images/Rexzo.jpeg"><div class="actions"><button onclick="savePlayer()">💾 Save Player</button><button class="secondary" onclick="resetForm()">Clear</button></div></section><section class="panel"><h2>👥 Clan Player Database</h2><input id="search" placeholder="Search players..." oninput="render()"><div id="list" class="list"></div></section></div></main><div id="toast" class="toast"></div><script src="player-data.js"></script><script>
-if(sessionStorage.getItem('footballAdminLoggedIn')!=='true'){location.href='admin-login.html'}let editing=null;function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1800)}function resetForm(){editing=null;document.getElementById('formTitle').textContent='➕ Add Clan Player';['name','eid','country','photo'].forEach(id=>document.getElementById(id).value='')}function savePlayer(){const name=document.getElementById('name').value.trim();if(!name){alert('Enter player name.');return}const data={name,efootballId:document.getElementById('eid').value.trim(),country:document.getElementById('country').value.trim(),photo:document.getElementById('photo').value.trim(),clanPlayerId:editing};const p=arrowsRegisterPlayer(data);syncTournamentPlayer(p);toast(editing?'Player updated':'Player added');resetForm();render()}function syncTournamentPlayer(p){let t;try{t=JSON.parse(localStorage.getItem('footballTournament'))}catch(e){}if(!t||!t.teams)return;t.teams.forEach(team=>(team.players||[]).forEach(tp=>{if(tp.clanPlayerId===p.id || tp.name.toLowerCase()===p.name.toLowerCase()){tp.clanPlayerId=p.id;tp.name=p.name;tp.efootballId=p.efootballId;tp.country=p.country;tp.photo=p.photo}}));localStorage.setItem('footballTournament',JSON.stringify(t))}function edit(id){const p=arrowsGetPlayer(id);if(!p)return;editing=p.id;document.getElementById('formTitle').textContent='✏️ Modify Player';document.getElementById('name').value=p.name;document.getElementById('eid').value=p.efootballId||'';document.getElementById('country').value=p.country||'';document.getElementById('photo').value=p.photo||'';scrollTo({top:0,behavior:'smooth'})}function remove(id){if(!confirm('Delete this clan player? Tournament records will remain but the common profile will be removed.'))return;arrowsDeletePlayer(id);render();toast('Player deleted')}function render(){arrowsSyncDuoPlayers();const q=document.getElementById('search').value.toLowerCase();const players=arrowsGetPlayers().filter(p=>(p.name+' '+p.efootballId+' '+p.country).toLowerCase().includes(q));document.getElementById('list').innerHTML=players.map(p=>{const s=arrowsPlayerStats(p.id);return `<article class="player"><h3>${arrowsEscape(p.name)}</h3><div class="note">${arrowsEscape(p.efootballId||'No eFootball ID')} · ${arrowsEscape(p.country||'No country')}</div><p>⚽ ${s.goals} goals · 🎮 ${s.matches} matches · ⭐ ${s.motm} MOTM</p><div class="actions"><button class="small" onclick="edit('${p.id}')">✏️ Modify</button><button class="small secondary" onclick="location.href='player-profile.html?id=${p.id}'">👁️ View</button><button class="small danger" onclick="remove('${p.id}')">🗑️ Delete</button></div></article>`}).join('')||'<p class="note">No players found.</p>'}render();
-</script><script src="supabase-config.js"></script><script src="supabase-sync.js"></script>
-</body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260820-publicsync3"></script>
+<script src="supabase-data.js?v=20260820-publicsync3"></script>
+</head><body><header class="top"><div><h2 style="margin:0">✏️ Player Management</h2><small>ARROWS ESPORTS ADMIN</small></div><div><a href="editpage.html">Admin</a><a href="Playerdetails.html">View Players</a><a href="duo.html">Tournament</a></div></header><main class="wrap"><div class="grid"><section class="panel"><h2 id="formTitle">➕ Add Clan Player</h2><p class="note">Add a player once here. Tournament pages can then link that same player to different teams and tournaments.</p><input id="name" placeholder="Player name"><input id="eid" placeholder="eFootball ID"><input id="country" placeholder="Country"><input id="photo" placeholder="Photo path, e.g. images/Rexzo.jpeg"><div class="actions"><button onclick="savePlayer()">💾 Save Player</button><button class="secondary" onclick="resetForm()">Clear</button></div></section><section class="panel"><h2>👥 Clan Player Database</h2><input id="search" placeholder="Search players..." oninput="render()"><div id="list" class="list"></div></section></div></main><div id="toast" class="toast"></div><script src="player-data.js?v=20260820-publicsync3"></script><script>
+
+if(sessionStorage.getItem('footballAdminLoggedIn')!=='true'){location.href='admin-login.html'}
+let editing=null;
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1800)}
+function resetForm(){editing=null;document.getElementById('formTitle').textContent='➕ Add Clan Player';['name','eid','country','photo'].forEach(id=>document.getElementById(id).value='')}
+
+async function savePlayer(){
+  const name=document.getElementById('name').value.trim();
+  if(!name){alert('Enter player name.');return}
+  try{
+    const data={name,efootballId:document.getElementById('eid').value.trim(),country:document.getElementById('country').value.trim(),photo:document.getElementById('photo').value.trim(),clanPlayerId:editing};
+    const p=await arrowsRegisterPlayer(data);
+    await syncTournamentPlayer(p);
+    toast(editing?'Player updated':'Player added');
+    resetForm();
+    render();
+  }catch(e){console.error(e);toast('Save failed: '+(e.message||'Supabase error'))}
+}
+
+async function syncTournamentPlayer(p){
+  if(!p)return;
+  let t=await ARROWS_DB.getTournament();
+  if(!t||!Array.isArray(t.teams))return;
+  let changed=false;
+  t.teams.forEach(team=>(team.players||[]).forEach(tp=>{
+    if(String(tp.clanPlayerId||'')===String(p.id) || String(tp.name||'').toLowerCase()===String(p.name||'').toLowerCase()){
+      tp.clanPlayerId=p.id;tp.name=p.name;tp.efootballId=p.efootballId;tp.country=p.country;tp.photo=p.photo;changed=true;
+    }
+  }));
+  if(changed){await ARROWS_DB.saveTournament(t);arrowsSetTournamentCache(t)}
+}
+
+function edit(id){const p=arrowsGetPlayer(id);if(!p)return;editing=p.id;document.getElementById('formTitle').textContent='✏️ Modify Player';document.getElementById('name').value=p.name;document.getElementById('eid').value=p.efootballId||'';document.getElementById('country').value=p.country||'';document.getElementById('photo').value=p.photo||'';scrollTo({top:0,behavior:'smooth'})}
+
+async function remove(id){
+  if(!confirm('Delete this clan player? Tournament records will remain but the common profile will be removed.'))return;
+  try{await arrowsDeletePlayer(id);render();toast('Player deleted')}catch(e){console.error(e);toast('Delete failed: '+(e.message||'Supabase error'))}
+}
+
+async function render(){
+  await arrowsReady();
+  const q=document.getElementById('search').value.toLowerCase();
+  const players=arrowsGetPlayers().filter(p=>(p.name+' '+p.efootballId+' '+p.country).toLowerCase().includes(q));
+  document.getElementById('list').innerHTML=players.map(p=>{const s=arrowsPlayerStats(p.id);return `<article class="player"><h3>${arrowsEscape(p.name)}</h3><div class="note">${arrowsEscape(p.efootballId||'No eFootball ID')} · ${arrowsEscape(p.country||'No country')}</div><p>⚽ ${s.goals} goals · 🎮 ${s.matches} matches · ⭐ ${s.motm} MOTM</p><div class="actions"><button class="small" onclick="edit('${p.id}')">✏️ Modify</button><button class="small secondary" onclick="location.href='player-profile.html?id=${p.id}'">👁️ View</button><button class="small danger" onclick="remove('${p.id}')">🗑️ Delete</button></div></article>`}).join('')||'<p class="note">No players found.</p>'
+}
+
+arrowsReady().then(render).catch(e=>{console.error(e);toast('Could not connect to Supabase')});
+</script></body></html>
