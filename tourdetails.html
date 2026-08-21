@@ -792,11 +792,14 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 };
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260821-relational1"></script>
+<script src="supabase-data.js?v=20260821-relational1"></script>
 </head>
 
 
 <body>
-<script src="player-data.js"></script>
+<script src="player-data.js?v=20260821-relational1"></script>
 
 
 <!-- =========================
@@ -820,7 +823,7 @@ HEADER
     
         <ul>
         
-        <li><a href="index.html">Home</a></li>
+        <li><a href="home.html">Home</a></li>
         
         </ul>
         
@@ -1201,65 +1204,28 @@ let tournament = null;
 LOAD DATABASE
 ========================================= */
 
-function loadData(){
-
-    const saved =
-        localStorage.getItem(
-            "footballTournament"
-        );
-
-
-    if(saved){
-
-        try{
-
-            tournament =
-                JSON.parse(saved);
-
-        }
-
-        catch(error){
-
-            console.error(
-                "Tournament data error:",
-                error
-            );
-
-            tournament = {
-                name:"Football Tournament",
-                season:"",
-                organizer:"",
-                teams:[],
-                fixtures:[]
-            };
-
-        }
-
-    }
-
-    else{
-
-        tournament = {
-
+async function loadData(){
+    try{
+        await arrowsReady(true);
+        await ARROWS_DB.healthCheck();
+        const cloud = await ARROWS_DB.getTournament();
+        tournament = cloud || {
             name:"Football Tournament",
-
             season:"",
-
             organizer:"",
-
             teams:[],
-
             fixtures:[]
-
         };
-
+        tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
+        tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
+        arrowsSetTournamentCache(tournament);
+        renderAll();
+    }catch(error){
+        console.error("Tournament Supabase load error:",error);
+        tournament = tournament || {name:"Football Tournament",season:"",organizer:"",teams:[],fixtures:[]};
+        renderAll();
     }
-
-
-    renderAll();
-
 }
-
 
 /* =========================================
 HELPERS
@@ -3266,7 +3232,7 @@ loadData();
 
 
 /*
-    Automatically check localStorage
+    Automatically check Supabase
     every 5 seconds.
 
     This means viewers can keep the
@@ -3282,6 +3248,5 @@ setInterval(
 </script>
 
 
-<script src="supabase-config.js"></script><script src="supabase-sync.js"></script>
 </body>
 </html>
