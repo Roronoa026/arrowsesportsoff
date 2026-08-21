@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arrows Supabase Test</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:20px;background:#061009;color:#f4fff6}
+button{padding:12px 16px;margin:6px;border:0;border-radius:8px;cursor:pointer}
+pre{white-space:pre-wrap;background:#0d1b12;padding:16px;border-radius:12px;min-height:100px}
+</style>
+</head>
+<body>
+<h1>Supabase Public Sync Test</h1>
+<p>This page reads only <b>tournament_state → id = main</b>.</p>
+<p id="project"></p>
+<button onclick="readCloud()">Read cloud tournament</button>
+<button onclick="writeTest()">Write cloud test marker</button>
+<pre id="out">Ready.</pre>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260821-relational1"></script>
+<script src="supabase-data.js?v=20260821-relational1"></script>
+<script>
+const out=document.getElementById('out');
+document.getElementById('project').textContent='Supabase project: '+window.ARROWS_SUPABASE.url;
+function show(v){out.textContent=typeof v==='string'?v:JSON.stringify(v,null,2)}
+async function readCloud(){
+  try{
+    await ARROWS_DB.healthCheck();
+    show(await ARROWS_DB.getTournament());
+  }catch(e){show('ERROR: '+e.message)}
+}
+async function writeTest(){
+  try{
+    let t=await ARROWS_DB.getTournament() || {
+      name:'ARROWS DUO TOURNAMENT',teams:[],fixtures:[]
+    };
+    t.cloudTest='saved-'+new Date().toISOString();
+    const saved=await ARROWS_DB.saveTournament(t);
+    show(saved);
+  }catch(e){show('ERROR: '+e.message)}
+}
+</script>
+</body>
+</html>
