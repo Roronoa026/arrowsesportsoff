@@ -177,6 +177,8 @@ footer strong{color:var(--green)}
   .section{padding-bottom:48px}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260821-relational1"></script>
 </head>
 
 <body>
@@ -187,7 +189,7 @@ footer strong{color:var(--green)}
     </a>
     <nav>
       <ul>
-        <li><a href="index.html">Home</a></li>
+        <li><a href="home.html">Home</a></li>
         <li><a href="Playerdetails.html">Players</a></li>
         <li><a class="active" href="Tournaments.html">Tournaments</a></li>
         <li><a href="#">eFootball News</a></li>
@@ -313,6 +315,5 @@ const menu=document.querySelector('.menu');
 const navList=document.querySelector('nav ul');
 menu?.addEventListener('click',()=>navList.classList.toggle('show'));
 </script>
-<script src="supabase-config.js"></script><script src="supabase-sync.js"></script>
 </body>
 </html>
