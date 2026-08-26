@@ -2617,11 +2617,36 @@ function renderPoints(){
 
     }
 
+    if((tournament.type || "").toLowerCase() === "knockout"){
+        box.innerHTML = `
+            <div class="empty">
+                A points table is not used for a direct knockout tournament.
+            </div>
+        `;
+        return;
+    }
+
+    // Standings must only use the league/group phase. Knockout results
+    // should never create or alter a points table.
+    const tableFixtures = fixtures.filter(match =>
+        String(match.stage || "").toLowerCase() !== "knockout" &&
+        String(match.group || "").toLowerCase() !== "knockout"
+    );
+
+    if(!tableFixtures.length){
+        box.innerHTML = `
+            <div class="empty">
+                No league/group results are available for the points table.
+            </div>
+        `;
+        return;
+    }
+
 
     const groups =
         [
             ...new Set(
-                fixtures
+                tableFixtures
                 .map(
                     match =>
                     match.group
@@ -2636,7 +2661,7 @@ function renderPoints(){
         groups.forEach(group => {
 
             const matches =
-                fixtures.filter(
+                tableFixtures.filter(
                     match =>
                     match.group === group
                 );
@@ -2683,7 +2708,7 @@ function renderPoints(){
         createTable(
             "🏆 League Table",
             calculateTable(
-                fixtures,
+                tableFixtures,
                 teamIds
             )
         );

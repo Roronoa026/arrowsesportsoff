@@ -27,13 +27,24 @@
     return rows[0];
   }
 
+  function localDateParts(value){
+    if(!value) return {date:"",time:""};
+    const dt=new Date(value);
+    if(Number.isNaN(dt.getTime())) return {date:"",time:""};
+    const pad=n=>String(n).padStart(2,"0");
+    return {
+      date:`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`,
+      time:`${pad(dt.getHours())}:${pad(dt.getMinutes())}`
+    };
+  }
+
   function matchToLegacy(m,goals,awards){
-    const dt=m.match_date?new Date(m.match_date):null;
+    const dt=localDateParts(m.match_date);
     const motm=(awards||[]).find(a=>a.award_type==="motm");
     return {
       id:m.id,home:m.home_team_id,away:m.away_team_id,
       stage:m.stage||"League",round:m.round||1,group:m.group_name||"",
-      date:dt?dt.toISOString().slice(0,10):"",time:dt?dt.toTimeString().slice(0,5):"",
+      date:dt.date,time:dt.time,
       venue:m.venue||"",played:m.status==="completed",
       goals:(goals||[]).map(g=>({id:g.id,teamId:g.team_id,playerId:g.player_id,minute:g.minute??""})),
       motm:motm?motm.player_id:null,
@@ -116,6 +127,18 @@
         await saveTeam(team,t.id);
         for(const player of team.players||[]) await savePlayer(player,team.id);
       }
+
+      // Reconcile matches, not just upsert them. Without this, fixtures removed
+      // in the admin UI remain in Supabase and reappear on the next reload.
+      const existingMatches=await req("matches?tournament_id=eq."+encodeURIComponent(t.id)+"&select=id");
+      const keepIds=new Set((state.fixtures||[]).map(m=>String(m.id)));
+      for(const existing of existingMatches||[]){
+        if(keepIds.has(String(existing.id))) continue;
+        await req("awards?match_id=eq."+encodeURIComponent(existing.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+        await req("match_goals?match_id=eq."+encodeURIComponent(existing.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+        await req("matches?id=eq."+encodeURIComponent(existing.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      }
+
       for(const m of state.fixtures||[]) await saveMatch(m,t.id);
       return loadTournament();
     },
@@ -128,6 +151,13 @@
     },
     async deletePlayer(id){await req("players?id=eq."+encodeURIComponent(id),{method:"DELETE"});return true},
     async deleteTeam(id){await req("teams?id=eq."+encodeURIComponent(id),{method:"DELETE"});return true},
-    async deleteMatch(id){await req("matches?id=eq."+encodeURIComponent(id),{method:"DELETE"});return true}
+    async deleteMatch(id){
+      // Delete dependent rows first so this works even when the database
+      // foreign keys are not configured with ON DELETE CASCADE.
+      await req("awards?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      await req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      await req("matches?id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      return true
+    }
   };
 })();

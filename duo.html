@@ -2061,7 +2061,7 @@ function createMatch(
 GENERATE ROUND ROBIN
 ===================================================== */
 
-function generateFixtures(){
+async function generateFixtures(){
     if(tournament.teams.length < 2){
         alert("You need at least 2 teams.");
         return;
@@ -2079,9 +2079,13 @@ function generateFixtures(){
         generateLeaguePhase(type);
     }
 
-    save();
-    renderAll();
-    showPageByName("fixtures");
+    try{
+        await save();
+        renderAll();
+        showPageByName("fixtures");
+    }catch(error){
+        console.error("Fixture generation save failed:", error);
+    }
 }
 
 /* =====================================================
@@ -2089,11 +2093,18 @@ TOURNAMENT FORMAT HELPERS
 ===================================================== */
 
 function getGroupCount(){
+    const teamCount = tournament.teams.length;
+    if(teamCount < 2) return 1;
+
     const requested = Math.max(
-        2,
+        1,
         Math.min(10, parseInt(tournament.leagueGroups || 2, 10))
     );
-    return Math.min(requested, tournament.teams.length);
+
+    // Never create more groups than can contain at least two teams.
+    // Example: 2 teams + 2 groups previously produced zero fixtures.
+    const maxUsefulGroups = Math.max(1, Math.floor(teamCount / 2));
+    return Math.min(requested, maxUsefulGroups);
 }
 
 function makeGroups(teamIds, count){
@@ -3247,9 +3258,12 @@ async function deleteFixture(id){
         );
 
 
-    save();
-
-    renderAll();
+    try{
+        await save();
+        renderAll();
+    }catch(error){
+        console.error("Fixture delete save failed:", error);
+    }
 
 }
 
@@ -3515,7 +3529,7 @@ function clearMatchResult(id){
 DELETE ALL FIXTURES
 ===================================================== */
 
-function deleteAllFixtures(){
+async function deleteAllFixtures(){
 
     if(
         !confirm(
@@ -3528,11 +3542,16 @@ function deleteAllFixtures(){
     }
 
 
+    const previousFixtures=tournament.fixtures.slice();
     tournament.fixtures=[];
 
-    save();
-
-    renderAll();
+    try{
+        await save();
+        renderAll();
+    }catch(error){
+        tournament.fixtures=previousFixtures;
+        console.error("Delete all fixtures failed:", error);
+    }
 
 }
 
