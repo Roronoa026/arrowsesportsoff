@@ -98,15 +98,20 @@
     player.id=saved[0].id; player.clanPlayerId=saved[0].id; return player;
   }
 
-  async function saveMatch(m,tournamentId){
+  function matchRow(m,tournamentId){
     const id=(m.id&&String(m.id).includes("-"))?m.id:uuid(); m.id=id;
     let match_date=null;
     if(m.date){ match_date=new Date(m.date+"T"+(m.time||"00:00")+":00").toISOString(); }
     const homeScore=(m.goals||[]).filter(g=>String(g.teamId)===String(m.home)).length;
     const awayScore=(m.goals||[]).filter(g=>String(g.teamId)===String(m.away)).length;
-    const row={id,tournament_id:tournamentId,home_team_id:m.home,away_team_id:m.away,home_score:homeScore,away_score:awayScore,
+    return {id,tournament_id:tournamentId,home_team_id:m.home,away_team_id:m.away,home_score:homeScore,away_score:awayScore,
       match_date,round:Number(m.round)||1,status:m.played?"completed":"scheduled",venue:m.venue||"",
       stage:m.stage||"League",group_name:m.group||"",home_goalkeeper_id:m.homeGoalkeeper||null,away_goalkeeper_id:m.awayGoalkeeper||null};
+  }
+
+  async function saveMatch(m,tournamentId){
+    const row=matchRow(m,tournamentId);
+    const id=row.id;
     await req("matches?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(row)});
     await req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
     if((m.goals||[]).length){
@@ -151,11 +156,36 @@
     },
     async deletePlayer(id){await req("players?id=eq."+encodeURIComponent(id),{method:"DELETE"});return true},
     async deleteTeam(id){await req("teams?id=eq."+encodeURIComponent(id),{method:"DELETE"});return true},
+    async replaceFixtures(fixtures){
+      const t=await ensureTournament();
+      const existing=await req("matches?tournament_id=eq."+encodeURIComponent(t.id)+"&select=id");
+      const ids=(existing||[]).map(x=>x.id);
+
+      // Remove dependent fixture data in bulk, then replace all matches in one insert.
+      await req("awards?tournament_id=eq."+encodeURIComponent(t.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      for(let i=0;i<ids.length;i+=100){
+        const chunk=ids.slice(i,i+100);
+        const list=chunk.map(encodeURIComponent).join(",");
+        await req("match_goals?match_id=in.("+list+")",{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      }
+      await req("matches?tournament_id=eq."+encodeURIComponent(t.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+
+      if((fixtures||[]).length){
+        const rows=fixtures.map(m=>matchRow(m,t.id));
+        await req("matches?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(rows)});
+      }
+      return true;
+    },
+    async deleteAllMatches(){
+      return this.replaceFixtures([]);
+    },
     async deleteMatch(id){
       // Delete dependent rows first so this works even when the database
       // foreign keys are not configured with ON DELETE CASCADE.
-      await req("awards?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
-      await req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      await Promise.all([
+        req("awards?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}}),
+        req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}})
+      ]);
       await req("matches?id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
       return true
     }

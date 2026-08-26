@@ -2087,12 +2087,17 @@ async function generateFixtures(){
         generateLeaguePhase(type);
     }
 
+    // Render immediately; only the fixtures are synced to Supabase.
+    // This avoids re-saving every team/player and every fixture one-by-one.
+    renderAll();
+    showPageByName("fixtures");
+
     try{
-        await save();
-        renderAll();
-        showPageByName("fixtures");
+        await ARROWS_DB.replaceFixtures(tournament.fixtures);
+        window.arrowsSetTournamentCache(tournament);
     }catch(error){
         console.error("Fixture generation save failed:", error);
+        alert("Fixture save failed: "+(error.message || error));
     }
 }
 
@@ -3266,12 +3271,10 @@ async function deleteFixture(id){
         );
 
 
-    try{
-        await save();
-        renderAll();
-    }catch(error){
-        console.error("Fixture delete save failed:", error);
-    }
+    // The match was already deleted from Supabase above. Do not run the
+    // expensive full-tournament save again.
+    window.arrowsSetTournamentCache(tournament);
+    renderAll();
 
 }
 
@@ -3552,13 +3555,16 @@ async function deleteAllFixtures(){
 
     const previousFixtures=tournament.fixtures.slice();
     tournament.fixtures=[];
+    renderAll();
 
     try{
-        await save();
-        renderAll();
+        await ARROWS_DB.deleteAllMatches();
+        window.arrowsSetTournamentCache(tournament);
     }catch(error){
         tournament.fixtures=previousFixtures;
+        renderAll();
         console.error("Delete all fixtures failed:", error);
+        alert("Delete all fixtures failed: "+(error.message || error));
     }
 
 }
