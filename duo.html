@@ -577,12 +577,18 @@ window.arrowsSetTournamentCache = window.arrowsSetTournamentCache || function(t)
 
 <body>
 
+<script>
+// Use the main admin login only. Do not show a second login inside Duo.
+if (sessionStorage.getItem("footballAdminLoggedIn") !== "true") {
+    window.location.replace("admin-login.html");
+}
+</script>
 
 <!-- =====================================================
 LOGIN PAGE
 ===================================================== -->
 
-<div id="loginPage">
+<div id="loginPage" class="hidden">
 
     <div class="login-box">
 
@@ -632,7 +638,7 @@ LOGIN PAGE
 ADMIN APP
 ===================================================== -->
 
-<div id="adminApp" class="hidden">
+<div id="adminApp">
 
 
 <header>
@@ -1199,20 +1205,22 @@ function checkLogin(){
     if(
         sessionStorage.getItem(
             "footballAdminLoggedIn"
-        ) === "true"
+        ) !== "true"
     ){
-
-        document
-        .getElementById("loginPage")
-        .classList.add("hidden");
-
-        document
-        .getElementById("adminApp")
-        .classList.remove("hidden");
-
-        renderAll();
-
+        window.location.replace("admin-login.html");
+        return false;
     }
+
+    document
+    .getElementById("loginPage")
+    .classList.add("hidden");
+
+    document
+    .getElementById("adminApp")
+    .classList.remove("hidden");
+
+    renderAll();
+    return true;
 
 }
 
@@ -3856,11 +3864,15 @@ INITIALIZE
 ===================================================== */
 
 (async function initializeSupabaseTournament(){
+    if(!checkLogin()) return;
+
     try{
         await loadTournamentFromSupabase();
-        checkLogin();
+        renderAll();
     }catch(error){
-        console.error("Initialization stopped because Supabase is unavailable.", error);
+        console.error("Supabase tournament data could not be loaded.", error);
+        // Keep the authenticated admin panel available even if Supabase is unavailable.
+        renderAll();
     }
 })();
 
