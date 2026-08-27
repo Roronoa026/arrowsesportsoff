@@ -109,24 +109,40 @@
     if (!duo || !Array.isArray(duo.teams)) return records;
 
     const teamById = Object.fromEntries(duo.teams.map(t => [String(t.id), t]));
-    const playerById = {};
+    const localPlayerById = {};
     const stats = {};
 
+    // Resolve any tournament/team-local player ID to the permanent clan player ID.
     duo.teams.forEach(team => (team.players || []).forEach(p => {
-      playerById[String(p.id)] = { player: p, team };
+      localPlayerById[String(p.id)] = { player: p, team };
+      if (p.clanPlayerId) localPlayerById[String(p.clanPlayerId)] = { player: p, team };
     }));
+
+    const canonicalId = (playerId, team) => {
+      if (!playerId) return null;
+      const key = String(playerId);
+      const inTeam = (team?.players || []).find(p =>
+        String(p.id) === key || String(p.clanPlayerId || '') === key
+      );
+      if (inTeam) return String(inTeam.clanPlayerId || inTeam.id);
+      const ref = localPlayerById[key];
+      return ref ? String(ref.player.clanPlayerId || ref.player.id) : key;
+    };
 
     const ensure = (cid, team) => {
       if (!cid) return null;
       cid = String(cid);
       if (!stats[cid]) stats[cid] = {
-        goals:0, assists:0, matches:0, wins:0, losses:0, draws:0, motm:0, teams:new Set()
+        goals:0, goalsConceded:0, assists:0, matches:0,
+        wins:0, losses:0, draws:0, motm:0, teams:new Set()
       };
       if (team && team.name) stats[cid].teams.add(team.name);
       return stats[cid];
     };
 
-    duo.teams.forEach(team => (team.players || []).forEach(p => ensure(p.clanPlayerId, team)));
+    duo.teams.forEach(team => (team.players || []).forEach(p =>
+      ensure(String(p.clanPlayerId || p.id), team)
+    ));
 
     (Array.isArray(duo.fixtures) ? duo.fixtures : []).forEach(match => {
       if (!match.played) return;
@@ -134,33 +150,57 @@
       const away = teamById[String(match.away)];
       if (!home || !away) return;
 
-      const goals = Array.isArray(match.goals) ? match.goals : [];
-      const homeScore = goals.filter(g => String(g.teamId) === String(home.id)).length;
-      const awayScore = goals.filter(g => String(g.teamId) === String(away.id)).length;
+      const result = match.result && typeof match.result === 'object' ? match.result : null;
+      const playerStats = result && Array.isArray(result.playerStats) ? result.playerStats : [];
 
-      [home, away].forEach((team, idx) => (team.players || []).forEach(p => {
-        const s = ensure(p.clanPlayerId, team);
-        if (!s) return;
-        s.matches++;
-        if (homeScore === awayScore) s.draws++;
-        else if ((idx === 0 && homeScore > awayScore) || (idx === 1 && awayScore > homeScore)) s.wins++;
-        else s.losses++;
-      }));
+      if (playerStats.length) {
+        // New result format: the admin-entered player rows are authoritative.
+        playerStats.forEach(row => {
+          const rowTeam = teamById[String(row.teamId)] ||
+            ((home.players || []).some(p => String(p.id) === String(row.playerId) || String(p.clanPlayerId || '') === String(row.playerId)) ? home : away);
+          const cid = canonicalId(row.playerId, rowTeam);
+          const s = ensure(cid, rowTeam);
+          if (!s) return;
+          s.matches++;
+          s.goals += Math.max(0, Number(row.goalsScored) || 0);
+          s.goalsConceded += Math.max(0, Number(row.goalsConceded) || 0);
+          const outcome = String(row.outcome || '').toLowerCase();
+          if (outcome === 'win') s.wins++;
+          else if (outcome === 'loss') s.losses++;
+          else if (outcome === 'draw') s.draws++;
+        });
+      } else {
+        // Legacy fallback for matches saved before per-player result rows existed.
+        const goals = Array.isArray(match.goals) ? match.goals : [];
+        const homeScore = result ? Number(result.homePoints || 0) : goals.filter(g => String(g.teamId) === String(home.id)).length;
+        const awayScore = result ? Number(result.awayPoints || 0) : goals.filter(g => String(g.teamId) === String(away.id)).length;
 
-      goals.forEach(g => {
-        const ref = playerById[String(g.playerId)];
-        if (ref) {
-          const s = ensure(ref.player.clanPlayerId, ref.team);
+        [home, away].forEach((team, idx) => (team.players || []).forEach(p => {
+          const s = ensure(String(p.clanPlayerId || p.id), team);
+          if (!s) return;
+          s.matches++;
+          const conceded = idx === 0 ? awayScore : homeScore;
+          s.goalsConceded += Math.max(0, Number(conceded) || 0);
+          if (homeScore === awayScore) s.draws++;
+          else if ((idx === 0 && homeScore > awayScore) || (idx === 1 && awayScore > homeScore)) s.wins++;
+          else s.losses++;
+        }));
+
+        goals.forEach(g => {
+          const ref = localPlayerById[String(g.playerId)];
+          const rowTeam = teamById[String(g.teamId)] || ref?.team;
+          const cid = canonicalId(g.playerId, rowTeam);
+          const s = ensure(cid, rowTeam);
           if (s) s.goals++;
-        }
-      });
+        });
+      }
 
-      if (match.motm) {
-        const ref = playerById[String(match.motm)];
-        if (ref) {
-          const s = ensure(ref.player.clanPlayerId, ref.team);
-          if (s) s.motm++;
-        }
+      const mvpId = (result && result.mvp) || match.motm;
+      if (mvpId) {
+        const ref = localPlayerById[String(mvpId)];
+        const cid = canonicalId(mvpId, ref?.team);
+        const s = ensure(cid, ref?.team);
+        if (s) s.motm++;
       }
     });
 
@@ -168,8 +208,14 @@
       playerId:id,
       tournament:duo.name || "ARROWS DUO TOURNAMENT",
       teams:[...s.teams],
-      goals:s.goals, assists:s.assists, matches:s.matches,
-      wins:s.wins, losses:s.losses, draws:s.draws, motm:s.motm
+      goals:s.goals,
+      goalsConceded:s.goalsConceded,
+      assists:s.assists,
+      matches:s.matches,
+      wins:s.wins,
+      losses:s.losses,
+      draws:s.draws,
+      motm:s.motm
     }));
     return records;
   };
@@ -177,12 +223,14 @@
   window.arrowsPlayerStats = function (playerId) {
     const history = arrowsTournamentRecords().filter(r => String(r.playerId) === String(playerId));
     const out = {
-      tournaments:history.length, goals:0, assists:0, matches:0,
-      wins:0, losses:0, draws:0, motm:0, history
+      tournaments:history.filter(r => r.matches > 0).length,
+      goals:0, goalsConceded:0, assists:0, matches:0,
+      wins:0, losses:0, draws:0, motm:0, history:history.filter(r => r.matches > 0)
     };
-    history.forEach(r => ["goals","assists","matches","wins","losses","draws","motm"]
+    out.history.forEach(r => ["goals","goalsConceded","assists","matches","wins","losses","draws","motm"]
       .forEach(k => out[k] += Number(r[k] || 0)));
     out.winRate = out.matches ? Math.round(out.wins / out.matches * 100) : 0;
+    out.goalDifference = out.goals - out.goalsConceded;
     return out;
   };
 

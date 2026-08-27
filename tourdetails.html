@@ -1091,7 +1091,7 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260821-relational2"></script>
-<script src="supabase-data.js?v=20260821-relational2"></script>
+<script src="supabase-data.js?v=20260827-duoresults1"></script>
 </head>
 
 
@@ -1440,12 +1440,12 @@ AWARDS
             </span>
 
             <h2>
-                Golden Glove
+                Golden Ball
             </h2>
 
         </div>
 
-        <div id="goldenGlove"></div>
+        <div id="goldenBall"></div>
 
     </div>
 
@@ -1608,6 +1608,26 @@ function getMatch(id){
 }
 
 
+function getMatchResult(match){
+    const result=match && match.result && typeof match.result==="object" ? match.result : null;
+    if(result){
+        return {
+            homePoints:Number(result.homePoints)||0,
+            awayPoints:Number(result.awayPoints)||0,
+            playerStats:Array.isArray(result.playerStats)?result.playerStats:[],
+            mvp:result.mvp||match.motm||null
+        };
+    }
+    const goals=Array.isArray(match?.goals)?match.goals:[];
+    return {
+        homePoints:goals.filter(g=>String(g.teamId)===String(match.home)).length,
+        awayPoints:goals.filter(g=>String(g.teamId)===String(match.away)).length,
+        playerStats:[],
+        mvp:match?.motm||null
+    };
+}
+
+
 /* =========================================
 NAVIGATION
 ========================================= */
@@ -1754,10 +1774,12 @@ function renderDashboard(){
     let goalCount = 0;
 
     fixtures.forEach(match => {
-
-        goalCount +=
-            (match.goals || []).length;
-
+        const result=getMatchResult(match);
+        if(result.playerStats.length){
+            goalCount += result.playerStats.reduce((sum,row)=>sum+(Number(row.goalsScored)||0),0);
+        }else{
+            goalCount += (match.goals || []).length;
+        }
     });
 
 
@@ -2053,253 +2075,58 @@ function fixtureHTML(
     match,
     compact = false
 ){
+    const home=getTeam(match.home);
+    const away=getTeam(match.away);
+    if(!home || !away) return "";
 
-    const home =
-        getTeam(match.home);
+    const result=getMatchResult(match);
+    const status=match.played?"completed":"upcoming";
+    const statusText=match.played?"✓ Completed":"◷ Upcoming";
+    let info=[];
+    if(match.date) info.push("📅 "+escapeHTML(match.date));
+    if(match.time) info.push("🕐 "+escapeHTML(match.time));
+    if(match.venue) info.push("📍 "+escapeHTML(match.venue));
 
+    const playerRows=result.playerStats.length ? `
+        <div class="table-wrap" style="margin-top:16px;">
+            <table>
+                <thead><tr><th>Player</th><th>Team</th><th>Result</th><th>GS</th><th>GC</th></tr></thead>
+                <tbody>
+                    ${result.playerStats.map(row=>{
+                        const data=findPlayer(row.playerId);
+                        const team=getTeam(row.teamId);
+                        return `<tr>
+                            <td><strong>${escapeHTML(data?data.player.name:"Unknown Player")}</strong></td>
+                            <td>${escapeHTML(team?team.name:"")}</td>
+                            <td>${escapeHTML(String(row.outcome||"").toUpperCase())}</td>
+                            <td>⚽ ${Number(row.goalsScored)||0}</td>
+                            <td>${Number(row.goalsConceded)||0}</td>
+                        </tr>`;
+                    }).join("")}
+                </tbody>
+            </table>
+        </div>` : "";
 
-    const away =
-        getTeam(match.away);
-
-
-    if(!home || !away){
-
-        return "";
-
-    }
-
-
-    const goals =
-        match.goals || [];
-
-
-    const homeScore =
-        goals.filter(
-            goal =>
-            String(goal.teamId) ===
-            String(home.id)
-        ).length;
-
-
-    const awayScore =
-        goals.filter(
-            goal =>
-            String(goal.teamId) ===
-            String(away.id)
-        ).length;
-
-
-    const status =
-        match.played
-        ? "completed"
-        : "upcoming";
-
-
-    const statusText =
-        match.played
-        ? "✓ Completed"
-        : "◷ Upcoming";
-
-
-    let info = [];
-
-
-    if(match.date){
-
-        info.push(
-            "📅 " +
-            escapeHTML(match.date)
-        );
-
-    }
-
-
-    if(match.time){
-
-        info.push(
-            "🕐 " +
-            escapeHTML(match.time)
-        );
-
-    }
-
-
-    if(match.venue){
-
-        info.push(
-            "📍 " +
-            escapeHTML(match.venue)
-        );
-
-    }
-
-
-    const goalList =
-        goals.length
-        ? `
-
-            <div class="goal-list">
-
-                ${
-
-                    goals
-                    .map(goal => {
-
-                        const player =
-                            findPlayer(
-                                goal.playerId
-                            );
-
-
-                        return `
-
-                            <div class="goal">
-
-                                ⚽
-
-                                <strong>
-                                    ${
-                                        player
-                                        ? escapeHTML(
-                                            player.player.name
-                                          )
-                                        : "Unknown Player"
-                                    }
-                                </strong>
-
-                                ${
-                                    goal.minute
-                                    ? `
-
-                                        <span>
-                                            ${escapeHTML(
-                                                goal.minute
-                                            )}'
-                                        </span>
-
-                                    `
-                                    : ""
-                                }
-
-                            </div>
-
-                        `;
-
-                    })
-                    .join("")
-
-                }
-
-            </div>
-
-        `
-        : "";
-
+    const mvpData=result.mvp?findPlayer(result.mvp):null;
+    const mvpHtml=mvpData?`<div class="fixture-info" style="margin-top:12px;">⭐ Match MVP: <strong>${escapeHTML(mvpData.player.name)}</strong></div>`:"";
 
     return `
-
         <div class="fixture">
-
             <div class="fixture-header">
-
-                <span class="stage">
-
-                    ${
-                        escapeHTML(
-                            match.stage ||
-                            "Match"
-                        )
-                    }
-
-                    ${
-                        match.round
-                        ? " • Round " +
-                          escapeHTML(match.round)
-                        : ""
-                    }
-
-                </span>
-
-
-                ${
-                    match.group
-                    ? `
-                        <span class="group">
-                            🏆
-                            ${escapeHTML(
-                                match.group
-                            )}
-                        </span>
-                    `
-                    : ""
-                }
-
-
-                <span class="${status}">
-                    ${statusText}
-                </span>
-
+                <span class="stage">${escapeHTML(match.stage||"Match")}${match.round?" • Round "+escapeHTML(match.round):""}</span>
+                ${match.group?`<span class="group">🏆 ${escapeHTML(match.group)}</span>`:""}
+                <span class="${status}">${statusText}</span>
             </div>
-
-
             <div class="fixture-teams">
-
-                <div class="fixture-team">
-
-                    ${teamImage(home)}
-
-                    <strong>
-                        ${escapeHTML(
-                            home.name
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div class="score">
-
-                    ${homeScore}
-                    -
-                    ${awayScore}
-
-                </div>
-
-
-                <div class="fixture-team">
-
-                    <strong>
-                        ${escapeHTML(
-                            away.name
-                        )}
-                    </strong>
-
-                    ${teamImage(away)}
-
-                </div>
-
+                <div class="fixture-team">${teamImage(home)}<strong>${escapeHTML(home.name)}</strong></div>
+                <div class="score">${result.homePoints} - ${result.awayPoints}</div>
+                <div class="fixture-team"><strong>${escapeHTML(away.name)}</strong>${teamImage(away)}</div>
             </div>
-
-
-            ${
-                info.length
-                ? `
-                    <div class="fixture-info">
-                        ${info.join(" &nbsp; | &nbsp; ")}
-                    </div>
-                `
-                : ""
-            }
-
-
-            ${goalList}
-
-        </div>
-
-    `;
-
+            ${info.length?`<div class="fixture-info">${info.join(" &nbsp; | &nbsp; ")}</div>`:""}
+            ${compact?"":playerRows}
+            ${compact?"":mvpHtml}
+        </div>`;
 }
-
 
 /* =========================================
 POINTS TABLE
@@ -2346,24 +2173,9 @@ function calculateTable(
     )
     .forEach(match => {
 
-        const homeScore =
-            (match.goals || [])
-            .filter(
-                goal =>
-                String(goal.teamId) ===
-                String(match.home)
-            )
-            .length;
-
-
-        const awayScore =
-            (match.goals || [])
-            .filter(
-                goal =>
-                String(goal.teamId) ===
-                String(match.away)
-            )
-            .length;
+        const matchResult=getMatchResult(match);
+        const homeScore=matchResult.homePoints;
+        const awayScore=matchResult.awayPoints;
 
 
         const home =
@@ -2721,467 +2533,99 @@ PLAYER STATISTICS
 ========================================= */
 
 function getPlayerStats(){
+    const stats={};
 
-    const stats = {};
-
-
-    tournament.teams
-    .forEach(team => {
-
-        (team.players || [])
-        .forEach(player => {
-
-            const key =
-                team.id +
-                "-" +
-                player.id;
-
-
-            stats[key] = {
-
-                playerId:player.id,
-
-                teamId:team.id,
-
-                player:player.name,
-
-                team:team.name,
-
-                logo:team.logo,
-
-                matches:0,
-
-                wins:0,
-
-                losses:0,
-
-                goals:0,
-
-                motm:0,
-
-                goalkeeperMatches:0,
-
-                goalsConceded:0,
-
-                cleanSheets:0
-
+    tournament.teams.forEach(team=>{
+        (team.players||[]).forEach(player=>{
+            const key=team.id+"-"+player.id;
+            stats[key]={
+                playerId:player.id,teamId:team.id,player:player.name,team:team.name,logo:team.logo,
+                matches:0,wins:0,draws:0,losses:0,goals:0,goalsConceded:0,motm:0
             };
-
         });
-
     });
 
+    (tournament.fixtures||[]).filter(match=>match.played).forEach(match=>{
+        const result=getMatchResult(match);
 
-    tournament.fixtures
-    .filter(
-        match => match.played
-    )
-    .forEach(match => {
-
-        const homeTeam =
-            getTeam(match.home);
-
-
-        const awayTeam =
-            getTeam(match.away);
-
-
-        if(
-            !homeTeam ||
-            !awayTeam
-        ){
-
-            return;
-
+        if(result.playerStats.length){
+            result.playerStats.forEach(row=>{
+                const key=row.teamId+"-"+row.playerId;
+                if(!stats[key]) return;
+                stats[key].matches++;
+                const outcome=String(row.outcome||"").toLowerCase();
+                if(outcome==="win") stats[key].wins++;
+                else if(outcome==="loss") stats[key].losses++;
+                else if(outcome==="draw") stats[key].draws++;
+                stats[key].goals += Number(row.goalsScored)||0;
+                stats[key].goalsConceded += Number(row.goalsConceded)||0;
+            });
+        }else{
+            // Legacy fallback for old matches that have not been re-entered with duo player results.
+            const home=getTeam(match.home), away=getTeam(match.away);
+            const hs=result.homePoints, as=result.awayPoints;
+            (home?.players||[]).forEach(player=>{
+                const key=home.id+"-"+player.id; if(!stats[key]) return;
+                stats[key].matches++; if(hs>as)stats[key].wins++; else if(hs<as)stats[key].losses++; else stats[key].draws++;
+            });
+            (away?.players||[]).forEach(player=>{
+                const key=away.id+"-"+player.id; if(!stats[key]) return;
+                stats[key].matches++; if(as>hs)stats[key].wins++; else if(as<hs)stats[key].losses++; else stats[key].draws++;
+            });
+            (match.goals||[]).forEach(goal=>{
+                const key=goal.teamId+"-"+goal.playerId; if(stats[key])stats[key].goals++;
+            });
         }
 
-
-        const homeScore =
-            (match.goals || [])
-            .filter(
-                goal =>
-                String(goal.teamId) ===
-                String(match.home)
-            )
-            .length;
-
-
-        const awayScore =
-            (match.goals || [])
-            .filter(
-                goal =>
-                String(goal.teamId) ===
-                String(match.away)
-            )
-            .length;
-
-
-        (homeTeam.players || [])
-        .forEach(player => {
-
-            const key =
-                homeTeam.id +
-                "-" +
-                player.id;
-
-
-            if(!stats[key]){
-
-                return;
-
-            }
-
-
-            stats[key].matches++;
-
-
-            if(
-                homeScore >
-                awayScore
-            ){
-
-                stats[key].wins++;
-
-            }
-
-            else if(
-                homeScore <
-                awayScore
-            ){
-
-                stats[key].losses++;
-
-            }
-
-        });
-
-
-        (awayTeam.players || [])
-        .forEach(player => {
-
-            const key =
-                awayTeam.id +
-                "-" +
-                player.id;
-
-
-            if(!stats[key]){
-
-                return;
-
-            }
-
-
-            stats[key].matches++;
-
-
-            if(
-                awayScore >
-                homeScore
-            ){
-
-                stats[key].wins++;
-
-            }
-
-            else if(
-                awayScore <
-                homeScore
-            ){
-
-                stats[key].losses++;
-
-            }
-
-        });
-
-
-        /* GOALS */
-
-        (match.goals || [])
-        .forEach(goal => {
-
-            const key =
-                goal.teamId +
-                "-" +
-                goal.playerId;
-
-
-            if(stats[key]){
-
-                stats[key].goals++;
-
-            }
-
-        });
-
-
-        /* MOTM */
-
-        if(match.motm){
-
-            const data =
-                findPlayer(
-                    match.motm
-                );
-
-
+        if(result.mvp){
+            const data=findPlayer(result.mvp);
             if(data){
-
-                const key =
-                    data.team.id +
-                    "-" +
-                    data.player.id;
-
-
-                if(stats[key]){
-
-                    stats[key].motm++;
-
-                }
-
+                const key=data.team.id+"-"+data.player.id;
+                if(stats[key]) stats[key].motm++;
             }
-
         }
-
-
-        /* HOME GK */
-
-        if(match.homeGoalkeeper){
-
-            const key =
-                match.home +
-                "-" +
-                match.homeGoalkeeper;
-
-
-            if(stats[key]){
-
-                stats[key].goalkeeperMatches++;
-
-                stats[key].goalsConceded +=
-                    awayScore;
-
-
-                if(
-                    awayScore === 0
-                ){
-
-                    stats[key].cleanSheets++;
-
-                }
-
-            }
-
-        }
-
-
-        /* AWAY GK */
-
-        if(match.awayGoalkeeper){
-
-            const key =
-                match.away +
-                "-" +
-                match.awayGoalkeeper;
-
-
-            if(stats[key]){
-
-                stats[key].goalkeeperMatches++;
-
-                stats[key].goalsConceded +=
-                    homeScore;
-
-
-                if(
-                    homeScore === 0
-                ){
-
-                    stats[key].cleanSheets++;
-
-                }
-
-            }
-
-        }
-
     });
-
 
     return Object.values(stats);
-
 }
-
 
 /* =========================================
 AWARDS
 ========================================= */
 
 function renderAwards(){
+    const stats=getPlayerStats();
 
-    const stats =
-        getPlayerStats();
+    /* GOLDEN BOOT = most goals scored */
+    const scorers=[...stats].filter(p=>p.goals>0).sort((a,b)=>b.goals-a.goals || b.wins-a.wins || a.goalsConceded-b.goalsConceded);
+    const boot=document.getElementById("goldenBoot");
+    boot.innerHTML=scorers.length?createAwardTable(scorers,"goals"):`<div class="empty">No player goals have been recorded yet.</div>`;
 
-
-    /* GOLDEN BOOT */
-
-    const scorers =
-        [...stats]
-        .filter(
-            player =>
-            player.goals > 0
-        )
-        .sort(
-            (a,b) =>
-            b.goals -
-            a.goals
-        );
-
-
-    const boot =
-        document
-        .getElementById(
-            "goldenBoot"
-        );
-
-
-    if(!scorers.length){
-
-        boot.innerHTML = `
-            <div class="empty">
-                No goals have been recorded yet.
-            </div>
-        `;
-
+    /* GOLDEN BALL = lowest goals conceded (only players with recorded match stats) */
+    const defenders=[...stats].filter(p=>p.matches>0).sort((a,b)=>a.goalsConceded-b.goalsConceded || b.matches-a.matches || b.wins-a.wins || b.goals-a.goals);
+    const ball=document.getElementById("goldenBall");
+    if(!defenders.length){
+        ball.innerHTML=`<div class="empty">Goals-conceded statistics are not available yet.</div>`;
+    }else{
+        const bestConceded=defenders[0].goalsConceded;
+        const leaders=defenders.filter(p=>p.goalsConceded===bestConceded);
+        ball.innerHTML=`
+            <div class="table-wrap"><table>
+                <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Goals Conceded</th><th>Matches</th></tr></thead>
+                <tbody>${leaders.map((p,i)=>`<tr><td>${i===0?'🥇':i+1}</td><td><strong>${escapeHTML(p.player)}</strong></td><td>${escapeHTML(p.team)}</td><td>${p.goalsConceded}</td><td>${p.matches}</td></tr>`).join("")}</tbody>
+            </table></div>`;
     }
 
-    else{
-
-        boot.innerHTML =
-            createAwardTable(
-                scorers,
-                "goals"
-            );
-
-    }
-
-
-    /* GOLDEN GLOVE */
-
-    const keepers =
-        [...stats]
-        .filter(
-            player =>
-            player.goalkeeperMatches > 0
-        )
-        .sort(
-            (a,b) =>
-            b.cleanSheets -
-            a.cleanSheets ||
-            a.goalsConceded -
-            b.goalsConceded
-        );
-
-
-    const glove =
-        document
-        .getElementById(
-            "goldenGlove"
-        );
-
-
-    if(!keepers.length){
-
-        glove.innerHTML = `
-            <div class="empty">
-                Goalkeeper statistics are not available yet.
-            </div>
-        `;
-
-    }
-
-    else{
-
-        const winner =
-            keepers[0];
-
-
-        glove.innerHTML =
-            awardWinnerHTML(
-                "🧤",
-                winner.player,
-                winner.team,
-                `${winner.cleanSheets} Clean Sheet${
-                    winner.cleanSheets === 1
-                    ? ""
-                    : "s"
-                }`
-            );
-
-    }
-
-
-    /* BEST PLAYER */
-
-    const best =
-        [...stats]
-        .map(player => {
-
-            return {
-
-                ...player,
-
-                rating:
-                    player.goals * 5 +
-                    player.motm * 4 +
-                    player.wins * 2
-
-            };
-
-        })
-        .sort(
-            (a,b) =>
-            b.rating -
-            a.rating
-        );
-
-
-    const bestBox =
-        document
-        .getElementById(
-            "bestPlayer"
-        );
-
-
+    /* BEST PLAYER = most Match MVP awards */
+    const best=[...stats].filter(p=>p.matches>0).sort((a,b)=>b.motm-a.motm || b.wins-a.wins || b.goals-a.goals || a.goalsConceded-b.goalsConceded);
+    const bestBox=document.getElementById("bestPlayer");
     if(!best.length){
-
-        bestBox.innerHTML = `
-            <div class="empty">
-                Player awards will appear after matches are played.
-            </div>
-        `;
-
+        bestBox.innerHTML=`<div class="empty">Player awards will appear after matches are played.</div>`;
+    }else{
+        const winner=best[0];
+        bestBox.innerHTML=awardWinnerHTML("⭐",winner.player,winner.team,`${winner.motm} Match MVP${winner.motm===1?"":"s"}`);
     }
-
-    else{
-
-        const winner =
-            best[0];
-
-
-        bestBox.innerHTML =
-            awardWinnerHTML(
-                "⭐",
-                winner.player,
-                winner.team,
-                `Rating: ${winner.rating}`
-            );
-
-    }
-
 }
-
 
 /* =========================================
 AWARD TABLE

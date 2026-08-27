@@ -41,14 +41,17 @@
   function matchToLegacy(m,goals,awards){
     const dt=localDateParts(m.match_date);
     const motm=(awards||[]).find(a=>a.award_type==="motm");
+    let notes={};
+    try{ notes=m.notes?JSON.parse(m.notes):{}; }catch(e){ notes={}; }
+    const result=notes&&notes.duoResult&&typeof notes.duoResult==="object"?notes.duoResult:null;
     return {
       id:m.id,home:m.home_team_id,away:m.away_team_id,
       stage:m.stage||"League",round:m.round||1,group:m.group_name||"",
       date:dt.date,time:dt.time,
       venue:m.venue||"",played:m.status==="completed",
       goals:(goals||[]).map(g=>({id:g.id,teamId:g.team_id,playerId:g.player_id,minute:g.minute??""})),
-      motm:motm?motm.player_id:null,
-      homeGoalkeeper:m.home_goalkeeper_id||null,awayGoalkeeper:m.away_goalkeeper_id||null
+      motm:(result&&result.mvp)||(motm?motm.player_id:null),
+      result
     };
   }
 
@@ -102,11 +105,15 @@
     const id=(m.id&&String(m.id).includes("-"))?m.id:uuid(); m.id=id;
     let match_date=null;
     if(m.date){ match_date=new Date(m.date+"T"+(m.time||"00:00")+":00").toISOString(); }
-    const homeScore=(m.goals||[]).filter(g=>String(g.teamId)===String(m.home)).length;
-    const awayScore=(m.goals||[]).filter(g=>String(g.teamId)===String(m.away)).length;
+    const result=m.result&&typeof m.result==="object"?m.result:null;
+    const legacyHome=(m.goals||[]).filter(g=>String(g.teamId)===String(m.home)).length;
+    const legacyAway=(m.goals||[]).filter(g=>String(g.teamId)===String(m.away)).length;
+    const homeScore=result?Math.max(0,Number(result.homePoints)||0):legacyHome;
+    const awayScore=result?Math.max(0,Number(result.awayPoints)||0):legacyAway;
     return {id,tournament_id:tournamentId,home_team_id:m.home,away_team_id:m.away,home_score:homeScore,away_score:awayScore,
       match_date,round:Number(m.round)||1,status:m.played?"completed":"scheduled",venue:m.venue||"",
-      stage:m.stage||"League",group_name:m.group||"",home_goalkeeper_id:m.homeGoalkeeper||null,away_goalkeeper_id:m.awayGoalkeeper||null};
+      stage:m.stage||"League",group_name:m.group||"",home_goalkeeper_id:null,away_goalkeeper_id:null,
+      notes:JSON.stringify({duoResult:result})};
   }
 
   async function saveMatch(m,tournamentId){

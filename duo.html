@@ -571,7 +571,7 @@ window.arrowsSetTournamentCache = window.arrowsSetTournamentCache || function(t)
 };
 </script>
 
-<script src="supabase-data.js?v=20260821-relational3"></script>
+<script src="supabase-data.js?v=20260827-duoresults1"></script>
 <script src="player-data.js?v=20260821-relational3"></script>
 </head>
 
@@ -1253,6 +1253,15 @@ function normalizeTournament(){
     tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
     tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
     tournament.teams.forEach(team=>{team.players=Array.isArray(team.players)?team.players:[]});
+    tournament.fixtures.forEach(match=>{
+        match.goals=Array.isArray(match.goals)?match.goals:[];
+        if(match.result && typeof match.result === "object"){
+            match.result.playerStats=Array.isArray(match.result.playerStats)?match.result.playerStats:[];
+            match.result.homePoints=Number(match.result.homePoints)||0;
+            match.result.awayPoints=Number(match.result.awayPoints)||0;
+            match.result.mvp=match.result.mvp||match.motm||null;
+        }
+    });
     window.arrowsSetTournamentCache(tournament);
 }
 
@@ -1779,10 +1788,7 @@ function deletePlayer(
         );
 
 
-    /*
-        Remove player from goals,
-        MOTM and goalkeeper selections.
-    */
+    /* Remove the player from any stored fixture result data. */
 
     tournament.fixtures.forEach(
         match => {
@@ -1804,24 +1810,11 @@ function deletePlayer(
 
             }
 
-
-            if(
-                String(match.homeGoalkeeper) ===
-                String(playerId)
-            ){
-
-                match.homeGoalkeeper=null;
-
-            }
-
-
-            if(
-                String(match.awayGoalkeeper) ===
-                String(playerId)
-            ){
-
-                match.awayGoalkeeper=null;
-
+            if(match.result){
+                match.result.playerStats=(match.result.playerStats||[]).filter(row=>
+                    String(row.playerId)!==String(playerId)
+                );
+                if(String(match.result.mvp)===String(playerId)) match.result.mvp=null;
             }
 
         }
@@ -2054,9 +2047,7 @@ function createMatch(
 
         motm:null,
 
-        homeGoalkeeper:null,
-
-        awayGoalkeeper:null,
+        result:null,
 
         played:false
 
@@ -2210,8 +2201,9 @@ function teamPoints(teamId, fixtureSet){
     getCompletedMatchesForTeam(teamId, fixtureSet)
     .filter(m=>m.played)
     .forEach(m=>{
-        const homeScore=m.goals.filter(g=>String(g.teamId)===String(m.home)).length;
-        const awayScore=m.goals.filter(g=>String(g.teamId)===String(m.away)).length;
+        const result=getMatchResult(m);
+        const homeScore=result.homePoints;
+        const awayScore=result.awayPoints;
         const isHome=String(m.home)===String(teamId);
         const scored=isHome?homeScore:awayScore;
         const conceded=isHome?awayScore:homeScore;
@@ -2412,16 +2404,72 @@ function playerOptions(teamId){
 
 
 /* =====================================================
+DUO RESULT HELPERS
+===================================================== */
+
+function getMatchResult(match){
+    const result=match && match.result && typeof match.result==="object" ? match.result : null;
+    if(result){
+        return {
+            homePoints:Number(result.homePoints)||0,
+            awayPoints:Number(result.awayPoints)||0,
+            playerStats:Array.isArray(result.playerStats)?result.playerStats:[],
+            mvp:result.mvp||match.motm||null
+        };
+    }
+
+    // Legacy fallback: preserve old fixtures until they are edited with the new result form.
+    const goals=Array.isArray(match?.goals)?match.goals:[];
+    return {
+        homePoints:goals.filter(g=>String(g.teamId)===String(match.home)).length,
+        awayPoints:goals.filter(g=>String(g.teamId)===String(match.away)).length,
+        playerStats:[],
+        mvp:match?.motm||null
+    };
+}
+
+function getPlayerResult(match,playerId){
+    return getMatchResult(match).playerStats.find(row=>String(row.playerId)===String(playerId)) || null;
+}
+
+function resultPlayerRowHTML(match,team,player){
+    const row=getPlayerResult(match,player.id)||{};
+    const prefix=`result-${match.id}-${player.id}`;
+    const outcome=String(row.outcome||"").toLowerCase();
+    return `
+        <div class="player-row" style="display:grid;grid-template-columns:minmax(150px,1.2fr) repeat(3,minmax(110px,1fr));gap:10px;align-items:end;">
+            <div>
+                <label>Player</label>
+                <strong>${escapeHTML(player.name)}</strong>
+            </div>
+            <div>
+                <label>Win / Loss</label>
+                <select id="${prefix}-outcome">
+                    <option value="" ${!outcome?'selected':''}>Select</option>
+                    <option value="win" ${outcome==='win'?'selected':''}>Win</option>
+                    <option value="loss" ${outcome==='loss'?'selected':''}>Loss</option>
+                    <option value="draw" ${outcome==='draw'?'selected':''}>Draw</option>
+                </select>
+            </div>
+            <div>
+                <label>Goals Scored</label>
+                <input id="${prefix}-gs" type="number" min="0" value="${Number(row.goalsScored)||0}">
+            </div>
+            <div>
+                <label>Goals Conceded</label>
+                <input id="${prefix}-gc" type="number" min="0" value="${Number(row.goalsConceded)||0}">
+            </div>
+        </div>
+    `;
+}
+
+
+/* =====================================================
 RENDER FIXTURES
 ===================================================== */
 
 function renderFixtures(){
-
-    const box =
-        document.getElementById(
-            "fixtureList"
-        );
-
+    const box=document.getElementById("fixtureList");
     box.innerHTML="";
 
     const typeNames={
@@ -2434,528 +2482,85 @@ function renderFixtures(){
     box.innerHTML += `
         <div class="card">
             <span class="format-badge">FORMAT: ${escapeHTML(typeNames[tournament.type] || "Round Robin / League")}</span>
-            ${
-                tournament.type!=="knockout"
-                ? `<span class="format-badge">GROUPS: ${tournament.leagueGroups}</span>`
-                : ""
-            }
+            ${tournament.type!=="knockout" ? `<span class="format-badge">GROUPS: ${tournament.leagueGroups}</span>` : ""}
         </div>
     `;
 
-    if(
-        tournament.fixtures.length === 0
-    ){
-
-        box.innerHTML =
-
-        `
-        <div class="card">
-
-            <h3>📅 No fixtures</h3>
-
-            <p>
-                Choose the tournament format in Settings, then click "Generate Fixtures" to create fixtures.
-            </p>
-
-        </div>
-        `;
-
+    if(!tournament.fixtures.length){
+        box.innerHTML = `<div class="card"><h3>📅 No fixtures</h3><p>Choose the tournament format in Settings, then click "Generate Fixtures" to create fixtures.</p></div>`;
         return;
-
     }
 
-
-    tournament.fixtures.forEach(
-        match => {
-
-            const home =
-                getTeam(match.home);
-
-            const away =
-                getTeam(match.away);
-
-            if(!home || !away)return;
-
-
-            const homeScore =
-                match.goals.filter(
-                    goal =>
-                    String(goal.teamId) ===
-                    String(home.id)
-                ).length;
-
-
-            const awayScore =
-                match.goals.filter(
-                    goal =>
-                    String(goal.teamId) ===
-                    String(away.id)
-                ).length;
-
-
-            let goalsHTML="";
-
-
-            match.goals.forEach(
-                goal => {
-
-                    const scorer =
-                        findPlayer(
-                            goal.playerId
-                        );
-
-                    goalsHTML +=
-
-                    `
-                    <div class="player-row">
-
-                        <span>
-                            ⚽
-                            ${
-                                scorer
-                                ?
-                                escapeHTML(
-                                    scorer.player.name
-                                )
-                                :
-                                "Unknown Player"
-                            }
-
-                            ${
-                                goal.minute
-                                ?
-                                " • "+goal.minute+"'"
-                                :
-                                ""
-                            }
-                        </span>
-
-                        <button
-                            class="danger small"
-                            onclick="deleteGoal(
-                                '${match.id}',
-                                '${goal.id}'
-                            )">
-                            🗑️ Remove
-                        </button>
-
-                    </div>
-                    `;
-
-                }
-            );
-
-
-            box.innerHTML +=
-
-            `
-            <div class="fixture">
-
-                <div class="fixture-title">
-
-                    <div>
-
-                        <b>
-                            ${escapeHTML(match.stage)}
-                        </b>
-
-                        ${
-                            match.group
-                            ?
-                            " • "+
-                            escapeHTML(match.group)
-                            :
-                            ""
-                        }
-
-                        • Round
-                        ${match.round}
-
-                    </div>
-
-
-                    <div>
-
-                        ${
-                            match.played
-                            ?
-                            `<span style="
-                            color:#39d864;
-                            font-weight:bold;">
-                            ✅ COMPLETED
-                            </span>`
-                            :
-                            `<span style="
-                            color:#f4c542;
-                            font-weight:bold;">
-                            ⏳ NOT COMPLETED
-                            </span>`
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div class="fixture-teams">
-
-                    <div class="fixture-team">
-
-                        ${
-                            home.logo
-                            ?
-                            `<img
-                                src="${home.logo}"
-                                class="team-logo">`
-                            :
-                            "🛡️"
-                        }
-
-                        <b>
-                            ${escapeHTML(home.name)}
-                        </b>
-
-                    </div>
-
-
-                    <div class="score">
-
-                        ${homeScore}
-                        -
-                        ${awayScore}
-
-                    </div>
-
-
-                    <div class="fixture-team">
-
-                        <b>
-                            ${escapeHTML(away.name)}
-                        </b>
-
-                        ${
-                            away.logo
-                            ?
-                            `<img
-                                src="${away.logo}"
-                                class="team-logo">`
-                            :
-                            "🛡️"
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div class="fixture-section">
-
-                    <h3>✏️ Fixture Details</h3>
-
-                    <button
-                        class="secondary"
-                        onclick="openFixtureEditor(
-                            '${match.id}'
-                        )">
-                        ✏️ Edit Fixture
-                    </button>
-
-                    <button
-                        class="danger"
-                        onclick="deleteFixture(
-                            '${match.id}'
-                        )">
-                        🗑️ Delete Fixture
-                    </button>
-
-                </div>
-
-
-                <div class="fixture-section">
-
-                    <h3>⚽ Goals</h3>
-
-                    <label>Scoring Team</label>
-
-                    <select
-                        id="goalTeam-${match.id}">
-
-                        <option value="${home.id}">
-                            ${escapeHTML(home.name)}
-                        </option>
-
-                        <option value="${away.id}">
-                            ${escapeHTML(away.name)}
-                        </option>
-
-                    </select>
-
-
-                    <label>Goal Scorer</label>
-
-                    <select
-                        id="scorer-${match.id}">
-
-                        <option value="">
-                            Select scorer
-                        </option>
-
-                        ${
-                            home.players.length
-                            ?
-                            `
-                            <optgroup
-                                label="${escapeHTML(home.name)}">
-
-                                ${playerOptions(home.id)}
-
-                            </optgroup>
-                            `
-                            :
-                            ""
-                        }
-
-                        ${
-                            away.players.length
-                            ?
-                            `
-                            <optgroup
-                                label="${escapeHTML(away.name)}">
-
-                                ${playerOptions(away.id)}
-
-                            </optgroup>
-                            `
-                            :
-                            ""
-                        }
-
-                    </select>
-
-
-                    <label>Goal Minute</label>
-
-                    <input
-                        id="minute-${match.id}"
-                        type="number"
-                        min="1"
-                        max="150"
-                        placeholder="Example: 45">
-
-
-                    <button
-                        onclick="addGoal(
-                            '${match.id}'
-                        )">
-                        ⚽ Add Goal
-                    </button>
-
-
-                    ${
-                        goalsHTML ||
-                        "<p>No goals recorded.</p>"
-                    }
-
-                </div>
-
-
-                <div class="fixture-section">
-
-                    <h3>🧤 Goalkeepers</h3>
-
-                    <label>
-                        ${escapeHTML(home.name)}
-                        Goalkeeper
-                    </label>
-
-                    <select
-                        id="homeGK-${match.id}"
-                        onchange="setGoalkeeper(
-                            '${match.id}',
-                            'homeGoalkeeper',
-                            this.value
-                        )">
-
-                        <option value="">
-                            Select goalkeeper
-                        </option>
-
-                        ${playerOptions(home.id)}
-
-                    </select>
-
-
-                    <label>
-                        ${escapeHTML(away.name)}
-                        Goalkeeper
-                    </label>
-
-                    <select
-                        id="awayGK-${match.id}"
-                        onchange="setGoalkeeper(
-                            '${match.id}',
-                            'awayGoalkeeper',
-                            this.value
-                        )">
-
-                        <option value="">
-                            Select goalkeeper
-                        </option>
-
-                        ${playerOptions(away.id)}
-
-                    </select>
-
-                </div>
-
-
-                <div class="fixture-section">
-
-                    <h3>⭐ Man of the Match</h3>
-
-                    <select
-                        id="motm-${match.id}">
-
-                        <option value="">
-                            Select MOTM
-                        </option>
-
-                        ${
-                            home.players.length
-                            ?
-                            `
-                            <optgroup
-                                label="${escapeHTML(home.name)}">
-
-                                ${playerOptions(home.id)}
-
-                            </optgroup>
-                            `
-                            :
-                            ""
-                        }
-
-                        ${
-                            away.players.length
-                            ?
-                            `
-                            <optgroup
-                                label="${escapeHTML(away.name)}">
-
-                                ${playerOptions(away.id)}
-
-                            </optgroup>
-                            `
-                            :
-                            ""
-                        }
-
-                    </select>
-
-
-                    <button
-                        class="secondary"
-                        onclick="saveMOTM(
-                            '${match.id}'
-                        )">
-                        ⭐ Save MOTM
-                    </button>
-
-                </div>
-
-
-                <div class="fixture-section">
-
-                    <h3>🏁 Match Status</h3>
-
-                    <button
-                        class="warning"
-                        onclick="toggleMatchStatus(
-                            '${match.id}'
-                        )">
-
-                        ${
-                            match.played
-                            ?
-                            "↩️ Mark As Not Played"
-                            :
-                            "✅ Mark Match Completed"
-                        }
-
-                    </button>
-
-                    <button
-                        class="danger"
-                        onclick="clearMatchResult(
-                            '${match.id}'
-                        )">
-                        🧹 Clear Result
-                    </button>
-
-                </div>
-
+    tournament.fixtures.forEach(match=>{
+        const home=getTeam(match.home);
+        const away=getTeam(match.away);
+        if(!home || !away) return;
+
+        const result=getMatchResult(match);
+        const mvpData=result.mvp?findPlayer(result.mvp):null;
+
+        const homeRows=(home.players||[]).map(player=>resultPlayerRowHTML(match,home,player)).join("");
+        const awayRows=(away.players||[]).map(player=>resultPlayerRowHTML(match,away,player)).join("");
+
+        box.innerHTML += `
+        <div class="fixture">
+            <div class="fixture-title">
+                <div><b>${escapeHTML(match.stage)}</b>${match.group?" • "+escapeHTML(match.group):""} • Round ${match.round}</div>
+                <div>${match.played?'<span style="color:#39d864;font-weight:bold;">✅ COMPLETED</span>':'<span style="color:#f4c542;font-weight:bold;">⏳ NOT COMPLETED</span>'}</div>
             </div>
-            `;
 
+            <div class="fixture-teams">
+                <div class="fixture-team">${home.logo?`<img src="${home.logo}" class="team-logo">`:"🛡️"}<b>${escapeHTML(home.name)}</b></div>
+                <div class="score">${result.homePoints} - ${result.awayPoints}</div>
+                <div class="fixture-team"><b>${escapeHTML(away.name)}</b>${away.logo?`<img src="${away.logo}" class="team-logo">`:"🛡️"}</div>
+            </div>
 
-            /*
-                Set saved values after rendering.
-            */
+            <div class="fixture-section">
+                <h3>✏️ Fixture Details</h3>
+                <button class="secondary" onclick="openFixtureEditor('${match.id}')">✏️ Edit Fixture</button>
+                <button class="danger" onclick="deleteFixture('${match.id}')">🗑️ Delete Fixture</button>
+            </div>
 
-            setTimeout(
-                () => {
+            <div class="fixture-section">
+                <h3>🏁 Duo Match Result</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label>${escapeHTML(home.name)} Points</label>
+                        <input id="homePoints-${match.id}" type="number" min="0" value="${result.homePoints}">
+                    </div>
+                    <div>
+                        <label>${escapeHTML(away.name)} Points</label>
+                        <input id="awayPoints-${match.id}" type="number" min="0" value="${result.awayPoints}">
+                    </div>
+                </div>
 
-                    const homeGK =
-                        document.getElementById(
-                            "homeGK-"+match.id
-                        );
+                <h3 style="margin-top:22px;">${escapeHTML(home.name)} Players</h3>
+                ${homeRows || '<p>No players added to this team.</p>'}
 
-                    const awayGK =
-                        document.getElementById(
-                            "awayGK-"+match.id
-                        );
+                <h3 style="margin-top:22px;">${escapeHTML(away.name)} Players</h3>
+                ${awayRows || '<p>No players added to this team.</p>'}
 
-                    const motm =
-                        document.getElementById(
-                            "motm-"+match.id
-                        );
+                <label style="margin-top:18px;">⭐ Match MVP</label>
+                <select id="resultMvp-${match.id}">
+                    <option value="">Select MVP</option>
+                    ${(home.players||[]).length?`<optgroup label="${escapeHTML(home.name)}">${playerOptions(home.id)}</optgroup>`:""}
+                    ${(away.players||[]).length?`<optgroup label="${escapeHTML(away.name)}">${playerOptions(away.id)}</optgroup>`:""}
+                </select>
 
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+                    <button onclick="saveDuoResult('${match.id}')">💾 Save Result</button>
+                    <button class="danger" onclick="clearMatchResult('${match.id}')">🧹 Clear Result</button>
+                </div>
+                ${mvpData?`<p style="margin-top:10px;">Current MVP: <strong>${escapeHTML(mvpData.player.name)}</strong></p>`:""}
+            </div>
+        </div>`;
 
-                    if(homeGK){
-
-                        homeGK.value =
-                            match.homeGoalkeeper ||
-                            "";
-
-                    }
-
-
-                    if(awayGK){
-
-                        awayGK.value =
-                            match.awayGoalkeeper ||
-                            "";
-
-                    }
-
-
-                    if(motm){
-
-                        motm.value =
-                            match.motm ||
-                            "";
-
-                    }
-
-                },
-                0
-            );
-
-        }
-    );
-
+        setTimeout(()=>{
+            const select=document.getElementById("resultMvp-"+match.id);
+            if(select) select.value=result.mvp||"";
+        },0);
+    });
 }
-
 
 /* =====================================================
 EDIT FIXTURE
@@ -3114,46 +2719,15 @@ function saveFixtureEdit(){
         String(match.home) !== String(home) ||
         String(match.away) !== String(away);
 
-
-    /*
-        If teams are changed, old goals/GK/MOTM
-        may no longer be valid.
-    */
-
-    if(
-        teamChanged &&
-        (
-            match.goals.length ||
-            match.motm ||
-            match.homeGoalkeeper ||
-            match.awayGoalkeeper
-        )
-    ){
-
-        const confirmChange =
-            confirm(
-                "Changing the teams will clear the current result, goals, goalkeeper selections and MOTM. Continue?"
-            );
-
-        if(!confirmChange){
-
-            return;
-
-        }
-
-
+    /* If teams change, the stored player-level result is no longer valid. */
+    if(teamChanged && (match.played || match.result || (match.goals||[]).length || match.motm)){
+        const confirmChange=confirm("Changing the teams will clear the current result and MVP. Continue?");
+        if(!confirmChange) return;
         match.goals=[];
-
         match.motm=null;
-
-        match.homeGoalkeeper=null;
-
-        match.awayGoalkeeper=null;
-
+        match.result=null;
         match.played=false;
-
     }
-
 
     match.home =
         home;
@@ -3280,261 +2854,82 @@ async function deleteFixture(id){
 
 
 /* =====================================================
-ADD GOAL
+SAVE DUO RESULT
 ===================================================== */
 
-function addGoal(matchId){
+async function saveDuoResult(matchId){
+    const match=getMatch(matchId);
+    if(!match) return;
+    const home=getTeam(match.home);
+    const away=getTeam(match.away);
+    if(!home || !away) return;
 
-    const match =
-        getMatch(matchId);
+    const homePoints=Math.max(0,Number(document.getElementById("homePoints-"+matchId)?.value)||0);
+    const awayPoints=Math.max(0,Number(document.getElementById("awayPoints-"+matchId)?.value)||0);
+    const playerStats=[];
 
-    if(!match)return;
-
-
-    const teamId =
-        document
-        .getElementById(
-            "goalTeam-"+matchId
-        )
-        .value;
-
-
-    const playerId =
-        document
-        .getElementById(
-            "scorer-"+matchId
-        )
-        .value;
-
-
-    const minute =
-        document
-        .getElementById(
-            "minute-"+matchId
-        )
-        .value;
-
-
-    if(!playerId){
-
-        alert(
-            "Please select the goal scorer."
-        );
-
-        return;
-
+    for(const team of [home,away]){
+        for(const player of (team.players||[])){
+            const prefix=`result-${match.id}-${player.id}`;
+            const outcome=document.getElementById(prefix+"-outcome")?.value||"";
+            const goalsScored=Math.max(0,Number(document.getElementById(prefix+"-gs")?.value)||0);
+            const goalsConceded=Math.max(0,Number(document.getElementById(prefix+"-gc")?.value)||0);
+            if(!outcome){
+                alert(`Please select Win / Loss for ${player.name}.`);
+                return;
+            }
+            playerStats.push({teamId:team.id,playerId:player.id,outcome,goalsScored,goalsConceded});
+        }
     }
 
-
-    const scorer =
-        findPlayer(playerId);
-
-
-    if(!scorer){
-
-        alert(
-            "Player not found."
-        );
-
+    const mvp=document.getElementById("resultMvp-"+matchId)?.value||null;
+    if(!mvp){
+        alert("Please select the Match MVP.");
         return;
-
     }
 
-
-    if(
-        String(scorer.team.id) !==
-        String(teamId)
-    ){
-
-        alert(
-            "The selected player does not belong to the selected team."
-        );
-
+    const validMvp=playerStats.some(row=>String(row.playerId)===String(mvp));
+    if(!validMvp){
+        alert("The selected MVP must be a player in this fixture.");
         return;
-
     }
 
+    match.result={homePoints,awayPoints,playerStats,mvp};
+    match.motm=mvp; // kept for older pages/data compatibility
+    match.goals=[]; // new results use aggregated player goals, not goal-by-goal editing
+    match.played=true;
 
-    match.goals.push({
-
-        id:crypto.randomUUID(),
-
-        teamId:teamId,
-
-        playerId:playerId,
-
-        minute:minute || ""
-
-    });
-
-
-    save();
-
+    await save();
     renderAll();
-
 }
-
-
-/* =====================================================
-DELETE GOAL
-===================================================== */
-
-function deleteGoal(
-    matchId,
-    goalId
-){
-
-    const match =
-        getMatch(matchId);
-
-    if(!match)return;
-
-
-    match.goals =
-        match.goals.filter(
-            goal =>
-            String(goal.id) !==
-            String(goalId)
-        );
-
-
-    save();
-
-    renderAll();
-
-}
-
-
-/* =====================================================
-GOALKEEPER
-===================================================== */
-
-function setGoalkeeper(
-    matchId,
-    side,
-    playerId
-){
-
-    const match =
-        getMatch(matchId);
-
-    if(!match)return;
-
-
-    match[side] =
-        playerId || null;
-
-
-    save();
-
-}
-
-
-/* =====================================================
-MOTM
-===================================================== */
-
-function saveMOTM(matchId){
-
-    const match =
-        getMatch(matchId);
-
-    if(!match)return;
-
-
-    const playerId =
-        document
-        .getElementById(
-            "motm-"+matchId
-        )
-        .value;
-
-
-    if(!playerId){
-
-        alert(
-            "Please select a player."
-        );
-
-        return;
-
-    }
-
-
-    match.motm =
-        playerId;
-
-
-    save();
-
-    renderAll();
-
-}
-
 
 /* =====================================================
 MATCH STATUS
 ===================================================== */
 
-function toggleMatchStatus(id){
-
-    const match =
-        getMatch(id);
-
-    if(!match)return;
-
-
-    match.played =
-        !match.played;
-
-
-    save();
-
+async function toggleMatchStatus(id){
+    const match=getMatch(id);
+    if(!match) return;
+    match.played=!match.played;
+    await save();
     renderAll();
-
 }
-
 
 /* =====================================================
 CLEAR RESULT
 ===================================================== */
 
-function clearMatchResult(id){
-
-    const match =
-        getMatch(id);
-
-    if(!match)return;
-
-
-    if(
-        !confirm(
-            "Clear all goals, MOTM and goalkeeper information for this match?"
-        )
-    ){
-
-        return;
-
-    }
-
-
+async function clearMatchResult(id){
+    const match=getMatch(id);
+    if(!match) return;
+    if(!confirm("Clear all player result statistics and MVP for this match?")) return;
+    match.result=null;
     match.goals=[];
-
     match.motm=null;
-
-    match.homeGoalkeeper=null;
-
-    match.awayGoalkeeper=null;
-
     match.played=false;
-
-
-    save();
-
+    await save();
     renderAll();
-
 }
-
 
 /* =====================================================
 DELETE ALL FIXTURES
@@ -3704,14 +3099,12 @@ function updateDashboard(){
     );
 
 
-    tournament.fixtures.forEach(
-        match => {
-
-            goalCount +=
-                match.goals.length;
-
-        }
-    );
+    tournament.fixtures.forEach(match => {
+        const result=getMatchResult(match);
+        goalCount += result.playerStats.length
+            ? result.playerStats.reduce((sum,row)=>sum+(Number(row.goalsScored)||0),0)
+            : (match.goals||[]).length;
+    });
 
 
     document
