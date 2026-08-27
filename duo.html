@@ -1253,6 +1253,8 @@ function normalizeTournament(){
     tournament.teams = Array.isArray(tournament.teams) ? tournament.teams : [];
     tournament.fixtures = Array.isArray(tournament.fixtures) ? tournament.fixtures : [];
     tournament.teams.forEach(team=>{team.players=Array.isArray(team.players)?team.players:[]});
+    tournament.fixtures = sortFixturesForDisplay(tournament.fixtures);
+
     tournament.fixtures.forEach(match=>{
         match.goals=Array.isArray(match.goals)?match.goals:[];
         if(match.result && typeof match.result === "object"){
@@ -2083,6 +2085,10 @@ async function generateFixtures(){
     renderAll();
     showPageByName("fixtures");
 
+    // Keep the in-memory array deterministic as well, so editing/re-rendering
+    // never falls back to Supabase insertion order.
+    tournament.fixtures = sortFixturesForDisplay(tournament.fixtures);
+
     try{
         await ARROWS_DB.replaceFixtures(tournament.fixtures);
         window.arrowsSetTournamentCache(tournament);
@@ -2465,6 +2471,61 @@ function resultPlayerRowHTML(match,team,player){
 
 
 /* =====================================================
+FIXTURE DISPLAY ORDER
+===================================================== */
+
+function fixtureStageOrder(match){
+    const stage=String(match?.stage || "").toLowerCase().trim();
+    const group=String(match?.group || "").toLowerCase().trim();
+    if(stage.includes("league") || stage.includes("group") || group.includes("group")) return 10;
+    if(stage.includes("round of 32")) return 20;
+    if(stage.includes("round of 16")) return 30;
+    if(stage.includes("quarter")) return 40;
+    if(stage.includes("semi")) return 50;
+    if(stage.includes("final")) return 60;
+    if(stage.includes("knockout") || group.includes("knockout")) return 35;
+    return 15;
+}
+
+function fixtureGroupOrder(match){
+    const value=String(match?.group || "").trim();
+    const m=value.match(/group\s*([a-z])/i);
+    if(m) return m[1].toUpperCase().charCodeAt(0)-64;
+    if(!value) return 999;
+    return 500;
+}
+
+function fixtureRoundNumber(match){
+    const raw=match?.round ?? match?.matchday ?? match?.matchDay ?? 0;
+    const n=parseInt(raw,10);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function sortFixturesForDisplay(fixtures){
+    return [...(fixtures || [])].sort((a,b)=>{
+        const stageDiff=fixtureStageOrder(a)-fixtureStageOrder(b);
+        if(stageDiff) return stageDiff;
+
+        const groupDiff=fixtureGroupOrder(a)-fixtureGroupOrder(b);
+        if(groupDiff) return groupDiff;
+
+        const groupTextDiff=String(a?.group||"").localeCompare(String(b?.group||""),undefined,{numeric:true,sensitivity:"base"});
+        if(groupTextDiff) return groupTextDiff;
+
+        const roundDiff=fixtureRoundNumber(a)-fixtureRoundNumber(b);
+        if(roundDiff) return roundDiff;
+
+        const dateDiff=String(a?.date||"").localeCompare(String(b?.date||""));
+        if(dateDiff) return dateDiff;
+
+        const timeDiff=String(a?.time||"").localeCompare(String(b?.time||""));
+        if(timeDiff) return timeDiff;
+
+        return String(a?.id||"").localeCompare(String(b?.id||""));
+    });
+}
+
+/* =====================================================
 RENDER FIXTURES
 ===================================================== */
 
@@ -2491,7 +2552,9 @@ function renderFixtures(){
         return;
     }
 
-    tournament.fixtures.forEach(match=>{
+    const orderedFixtures=sortFixturesForDisplay(tournament.fixtures);
+
+    orderedFixtures.forEach(match=>{
         const home=getTeam(match.home);
         const away=getTeam(match.away);
         if(!home || !away) return;
