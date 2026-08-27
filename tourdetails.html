@@ -2763,16 +2763,14 @@ let nativePdfPrintCleanup = null;
 
 function beginNativePrint(target, titleText){
 
-    // Print in a completely isolated iframe so the website's dark
-    // background and screen-only CSS cannot create a black/blank page.
-
+    // Print in an isolated iframe so the PDF can have its own clean,
+    // viewer-friendly tournament report styling without changing the webpage.
     if(nativePdfPrintCleanup){
         nativePdfPrintCleanup();
         nativePdfPrintCleanup=null;
     }
 
     const iframe=document.createElement("iframe");
-
     iframe.style.position="fixed";
     iframe.style.width="1px";
     iframe.style.height="1px";
@@ -2780,155 +2778,131 @@ function beginNativePrint(target, titleText){
     iframe.style.bottom="0";
     iframe.style.border="0";
     iframe.style.opacity="0";
-
     document.body.appendChild(iframe);
 
-    const printDoc =
-        iframe.contentDocument ||
-        iframe.contentWindow.document;
-
-    const styles =
-        Array.from(
-            document.querySelectorAll(
-                'link[rel="stylesheet"], style'
-            )
-        )
-        .map(node => node.outerHTML)
-        .join("\n");
-
-    const printable =
-        target.cloneNode(true);
-
-    printable
-        .querySelectorAll(".pdf-download-button")
-        .forEach(btn => btn.remove());
-
+    const printDoc=iframe.contentDocument || iframe.contentWindow.document;
+    const printable=target.cloneNode(true);
+    printable.querySelectorAll(".pdf-download-button,.refresh-button,.matchday-actions").forEach(el=>el.remove());
     printable.style.display="block";
     printable.style.visibility="visible";
     printable.style.position="static";
     printable.style.width="100%";
-    printable.style.background="#fff";
-    printable.style.color="#111";
-    printable.style.boxShadow="none";
+
+    const lowerTitle=String(titleText||"").toLowerCase();
+    const isPoints=lowerTitle.includes("points table");
+    const isFixtures=lowerTitle.includes("fixtures") || lowerTitle.includes("matchday");
+    const printType=isPoints ? "points-pdf" : (isFixtures ? "fixtures-pdf" : "standard-pdf");
+    const pageSize=isPoints ? "A4 landscape" : "A4 portrait";
+
+    const tournamentName=(tournament && tournament.name) ? tournament.name : "ARROWS DUO TOURNAMENT";
+    const sectionName=String(titleText||"").replace(tournamentName+" — ","").replace(tournamentName+" - ","");
+    const meta=[tournament && tournament.season, tournament && tournament.organizer].filter(Boolean).join("  •  ");
 
     printDoc.open();
-
     printDoc.write(`
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <base href="${document.baseURI}">
-${styles}
 <style>
-html,body{
-    margin:0!important;
-    padding:0!important;
-    width:100%!important;
-    min-height:100%!important;
-    background:#fff!important;
-    color:#111!important;
-    font-family:Arial,sans-serif!important;
-}
-body{overflow:visible!important}
-
-.pdf-print-title{
-    display:block!important;
-    visibility:visible!important;
-    position:static!important;
-    box-sizing:border-box!important;
-    width:100%!important;
-    text-align:center!important;
-    color:#12612a!important;
-    background:#fff!important;
-    font-size:24px!important;
-    font-weight:bold!important;
-    margin:0 0 18px!important;
-    padding:0 0 10px!important;
-    border-bottom:2px solid #12612a!important;
-}
-
-.print-root{
-    display:block!important;
-    position:static!important;
-    width:100%!important;
-    background:#fff!important;
-    color:#111!important;
-}
-
-.print-root *{
-    box-shadow:none!important;
-}
-
-.print-root .pdf-download-button{
-    display:none!important;
-}
-
-.print-root table{
-    width:100%!important;
-    min-width:0!important;
-    border-collapse:collapse!important;
-}
-
-.print-root tr{
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
-}
-
-.print-root th{
-    background:#1b5d30!important;
-    color:#fff!important;
-}
-
-.print-root td{
-    color:#111!important;
-    background:#fff!important;
-}
-
-@page{
-    size:A4;
-    margin:12mm;
-}
-
-@media print{
-    html,body,.print-root{
-        background:#fff!important;
-    }
-}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+html,body{margin:0!important;padding:0!important;width:100%!important;background:#f4f5f7!important;color:#17191d!important;font-family:Arial,Helvetica,sans-serif!important}
+body{overflow:visible!important;padding:0!important}
+.pdf-page-header{background:#101114!important;color:#fff!important;border-bottom:4px solid #e31b23!important;padding:14px 18px 13px!important;margin:0 0 16px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;border-radius:0 0 8px 8px!important}
+.pdf-brand{display:flex!important;align-items:center!important;gap:12px!important;min-width:0!important}
+.pdf-brand img{width:50px!important;height:50px!important;object-fit:contain!important;border-radius:8px!important;background:#fff!important;padding:3px!important}
+.pdf-brand-copy{min-width:0!important}
+.pdf-brand-name{font-size:10px!important;font-weight:800!important;letter-spacing:2px!important;color:#e31b23!important;text-transform:uppercase!important;margin-bottom:3px!important}
+.pdf-tournament-name{font-size:20px!important;line-height:1.05!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.4px!important;color:#fff!important;white-space:normal!important}
+.pdf-section-badge{flex:0 0 auto!important;border:1px solid #45484e!important;border-radius:999px!important;padding:8px 13px!important;background:#1b1d21!important;color:#fff!important;font-size:11px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:1px!important}
+.pdf-meta-line{margin:-7px 0 14px!important;padding:0 4px 10px!important;border-bottom:1px solid #d8dbe0!important;color:#666b73!important;font-size:9px!important;text-align:right!important;min-height:12px!important}
+.print-root{display:block!important;position:static!important;width:100%!important;background:transparent!important;color:#17191d!important}
+.print-root *{text-shadow:none!important}
+.print-root .pdf-download-button,.print-root .refresh-button{display:none!important}
+.print-root .section{display:block!important;margin:0!important;padding:0!important;background:transparent!important}
+.print-root .card,.print-root .matchday-card{background:#fff!important;color:#17191d!important;border:1px solid #d9dce1!important;border-radius:10px!important;box-shadow:none!important;margin:0 0 14px!important;padding:14px!important}
+.print-root h2{color:#17191d!important;font-size:15px!important;line-height:1.2!important;margin:0 0 10px!important;font-weight:900!important}
+.print-root p{color:#6b7078!important;font-size:9px!important;line-height:1.45!important;margin:4px 0 8px!important}
+.print-root .table-wrap{overflow:visible!important;border-radius:8px!important;border:1px solid #d9dce1!important;background:#fff!important}
+.print-root table{width:100%!important;min-width:0!important;border-collapse:separate!important;border-spacing:0!important;background:#fff!important;font-size:9px!important}
+.print-root tr{break-inside:avoid!important;page-break-inside:avoid!important}
+.print-root thead{display:table-header-group!important}
+.print-root th{background:#17191d!important;color:#fff!important;border:0!important;border-right:1px solid #34373d!important;border-bottom:2px solid #e31b23!important;padding:8px 6px!important;font-size:8px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.45px!important;text-align:center!important}
+.print-root th:first-child{text-align:left!important}
+.print-root td{color:#202329!important;background:#fff!important;border:0!important;border-right:1px solid #eceef1!important;border-bottom:1px solid #e5e7ea!important;padding:7px 6px!important;font-size:9px!important;text-align:center!important;vertical-align:middle!important}
+.print-root tbody tr:nth-child(even) td{background:#f7f8fa!important}
+.print-root tbody tr:last-child td{border-bottom:0!important}
+.print-root td:first-child{text-align:left!important}
+.print-root .team-cell{display:flex!important;align-items:center!important;gap:7px!important;min-width:0!important}
+.print-root .team-cell img,.print-root .team-logo{width:25px!important;height:25px!important;object-fit:cover!important;border-radius:6px!important;border:1px solid #dfe1e5!important;background:#fff!important}
+.print-root .fixture{background:#fff!important;border:1px solid #dde0e4!important;border-left:4px solid #e31b23!important;border-radius:9px!important;padding:11px 12px!important;margin:0 0 10px!important;box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important}
+.print-root .fixture-header{display:flex!important;align-items:center!important;gap:7px!important;flex-wrap:wrap!important;padding-bottom:7px!important;margin-bottom:8px!important;border-bottom:1px solid #eceef1!important}
+.print-root .stage,.print-root .group,.print-root .completed,.print-root .upcoming{font-size:7.5px!important;line-height:1!important;font-weight:800!important;border-radius:999px!important;padding:5px 7px!important;color:#3d4148!important;background:#f0f1f3!important;border:1px solid #e1e3e7!important}
+.print-root .completed{background:#eaf8ef!important;color:#176b35!important;border-color:#ccebd7!important}
+.print-root .upcoming{background:#fff6df!important;color:#815f0a!important;border-color:#f1dfa8!important}
+.print-root .fixture-teams{display:grid!important;grid-template-columns:1fr auto 1fr!important;align-items:center!important;gap:10px!important;padding:2px 0 5px!important}
+.print-root .fixture-team{display:flex!important;align-items:center!important;gap:7px!important;color:#17191d!important;font-size:11px!important;min-width:0!important}
+.print-root .fixture-team:last-child{justify-content:flex-end!important;text-align:right!important}
+.print-root .fixture-team img{width:31px!important;height:31px!important;object-fit:cover!important;border-radius:7px!important;border:1px solid #dddfe4!important;background:#fff!important}
+.print-root .score{font-size:18px!important;line-height:1!important;font-weight:900!important;color:#fff!important;background:#17191d!important;border-radius:7px!important;padding:7px 10px!important;min-width:62px!important;text-align:center!important;border-bottom:3px solid #e31b23!important}
+.print-root .fixture-info{font-size:8px!important;line-height:1.45!important;color:#686d75!important;text-align:center!important;padding-top:5px!important}
+.print-root .fixture .table-wrap{margin-top:9px!important}
+.print-root .fixture table{font-size:8px!important}
+.print-root .fixture th{font-size:7px!important;padding:6px 5px!important;background:#35383e!important;border-bottom:1px solid #e31b23!important}
+.print-root .fixture td{font-size:8px!important;padding:5px!important}
+.print-root .matchday-card{break-before:auto!important;page-break-before:auto!important;padding:12px!important}
+.print-root .matchday-card + .matchday-card{break-before:page!important;page-break-before:always!important}
+.print-root .matchday-header{display:flex!important;align-items:center!important;justify-content:space-between!important;margin:0 0 9px!important;padding:0 0 8px!important;border-bottom:2px solid #17191d!important}
+.print-root .matchday-title{font-size:14px!important;margin:0!important;text-transform:uppercase!important;letter-spacing:.4px!important}
+.points-pdf .print-root .card{padding:12px!important}
+.points-pdf .print-root h2{font-size:16px!important;border-left:4px solid #e31b23!important;padding-left:8px!important}
+.points-pdf .print-root table{font-size:10px!important}
+.points-pdf .print-root th{font-size:8px!important;padding:9px 7px!important}
+.points-pdf .print-root td{font-size:10px!important;padding:9px 7px!important}
+.points-pdf .print-root tbody tr:first-child td{background:#fff8dd!important;font-weight:800!important}
+.points-pdf .print-root tbody tr:nth-child(2) td{background:#f1f3f5!important}
+.points-pdf .print-root tbody tr:nth-child(3) td{background:#fff3e7!important}
+.pdf-page-footer{position:fixed!important;left:0!important;right:0!important;bottom:0!important;height:8mm!important;border-top:1px solid #d9dce1!important;background:#fff!important;color:#73777f!important;font-size:7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 2mm!important}
+.pdf-page-footer strong{color:#e31b23!important;letter-spacing:.8px!important}
+@page{size:${pageSize};margin:10mm 10mm 15mm 10mm}
+@media print{html,body{background:#fff!important}.pdf-page-header{break-after:avoid!important;page-break-after:avoid!important}}
 </style>
 </head>
-<body>
-<div class="pdf-print-title" id="printTitle"></div>
+<body class="${printType}">
+<div class="pdf-page-header">
+  <div class="pdf-brand">
+    <img src="arrowslogo.png" alt="Arrows Esports">
+    <div class="pdf-brand-copy">
+      <div class="pdf-brand-name">Arrows Esports</div>
+      <div class="pdf-tournament-name" id="pdfTournamentName"></div>
+    </div>
+  </div>
+  <div class="pdf-section-badge" id="pdfSectionName"></div>
+</div>
+<div class="pdf-meta-line" id="pdfMeta"></div>
 <div class="print-root" id="printRoot"></div>
+<div class="pdf-page-footer"><span><strong>ARROWS ESPORTS</strong> &nbsp; • &nbsp; PLAY • COMPETE • DOMINATE</span><span>${sectionName}</span></div>
 </body>
 </html>`);
-
     printDoc.close();
 
-    printDoc.getElementById("printTitle")
-        .textContent=titleText;
-
-    printDoc.getElementById("printRoot")
-        .appendChild(printable);
+    printDoc.getElementById("pdfTournamentName").textContent=tournamentName;
+    printDoc.getElementById("pdfSectionName").textContent=sectionName || "Tournament Report";
+    printDoc.getElementById("pdfMeta").textContent=meta;
+    printDoc.getElementById("printRoot").appendChild(printable);
 
     let cleaned=false;
-
     const cleanup=()=>{
         if(cleaned) return;
         cleaned=true;
-
-        if(iframe.parentNode){
-            iframe.parentNode.removeChild(iframe);
-        }
-
+        if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
         nativePdfPrintCleanup=null;
     };
-
     nativePdfPrintCleanup=cleanup;
 
     const doPrint=()=>{
         if(cleaned) return;
-
         try{
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
@@ -2938,10 +2912,18 @@ body{overflow:visible!important}
         }
     };
 
-    // Allow the table/images to finish layout first.
-    setTimeout(doPrint,500);
+    // Give logos and team images enough time to resolve before opening print.
+    const images=Array.from(printDoc.images||[]);
+    const pending=images.filter(img=>!img.complete);
+    if(pending.length){
+        let left=pending.length;
+        const done=()=>{ left--; if(left<=0) setTimeout(doPrint,120); };
+        pending.forEach(img=>{ img.addEventListener("load",done,{once:true}); img.addEventListener("error",done,{once:true}); });
+        setTimeout(doPrint,900);
+    }else{
+        setTimeout(doPrint,350);
+    }
 
-    // Safety cleanup after the print dialog has been open for a while.
     setTimeout(cleanup,120000);
 }
 function printSectionPDF(sectionId,label){
