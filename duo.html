@@ -2548,8 +2548,8 @@ function renderFixtures(){
                 </select>
 
                 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-                    <button onclick="saveDuoResult('${match.id}')">💾 Save Result</button>
-                    <button class="danger" onclick="clearMatchResult('${match.id}')">🧹 Clear Result</button>
+                    <button onclick="saveDuoResult('${match.id}',this)">💾 Save Result</button>
+                    <button class="danger" onclick="clearMatchResult('${match.id}',this)">🧹 Clear Result</button>
                 </div>
                 ${mvpData?`<p style="margin-top:10px;">Current MVP: <strong>${escapeHTML(mvpData.player.name)}</strong></p>`:""}
             </div>
@@ -2857,7 +2857,7 @@ async function deleteFixture(id){
 SAVE DUO RESULT
 ===================================================== */
 
-async function saveDuoResult(matchId){
+async function saveDuoResult(matchId,button){
     const match=getMatch(matchId);
     if(!match) return;
     const home=getTeam(match.home);
@@ -2887,20 +2887,34 @@ async function saveDuoResult(matchId){
         alert("Please select the Match MVP.");
         return;
     }
-
-    const validMvp=playerStats.some(row=>String(row.playerId)===String(mvp));
-    if(!validMvp){
+    if(!playerStats.some(row=>String(row.playerId)===String(mvp))){
         alert("The selected MVP must be a player in this fixture.");
         return;
     }
 
+    const previous={result:match.result,motm:match.motm,goals:match.goals,played:match.played};
     match.result={homePoints,awayPoints,playerStats,mvp};
-    match.motm=mvp; // kept for older pages/data compatibility
-    match.goals=[]; // new results use aggregated player goals, not goal-by-goal editing
+    match.motm=mvp;
+    match.goals=[];
     match.played=true;
 
-    await save();
-    renderAll();
+    const originalText=button?.innerHTML;
+    if(button){ button.disabled=true; button.innerHTML="⏳ Saving…"; }
+    try{
+        if(!ARROWS_DB.saveDuoMatchResult) throw new Error("Please upload the rebuilt supabase-data.js too.");
+        await ARROWS_DB.saveDuoMatchResult(match);
+        window.arrowsSetTournamentCache(tournament);
+        window.ARROWS_CLOUD_OK=true;
+        renderAll();
+    }catch(error){
+        match.result=previous.result; match.motm=previous.motm; match.goals=previous.goals; match.played=previous.played;
+        window.ARROWS_CLOUD_OK=false;
+        console.error("Result save failed:",error);
+        alert("RESULT NOT SAVED.\n\n"+(error.message||error));
+        renderAll();
+    }finally{
+        if(button && button.isConnected){ button.disabled=false; button.innerHTML=originalText||"💾 Save Result"; }
+    }
 }
 
 /* =====================================================
@@ -2919,16 +2933,37 @@ async function toggleMatchStatus(id){
 CLEAR RESULT
 ===================================================== */
 
-async function clearMatchResult(id){
+async function clearMatchResult(id,button){
     const match=getMatch(id);
     if(!match) return;
     if(!confirm("Clear all player result statistics and MVP for this match?")) return;
+
+    const previous={result:match.result,motm:match.motm,goals:match.goals,played:match.played};
+    const originalText=button?.innerHTML;
+    if(button){ button.disabled=true; button.innerHTML="⏳ Clearing…"; }
+
+    // Optimistic UI: the completed result disappears immediately.
     match.result=null;
     match.goals=[];
     match.motm=null;
     match.played=false;
-    await save();
+    window.arrowsSetTournamentCache(tournament);
     renderAll();
+
+    try{
+        if(!ARROWS_DB.clearDuoMatchResult) throw new Error("Please upload the rebuilt supabase-data.js too.");
+        await ARROWS_DB.clearDuoMatchResult(id);
+        window.ARROWS_CLOUD_OK=true;
+    }catch(error){
+        match.result=previous.result; match.motm=previous.motm; match.goals=previous.goals; match.played=previous.played;
+        window.arrowsSetTournamentCache(tournament);
+        window.ARROWS_CLOUD_OK=false;
+        console.error("Clear result failed:",error);
+        alert("RESULT WAS NOT CLEARED.\n\n"+(error.message||error));
+        renderAll();
+    }finally{
+        if(button && button.isConnected){ button.disabled=false; button.innerHTML=originalText||"🧹 Clear Result"; }
+    }
 }
 
 /* =====================================================
