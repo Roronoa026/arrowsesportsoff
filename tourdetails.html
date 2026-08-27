@@ -2984,9 +2984,9 @@ body{overflow:visible!important;padding:0!important}
 .points-pdf .print-root table{font-size:10px!important}
 .points-pdf .print-root th{font-size:8px!important;padding:9px 7px!important}
 .points-pdf .print-root td{font-size:10px!important;padding:9px 7px!important}
-.points-pdf .print-root tbody tr:first-child td{background:#fff8dd!important;font-weight:800!important}
-.points-pdf .print-root tbody tr:nth-child(2) td{background:#f1f3f5!important}
-.points-pdf .print-root tbody tr:nth-child(3) td{background:#fff3e7!important}
+.points-pdf .print-root tbody tr:first-child td{background:#071a33!important;color:#ffffff!important;font-weight:800!important;border-top:1px solid #d6a51f!important;border-bottom:1px solid #d6a51f!important}
+.points-pdf .print-root tbody tr:nth-child(2) td{background:#081b34!important;color:#ffffff!important;border-top:1px solid #9aa4b2!important;border-bottom:1px solid #9aa4b2!important}
+.points-pdf .print-root tbody tr:nth-child(3) td{background:#071a33!important;color:#ffffff!important;border-top:1px solid #b87333!important;border-bottom:1px solid #b87333!important}
 .pdf-page-footer{position:fixed!important;left:0!important;right:0!important;bottom:0!important;height:8mm!important;border-top:1px solid #d9dce1!important;background:#fff!important;color:#73777f!important;font-size:7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 2mm!important}
 .pdf-page-footer strong{color:#e31b23!important;letter-spacing:.8px!important}
 
@@ -3119,6 +3119,20 @@ html,body{width:210mm!important;min-width:210mm!important;height:auto!important;
 .points-pdf-page{margin:0!important}
 .pdf-page-header{break-after:avoid!important;page-break-after:avoid!important}
 }
+
+/* Dark top-three rows for PDF readability */
+.points-pdf .print-root tbody tr:nth-child(1) td,
+.points-pdf .print-root tbody tr:nth-child(2) td,
+.points-pdf .print-root tbody tr:nth-child(3) td{color:#fff!important;}
+.points-pdf .print-root tbody tr:nth-child(1) td{background:#08203e!important;}
+.points-pdf .print-root tbody tr:nth-child(2) td{background:#091d38!important;}
+.points-pdf .print-root tbody tr:nth-child(3) td{background:#08203e!important;}
+.points-pdf .print-root tbody tr:nth-child(1) .team-cell,
+.points-pdf .print-root tbody tr:nth-child(2) .team-cell,
+.points-pdf .print-root tbody tr:nth-child(3) .team-cell,
+.points-pdf .print-root tbody tr:nth-child(1) strong,
+.points-pdf .print-root tbody tr:nth-child(2) strong,
+.points-pdf .print-root tbody tr:nth-child(3) strong{color:#fff!important;}
 </style>
 </head>
 <body class="${printType}">
