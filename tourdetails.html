@@ -2761,6 +2761,72 @@ NATIVE BROWSER PDF / PRINT
 ========================================= */
 let nativePdfPrintCleanup = null;
 
+function buildPointsPdfContent(){
+    const wrap=document.createElement("div");
+    wrap.className="points-poster-content";
+
+    const fixtures=(tournament && tournament.fixtures) ? tournament.fixtures : [];
+    const tableFixtures=fixtures.filter(match =>
+        String(match.stage || "").toLowerCase() !== "knockout" &&
+        String(match.group || "").toLowerCase() !== "knockout"
+    );
+
+    if(!tableFixtures.length){
+        wrap.innerHTML='<div class="empty">No league/group results are available for the points table.</div>';
+        return wrap;
+    }
+
+    const groups=[...new Set(tableFixtures.map(match=>match.group).filter(Boolean))];
+    const blocks=[];
+
+    const makeBlock=(title,matches,teamIds)=>{
+        const rows=calculateTable(matches,teamIds);
+        const body=rows.map((row,index)=>{
+            const team=getTeam(row.id);
+            if(!team) return "";
+            const winPct=row.p ? Math.round((row.w/row.p)*100) : 0;
+            const medal=index===0?'gold':index===1?'silver':index===2?'bronze':'';
+            const logo=team.logo
+                ? `<img src="${escapeHTML(team.logo)}" alt="${escapeHTML(team.name)}">`
+                : `<span class="team-logo-fallback">A</span>`;
+            return `<tr>
+                <td><span class="rank-badge ${medal}">${index+1}</span></td>
+                <td><div class="poster-team">${logo}<strong>${escapeHTML(team.name)}</strong></div></td>
+                <td class="pts"><strong>${row.pts}</strong></td>
+                <td>${row.p}</td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td>
+                <td>${row.gf}</td><td>${row.ga}</td><td>${row.gd>0?'+':''}${row.gd}</td>
+                <td class="pct">${winPct}</td>
+            </tr>`;
+        }).join("");
+
+        blocks.push(`<section class="poster-table-block">
+            ${title ? `<div class="poster-group-title">${escapeHTML(title)}</div>` : ''}
+            <div class="poster-table-shell">
+                <table class="poster-points-table">
+                    <thead><tr>
+                        <th>Rank</th><th>Team</th><th>Pts</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>GD</th><th>%</th>
+                    </tr></thead>
+                    <tbody>${body}</tbody>
+                </table>
+            </div>
+        </section>`);
+    };
+
+    if(groups.length){
+        groups.forEach(group=>{
+            const matches=tableFixtures.filter(match=>match.group===group);
+            const teamIds=[...new Set(matches.flatMap(match=>[match.home,match.away]))];
+            makeBlock(group,matches,teamIds);
+        });
+    }else{
+        const teamIds=(tournament.teams||[]).map(team=>team.id);
+        makeBlock("",tableFixtures,teamIds);
+    }
+
+    wrap.innerHTML=blocks.join("");
+    return wrap;
+}
+
 function beginNativePrint(target, titleText){
 
     // Print in an isolated iframe so the PDF can have its own clean,
@@ -2855,14 +2921,40 @@ body{overflow:visible!important;padding:0!important}
 .print-root .matchday-card + .matchday-card{break-before:page!important;page-break-before:always!important}
 .print-root .matchday-header{display:flex!important;align-items:center!important;justify-content:space-between!important;margin:0 0 9px!important;padding:0 0 8px!important;border-bottom:2px solid #17191d!important}
 .print-root .matchday-title{font-size:14px!important;margin:0!important;text-transform:uppercase!important;letter-spacing:.4px!important}
-.points-pdf .print-root .card{padding:12px!important}
-.points-pdf .print-root h2{font-size:16px!important;border-left:4px solid #e31b23!important;padding-left:8px!important}
-.points-pdf .print-root table{font-size:10px!important}
-.points-pdf .print-root th{font-size:8px!important;padding:9px 7px!important}
-.points-pdf .print-root td{font-size:10px!important;padding:9px 7px!important}
-.points-pdf .print-root tbody tr:first-child td{background:#fff8dd!important;font-weight:800!important}
-.points-pdf .print-root tbody tr:nth-child(2) td{background:#f1f3f5!important}
-.points-pdf .print-root tbody tr:nth-child(3) td{background:#fff3e7!important}
+.points-pdf{background:#031023!important;color:#fff!important}
+.points-pdf:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 8%,rgba(35,114,255,.30),transparent 25%),radial-gradient(circle at 92% 10%,rgba(27,115,255,.28),transparent 24%),linear-gradient(180deg,#071a3f 0%,#03132d 42%,#020a17 100%);z-index:-2}
+.points-pdf:after{content:"";position:fixed;left:0;right:0;top:20mm;height:24mm;background:radial-gradient(ellipse at center,rgba(70,154,255,.24),transparent 66%);z-index:-1}
+.points-pdf .pdf-page-header{background:linear-gradient(180deg,rgba(3,15,36,.98),rgba(5,27,65,.94))!important;border:1px solid rgba(71,157,255,.62)!important;border-bottom:3px solid #e31b23!important;border-radius:14px!important;margin:0 0 10px!important;padding:12px 16px!important;box-shadow:inset 0 0 28px rgba(44,130,255,.15)!important}
+.points-pdf .pdf-brand img{width:58px!important;height:58px!important;background:transparent!important;border:0!important;padding:0!important}
+.points-pdf .pdf-brand-name{color:#fff!important;font-size:10px!important;letter-spacing:2.5px!important}
+.points-pdf .pdf-tournament-name{font-size:22px!important;color:#fff!important;letter-spacing:.8px!important}
+.points-pdf .pdf-section-badge{background:linear-gradient(180deg,#183b78,#0a224f)!important;border:1px solid #4da2ff!important;box-shadow:inset 0 0 16px rgba(58,145,255,.30)!important;color:#fff!important;font-size:12px!important;padding:9px 15px!important}
+.points-pdf .pdf-meta-line{color:#a8c9ef!important;border-bottom:0!important;text-align:center!important;margin:0 0 9px!important;padding:0 0 4px!important}
+.points-pdf .print-root{color:#fff!important}
+.points-pdf .points-poster-content{width:100%!important}
+.points-pdf .poster-table-block{break-inside:avoid!important;page-break-inside:avoid!important;margin:0 0 10px!important}
+.points-pdf .poster-group-title{display:inline-block!important;margin:0 0 6px 2px!important;padding:5px 10px!important;background:rgba(10,43,92,.92)!important;border:1px solid rgba(77,162,255,.55)!important;border-radius:999px!important;color:#dcecff!important;font-size:8px!important;font-weight:900!important;letter-spacing:1.1px!important;text-transform:uppercase!important}
+.points-pdf .poster-table-shell{overflow:hidden!important;border:1px solid #38a2ff!important;border-radius:12px!important;background:rgba(3,18,45,.92)!important;box-shadow:inset 0 0 24px rgba(25,120,255,.13)!important}
+.points-pdf .poster-points-table{width:100%!important;min-width:0!important;border-collapse:collapse!important;background:transparent!important;color:#fff!important;font-size:10px!important}
+.points-pdf .poster-points-table thead{display:table-header-group!important}
+.points-pdf .poster-points-table th{background:linear-gradient(180deg,#15459a,#0b2d70)!important;color:#fff!important;border:0!important;border-right:1px solid rgba(91,174,255,.45)!important;border-bottom:1px solid #53adff!important;padding:8px 5px!important;font-size:8px!important;font-weight:900!important;letter-spacing:.55px!important;text-align:center!important;text-transform:uppercase!important}
+.points-pdf .poster-points-table th:nth-child(2){text-align:left!important;padding-left:12px!important}
+.points-pdf .poster-points-table th:nth-child(3){color:#ffd342!important}
+.points-pdf .poster-points-table td{background:rgba(2,21,52,.92)!important;color:#f7fbff!important;border:0!important;border-right:1px solid rgba(74,150,229,.38)!important;border-bottom:1px solid rgba(70,145,224,.42)!important;padding:7px 5px!important;font-size:10px!important;text-align:center!important;vertical-align:middle!important}
+.points-pdf .poster-points-table tbody tr:nth-child(even) td{background:rgba(5,31,72,.95)!important}
+.points-pdf .poster-points-table tbody tr:last-child td{border-bottom:0!important}
+.points-pdf .poster-points-table td:nth-child(2){text-align:left!important;padding-left:9px!important}
+.points-pdf .poster-points-table .pts{color:#ff3b3f!important;font-size:12px!important;background:rgba(7,29,63,.98)!important}
+.points-pdf .poster-points-table .pct{color:#ff4b4e!important;font-weight:900!important}
+.points-pdf .poster-team{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;white-space:nowrap!important}
+.points-pdf .poster-team img,.points-pdf .team-logo-fallback{width:25px!important;height:25px!important;object-fit:contain!important;border-radius:50%!important;background:#fff!important;border:1px solid rgba(255,255,255,.65)!important;padding:2px!important;flex:0 0 auto!important}
+.points-pdf .team-logo-fallback{display:grid!important;place-items:center!important;color:#0b285e!important;font-size:10px!important;font-weight:900!important}
+.points-pdf .rank-badge{display:inline-grid!important;place-items:center!important;width:25px!important;height:25px!important;border-radius:8px!important;background:linear-gradient(180deg,#0d4da9,#073275)!important;border:1px solid #4ea8ff!important;color:#fff!important;font-weight:900!important}
+.points-pdf .rank-badge.gold{background:linear-gradient(180deg,#e0b12a,#88630c)!important;border-color:#ffe27b!important;color:#fff!important}
+.points-pdf .rank-badge.silver{background:linear-gradient(180deg,#aeb8c7,#5e6a7a)!important;border-color:#e8eef7!important;color:#fff!important}
+.points-pdf .rank-badge.bronze{background:linear-gradient(180deg,#b8662d,#71320d)!important;border-color:#e99a62!important;color:#fff!important}
+.points-pdf .pdf-page-footer{background:#031023!important;color:#a9c9ec!important;border-top:1px solid rgba(61,151,241,.55)!important}
+.points-pdf .pdf-page-footer strong{color:#fff!important}
 .pdf-page-footer{position:fixed!important;left:0!important;right:0!important;bottom:0!important;height:8mm!important;border-top:1px solid #d9dce1!important;background:#fff!important;color:#73777f!important;font-size:7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 2mm!important}
 .pdf-page-footer strong{color:#e31b23!important;letter-spacing:.8px!important}
 @page{size:${pageSize};margin:10mm 10mm 15mm 10mm}
@@ -2930,7 +3022,7 @@ function printSectionPDF(sectionId,label){
     const section=document.getElementById(sectionId);
     if(!section){ alert("The selected section could not be found."); return; }
 
-    const clone=section.cloneNode(true);
+    const clone = sectionId === "points" ? buildPointsPdfContent() : section.cloneNode(true);
     clone.style.display="block";
     clone.querySelectorAll(".pdf-download-button").forEach(btn=>btn.remove());
 
