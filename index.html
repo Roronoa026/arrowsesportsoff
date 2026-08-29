@@ -199,13 +199,26 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;color:var(--mut
 }
 
 /* Arrows welcome intro */
-#welcomeIntro{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,rgba(0,217,79,.18),transparent 32%),#030604;transition:opacity .65s ease,visibility .65s ease}
+#welcomeIntro{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,rgba(0,217,79,.18),transparent 32%),#030604;transition:opacity .65s ease,visibility .65s ease}
+#welcomeIntro::before{content:"";position:absolute;inset:-25%;pointer-events:none;opacity:0;background:repeating-linear-gradient(90deg,transparent 0 48px,rgba(92,255,114,.035) 49px 50px);transform:skewX(-12deg)}
+#welcomeIntro.intro-live::before{animation:introScan 1.8s ease-out both}
 #welcomeIntro.intro-out{opacity:0;visibility:hidden;pointer-events:none}
 .welcome-stage{text-align:center;padding:28px;width:min(92vw,650px)}
 .welcome-logo{width:min(220px,52vw);margin:0 auto 22px;filter:drop-shadow(0 0 28px rgba(92,255,114,.55));animation:introLogo 1.25s cubic-bezier(.2,.8,.2,1) both}
 .welcome-kicker{color:var(--green);font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;animation:introUp .7s .45s both}
 .welcome-title{font-family:"Barlow Condensed";font-size:clamp(48px,10vw,86px);line-height:.9;text-transform:uppercase;margin:10px 0 8px;animation:introUp .7s .6s both}
 .welcome-title span{color:var(--green);text-shadow:0 0 28px rgba(92,255,114,.3)}
+#welcomeIntro.intro-live .welcome-logo{animation:impactLogo .72s cubic-bezier(.12,.82,.18,1) both}
+#welcomeIntro.intro-live .welcome-title{animation:titleStrike .8s .18s cubic-bezier(.12,.82,.18,1) both}
+#welcomeIntro.intro-live .welcome-kicker,#welcomeIntro.intro-live .welcome-sub{animation:hardFlash .5s .32s both}
+#welcomeIntro.intro-live .welcome-stage{animation:stageKick .36s .18s both}
+#welcomeIntro.intro-live{animation:screenPunch .28s .18s both}
+@keyframes impactLogo{0%{opacity:.2;transform:scale(.7);filter:blur(9px) brightness(2)}55%{opacity:1;transform:scale(1.13);filter:blur(0) brightness(1.6) drop-shadow(0 0 42px rgba(92,255,114,.85))}100%{transform:scale(1);filter:drop-shadow(0 0 30px rgba(92,255,114,.62))}}
+@keyframes titleStrike{0%{opacity:0;transform:scale(1.26) translateY(14px);letter-spacing:10px;filter:blur(7px)}58%{opacity:1;transform:scale(.96) translateY(0);letter-spacing:0;filter:blur(0)}100%{transform:scale(1)}}
+@keyframes hardFlash{0%{opacity:0;transform:translateY(8px)}45%{opacity:1;filter:brightness(2.2)}100%{opacity:1;transform:none;filter:none}}
+@keyframes stageKick{0%,100%{transform:translate(0)}35%{transform:translate(-3px,2px)}55%{transform:translate(3px,-2px)}75%{transform:translate(-1px,1px)}}
+@keyframes screenPunch{0%,100%{filter:none}45%{filter:contrast(1.5) brightness(1.18)}}
+@keyframes introScan{0%{opacity:0;transform:translateX(-35%) skewX(-12deg)}28%{opacity:1}100%{opacity:0;transform:translateX(35%) skewX(-12deg)}}
 .welcome-sub{color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase;animation:introUp .7s .75s both}
 .welcome-enter{margin-top:26px;border:1px solid var(--green);background:var(--green);color:#041006;padding:13px 24px;border-radius:999px;font:800 12px Inter,Arial,sans-serif;letter-spacing:1.5px;cursor:pointer;animation:introUp .7s .9s both;box-shadow:0 0 28px rgba(92,255,114,.18)}
 .welcome-enter:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(92,255,114,.32)}
@@ -441,21 +454,74 @@ links.forEach(link => link.addEventListener('click', () => document.querySelecto
   const intro=document.getElementById('welcomeIntro');
   const enter=document.getElementById('welcomeEnter');
   if(!intro||!enter)return;
+
+  function chooseVoice(){
+    const voices=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+    const scored=voices.map(v=>{
+      const n=(v.name+' '+v.lang).toLowerCase();
+      let score=0;
+      if(/^en/i.test(v.lang)) score+=10;
+      if(/male|daniel|david|mark|alex|fred|george|aaron|guy|ryan|thomas/.test(n)) score+=7;
+      if(/enhanced|premium|natural/.test(n)) score+=4;
+      if(/gb|us|au/.test(n)) score+=2;
+      return {v,score};
+    }).sort((a,b)=>b.score-a.score);
+    return scored[0]&&scored[0].v;
+  }
+
+  function impactSound(delay, freq, length, gain){
+    setTimeout(()=>{
+      try{
+        const AC=window.AudioContext||window.webkitAudioContext;
+        if(!AC)return;
+        const ctx=impactSound.ctx||(impactSound.ctx=new AC());
+        const osc=ctx.createOscillator(), g=ctx.createGain();
+        osc.type='sawtooth'; osc.frequency.setValueAtTime(freq,ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(38,freq*.42),ctx.currentTime+length);
+        g.gain.setValueAtTime(.0001,ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(gain,ctx.currentTime+.012);
+        g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+length);
+        osc.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+length+.02);
+      }catch(e){}
+    },delay);
+  }
+
   enter.addEventListener('click',function(){
+    enter.disabled=true;
+    enter.style.opacity='0';
+    enter.style.pointerEvents='none';
+    intro.classList.remove('intro-live');
+    void intro.offsetWidth;
+    intro.classList.add('intro-live');
+
+    impactSound(0,95,.22,.18);
+    impactSound(220,68,.34,.24);
+    impactSound(760,120,.15,.10);
+
+    let finishTimer=setTimeout(finish,2900);
+    function finish(){
+      clearTimeout(finishTimer);
+      intro.classList.add('intro-out');
+      setTimeout(()=>intro.remove(),700);
+    }
+
     try{
       if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
-        const msg=new SpeechSynthesisUtterance('Welcome to Arrows Esports');
-        msg.rate=.9; msg.pitch=.9; msg.volume=1;
-        const voices=window.speechSynthesis.getVoices();
-        const preferred=voices.find(v=>/en(-|_)?(GB|US)/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
+        const msg=new SpeechSynthesisUtterance('WELCOME... TO ARROWS ESPORTS.');
+        msg.rate=1.08;
+        msg.pitch=.58;
+        msg.volume=1;
+        const preferred=chooseVoice();
         if(preferred)msg.voice=preferred;
+        msg.onstart=()=>intro.classList.add('voice-live');
+        msg.onend=()=>setTimeout(finish,260);
+        msg.onerror=()=>setTimeout(finish,1700);
         window.speechSynthesis.speak(msg);
       }
     }catch(e){}
-    intro.classList.add('intro-out');
-    setTimeout(()=>intro.remove(),700);
   });
+  if('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
 })();
 </script>
 </body>
