@@ -204,9 +204,9 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;color:var(--mut
 #welcomeIntro.intro-live::before{animation:introScan 1.8s ease-out both}
 #welcomeIntro.intro-out{opacity:0;visibility:hidden;pointer-events:none}
 .welcome-stage{text-align:center;padding:28px;width:min(92vw,650px)}
-.welcome-logo{width:min(220px,52vw);margin:0 auto 22px;filter:drop-shadow(0 0 28px rgba(92,255,114,.55));animation:introLogo 1.25s cubic-bezier(.2,.8,.2,1) both}
-.welcome-kicker{color:var(--green);font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;animation:introUp .7s .45s both}
-.welcome-title{font-family:"Barlow Condensed";font-size:clamp(48px,10vw,86px);line-height:.9;text-transform:uppercase;margin:10px 0 8px;animation:introUp .7s .6s both}
+.welcome-logo{width:min(220px,52vw);margin:0 auto 22px;filter:drop-shadow(0 0 28px rgba(92,255,114,.55))}
+.welcome-kicker{color:var(--green);font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase}
+.welcome-title{font-family:"Barlow Condensed";font-size:clamp(48px,10vw,86px);line-height:.9;text-transform:uppercase;margin:10px 0 8px}
 .welcome-title span{color:var(--green);text-shadow:0 0 28px rgba(92,255,114,.3)}
 #welcomeIntro.intro-live .welcome-logo{animation:impactLogo .72s cubic-bezier(.12,.82,.18,1) both}
 #welcomeIntro.intro-live .welcome-title{animation:titleStrike .8s .18s cubic-bezier(.12,.82,.18,1) both}
@@ -219,8 +219,8 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:40px 0;color:var(--mut
 @keyframes stageKick{0%,100%{transform:translate(0)}35%{transform:translate(-3px,2px)}55%{transform:translate(3px,-2px)}75%{transform:translate(-1px,1px)}}
 @keyframes screenPunch{0%,100%{filter:none}45%{filter:contrast(1.5) brightness(1.18)}}
 @keyframes introScan{0%{opacity:0;transform:translateX(-35%) skewX(-12deg)}28%{opacity:1}100%{opacity:0;transform:translateX(35%) skewX(-12deg)}}
-.welcome-sub{color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase;animation:introUp .7s .75s both}
-.welcome-enter{margin-top:26px;border:1px solid var(--green);background:var(--green);color:#041006;padding:13px 24px;border-radius:999px;font:800 12px Inter,Arial,sans-serif;letter-spacing:1.5px;cursor:pointer;animation:introUp .7s .9s both;box-shadow:0 0 28px rgba(92,255,114,.18)}
+.welcome-sub{color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.welcome-enter{margin-top:26px;border:1px solid var(--green);background:var(--green);color:#041006;padding:13px 24px;border-radius:999px;font:800 12px Inter,Arial,sans-serif;letter-spacing:1.5px;cursor:pointer;box-shadow:0 0 28px rgba(92,255,114,.18)}
 .welcome-enter:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(92,255,114,.32)}
 @keyframes introLogo{0%{opacity:0;transform:scale(.55) rotate(-7deg);filter:blur(10px) drop-shadow(0 0 0 transparent)}70%{opacity:1;transform:scale(1.06) rotate(1deg)}100%{opacity:1;transform:scale(1) rotate(0);filter:blur(0) drop-shadow(0 0 28px rgba(92,255,114,.55))}}
 @keyframes introUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -461,7 +461,7 @@ links.forEach(link => link.addEventListener('click', () => document.querySelecto
       const n=(v.name+' '+v.lang).toLowerCase();
       let score=0;
       if(/^en/i.test(v.lang)) score+=10;
-      if(/male|daniel|david|mark|alex|fred|george|aaron|guy|ryan|thomas/.test(n)) score+=7;
+      if(/male|daniel|david|mark|alex|fred|george|aaron|guy|ryan|thomas|ravi|prabhat/.test(n)) score+=7;
       if(/enhanced|premium|natural/.test(n)) score+=4;
       if(/gb|us|au/.test(n)) score+=2;
       return {v,score};
@@ -509,8 +509,8 @@ links.forEach(link => link.addEventListener('click', () => document.querySelecto
       if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
         const msg=new SpeechSynthesisUtterance('WELCOME... TO ARROWS ESPORTS.');
-        msg.rate=1.08;
-        msg.pitch=.58;
+        msg.rate=.92;
+        msg.pitch=.42;
         msg.volume=1;
         const preferred=chooseVoice();
         if(preferred)msg.voice=preferred;
