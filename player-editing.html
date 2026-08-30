@@ -28,7 +28,7 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=20260821-relational2"></script>
-<script src="supabase-data.js?v=20260821-relational2"></script>
+<script src="supabase-data.js?v=20260830-duoresults2"></script>
 </head><body><header class="top"><div><h2 style="margin:0">✏️ Player Management</h2><small>ARROWS ESPORTS ADMIN</small></div><div><a href="editpage.html">Admin</a><a href="Playerdetails.html">View Players</a><a href="duo.html">Tournament</a></div></header><main class="wrap"><div class="grid"><section class="panel"><h2 id="formTitle">➕ Add Clan Player</h2><p class="note">Add a player once here. Tournament pages can then link that same player to different teams and tournaments.</p><input id="name" placeholder="Player name"><input id="eid" placeholder="eFootball ID"><input id="country" placeholder="Country"><input id="photo" placeholder="Photo path, e.g. images/Rexzo.jpeg"><div class="actions"><button onclick="savePlayer()">💾 Save Player</button><button class="secondary" onclick="resetForm()">Clear</button></div></section><section class="panel"><h2>👥 Clan Player Database</h2><input id="search" placeholder="Search players..." oninput="render()"><div id="list" class="list"></div></section></div></main><div id="toast" class="toast"></div><script>
 /* Shared cache API fallback.
    This prevents stale/missing player-data.js from stopping Supabase startup. */
