@@ -1049,6 +1049,64 @@ footer strong{color:#dfffea;letter-spacing:.05em;}
     .stat-icon{width:38px;height:38px;}
     header h1{font-size:26px;}
 }
+
+
+/* =========================
+MATCHDAY FEATURE POPUP
+========================= */
+.matchday-feature-popup{
+    position:fixed;
+    inset:0;
+    z-index:100000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+    background:rgba(0,0,0,.88);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+}
+.matchday-feature-popup.is-hidden{display:none;}
+.matchday-feature-dialog{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:min(94vw,560px);
+    max-height:94vh;
+}
+.matchday-feature-image{
+    display:block;
+    width:auto;
+    max-width:100%;
+    max-height:92vh;
+    object-fit:contain;
+    border-radius:14px;
+    box-shadow:0 20px 70px rgba(0,0,0,.75),0 0 30px rgba(57,216,100,.25);
+}
+.matchday-feature-close{
+    position:absolute;
+    top:-10px;
+    right:-10px;
+    z-index:2;
+    width:42px;
+    height:42px;
+    border:0;
+    border-radius:50%;
+    background:#fff;
+    color:#07120a;
+    font-size:30px;
+    line-height:42px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 5px 18px rgba(0,0,0,.45);
+}
+@media(max-width:600px){
+    .matchday-feature-popup{padding:10px;}
+    .matchday-feature-dialog{width:96vw;}
+    .matchday-feature-image{max-height:90vh;}
+    .matchday-feature-close{top:-4px;right:-4px;}
+}
 </style>
 
 
@@ -1096,6 +1154,26 @@ window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(
 
 
 <body>
+
+<!-- Matchday 1 Player of the Match popup -->
+<div id="matchdayFeaturePopup" class="matchday-feature-popup" role="dialog" aria-modal="true" aria-label="Player of the Matchday">
+    <div class="matchday-feature-dialog">
+        <button id="matchdayFeatureClose" class="matchday-feature-close" type="button" aria-label="Close popup">&times;</button>
+        <img class="matchday-feature-image" src="images/matchday-1-firoz.png" alt="Player of the Matchday - Firoz, Matchday 1">
+    </div>
+</div>
+<script>
+(function(){
+    const popup=document.getElementById('matchdayFeaturePopup');
+    const closeBtn=document.getElementById('matchdayFeatureClose');
+    if(!popup || !closeBtn) return;
+    const closePopup=()=>popup.classList.add('is-hidden');
+    closeBtn.addEventListener('click',closePopup);
+    popup.addEventListener('click',event=>{ if(event.target===popup) closePopup(); });
+    document.addEventListener('keydown',event=>{ if(event.key==='Escape') closePopup(); });
+})();
+</script>
+
 <script>
 /* Shared cache API fallback.
    This prevents stale/missing player-data.js from stopping Supabase startup. */
@@ -2465,7 +2543,9 @@ function renderPoints(){
                 )
                 .filter(Boolean)
             )
-        ];
+        ].sort((a,b)=>
+            String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:"base"})
+        );
 
 
     if(groups.length){
@@ -2773,7 +2853,8 @@ function buildPointsPdfContent(){
         String(match.group || "").toLowerCase() !== "knockout"
     );
 
-    const groups=[...new Set(tableFixtures.map(match=>match.group).filter(Boolean))];
+    const groups=[...new Set(tableFixtures.map(match=>match.group).filter(Boolean))]
+        .sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:"base"}));
     const pageSets=[];
 
     if(groups.length){
