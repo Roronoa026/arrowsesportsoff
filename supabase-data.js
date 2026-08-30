@@ -183,6 +183,74 @@
       }
       return true;
     },
+    async saveDuoMatchResult(m){
+      if(!m || !m.id) throw new Error("Invalid match result: missing match id");
+      const t=await ensureTournament();
+      const id=String(m.id);
+      const existing=await req("matches?id=eq."+encodeURIComponent(id)+"&select=id,notes&limit=1");
+
+      // A result save should touch only this fixture. If the match somehow has
+      // not reached Supabase yet, create it using the normal match serializer.
+      if(!existing || !existing.length){
+        await saveMatch(m,t.id);
+        return true;
+      }
+
+      let notes={};
+      try{ notes=existing[0].notes?JSON.parse(existing[0].notes):{}; }catch(e){ notes={}; }
+      if(!notes || typeof notes!=="object" || Array.isArray(notes)) notes={};
+      notes.duoResult=(m.result && typeof m.result==="object")?m.result:null;
+
+      const result=notes.duoResult||{};
+      const homeScore=Math.max(0,Number(result.homePoints)||0);
+      const awayScore=Math.max(0,Number(result.awayPoints)||0);
+      await req("matches?id=eq."+encodeURIComponent(id),{
+        method:"PATCH",
+        headers:{Prefer:"return=minimal"},
+        body:JSON.stringify({
+          home_score:homeScore,
+          away_score:awayScore,
+          status:"completed",
+          notes:JSON.stringify(notes)
+        })
+      });
+
+      // Duo results are stored in matches.notes. Clear legacy goal rows so they
+      // cannot be counted as a second score source, then replace the MOTM row.
+      await req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      await req("awards?match_id=eq."+encodeURIComponent(id)+"&award_type=eq.motm",{method:"DELETE",headers:{Prefer:"return=minimal"}});
+      const mvp=(result.mvp||m.motm||null);
+      if(mvp){
+        await req("awards",{
+          method:"POST",
+          headers:{Prefer:"return=minimal"},
+          body:JSON.stringify({id:uuid(),tournament_id:t.id,match_id:id,player_id:mvp,award_type:"motm",title:"Man of the Match"})
+        });
+      }
+      return true;
+    },
+    async clearDuoMatchResult(id){
+      if(!id) throw new Error("Invalid match id");
+      id=String(id);
+      const existing=await req("matches?id=eq."+encodeURIComponent(id)+"&select=id,notes&limit=1");
+      if(!existing || !existing.length) throw new Error("Fixture not found in Supabase");
+
+      let notes={};
+      try{ notes=existing[0].notes?JSON.parse(existing[0].notes):{}; }catch(e){ notes={}; }
+      if(!notes || typeof notes!=="object" || Array.isArray(notes)) notes={};
+      notes.duoResult=null;
+
+      await req("matches?id=eq."+encodeURIComponent(id),{
+        method:"PATCH",
+        headers:{Prefer:"return=minimal"},
+        body:JSON.stringify({home_score:0,away_score:0,status:"scheduled",notes:JSON.stringify(notes)})
+      });
+      await Promise.all([
+        req("awards?match_id=eq."+encodeURIComponent(id)+"&award_type=eq.motm",{method:"DELETE",headers:{Prefer:"return=minimal"}}),
+        req("match_goals?match_id=eq."+encodeURIComponent(id),{method:"DELETE",headers:{Prefer:"return=minimal"}})
+      ]);
+      return true;
+    },
     async deleteAllMatches(){
       return this.replaceFixtures([]);
     },
