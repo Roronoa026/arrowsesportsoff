@@ -2246,93 +2246,94 @@ function rankedTeams(teamIds, fixtureSet){
 function generateKnockoutStage(){
     const type=tournament.type || "roundrobin";
 
-    if(type !== "worldcup" && type !== "ucl"){
-        alert("Knockout stage generation is available for World Cup and UCL formats.");
+    // This tournament uses 6 groups x 5 teams. After the league stage:
+    // - Top 2 from every group qualify (12 teams)
+    // - Best 4 third-place teams qualify (4 teams)
+    // - Total: 16 teams for the Round of 16
+    if(type !== "worldcup" && type !== "roundrobin"){
+        alert("This KO qualification is set for the 6-group league format.");
         return;
     }
 
     const leagueFixtures=tournament.fixtures.filter(m=>m.stage==="League");
     if(!leagueFixtures.length){
-        alert("Generate the league/group fixtures first.");
+        alert("No league fixtures were found.");
         return;
     }
 
     if(leagueFixtures.some(m=>!m.played)){
-        alert("Complete all league/group matches before generating the knockout stage.");
+        alert("Complete all league matches before generating the KO fixtures.");
         return;
     }
 
-    // Do not duplicate the knockout bracket.
     if(tournament.fixtures.some(m=>m.stage==="Knockout")){
-        alert("The knockout stage has already been generated.");
+        alert("The KO fixtures have already been generated.");
         return;
     }
 
-    let qualifiers=[];
+    const groupMap={};
+    tournament.teams.forEach(team=>{
+        const group=team.tournamentGroup || "";
+        if(!groupMap[group]) groupMap[group]=[];
+        groupMap[group].push(team.id);
+    });
 
-    if(type==="worldcup"){
-        const groupMap={};
-        tournament.teams.forEach(team=>{
-            const group=team.tournamentGroup || "";
-            if(!groupMap[group]) groupMap[group]=[];
-            groupMap[group].push(team.id);
-        });
+    const groupNames=Object.keys(groupMap).filter(Boolean).sort();
+    if(groupNames.length !== 6){
+        alert("KO qualification needs exactly 6 groups. Current groups found: "+groupNames.length);
+        return;
+    }
 
-        Object.keys(groupMap).sort().forEach(groupName=>{
-            const ranked=rankedTeams(groupMap[groupName],leagueFixtures);
-            qualifiers.push(...ranked.slice(0,2));
-        });
-    }else{
-        const allTeams=rankedTeams(
-            tournament.teams.map(t=>t.id),
-            leagueFixtures
+    const automatic=[];
+    const thirdPlaced=[];
+
+    groupNames.forEach(groupName=>{
+        const ranked=rankedTeams(groupMap[groupName],leagueFixtures);
+        if(ranked.length < 3) return;
+        automatic.push(ranked[0], ranked[1]);
+        thirdPlaced.push(ranked[2]);
+    });
+
+    if(automatic.length !== 12 || thirdPlaced.length !== 6){
+        alert("Could not calculate all group qualifiers. Please check that every group has at least 3 teams.");
+        return;
+    }
+
+    // Compare all six 3rd-place teams using the existing table rules:
+    // Points -> Goal Difference -> Goals For. Best four qualify.
+    const bestThird=rankedTeams(thirdPlaced,leagueFixtures).slice(0,4);
+    const qualifiers=[...automatic,...bestThird];
+
+    // Seed the Round of 16 by overall league performance. Stronger qualifiers
+    // are paired against lower seeds, while avoiding a same-group rematch when possible.
+    const seeded=rankedTeams(qualifiers,leagueFixtures);
+    const topHalf=seeded.slice(0,8);
+    const bottomHalf=seeded.slice(8).reverse();
+    const pairs=[];
+
+    function teamGroup(id){
+        const team=tournament.teams.find(t=>String(t.id)===String(id));
+        return team ? (team.tournamentGroup || "") : "";
+    }
+
+    topHalf.forEach(home=>{
+        let idx=bottomHalf.findIndex(away=>teamGroup(away)!==teamGroup(home));
+        if(idx<0) idx=0;
+        const away=bottomHalf.splice(idx,1)[0];
+        pairs.push([home,away]);
+    });
+
+    pairs.forEach((pair,index)=>{
+        tournament.fixtures.push(
+            createMatch(pair[0],pair[1],"Knockout",1,"Round of 16")
         );
-        const count=Math.max(2,Math.floor(allTeams.length/2));
-        qualifiers=allTeams.slice(0,count);
-    }
-
-    if(qualifiers.length < 2){
-        alert("Not enough qualified teams for a knockout stage.");
-        return;
-    }
-
-    // If needed, trim to the nearest power of two and create byes.
-    const bracketSize=Math.pow(2,Math.floor(Math.log2(qualifiers.length)));
-    qualifiers=qualifiers.slice(0,bracketSize);
-
-    let roundTeams=qualifiers;
-    let roundNumber=1;
-    let roundSize=roundTeams.length;
-
-    while(roundSize >= 2){
-        const stageName =
-            roundSize===2 ? "Final" :
-            roundSize===4 ? "Semi Final" :
-            roundSize===8 ? "Quarter Final" :
-            "Round of "+roundSize;
-
-        for(let i=0;i<roundTeams.length;i+=2){
-            tournament.fixtures.push(
-                createMatch(
-                    roundTeams[i],
-                    roundTeams[i+1],
-                    "Knockout",
-                    roundNumber,
-                    stageName
-                )
-            );
-        }
-
-        // Future rounds are intentionally not created with fake teams.
-        // They can be generated after winners are known.
-        break;
-    }
+    });
 
     tournament.knockoutReady=false;
     save();
     renderAll();
     showPageByName("fixtures");
-    alert("Knockout stage generated from the completed league/group results.");
+    alert("Round of 16 generated: top 2 from each group + best 4 third-place teams.");
 }
 
 /* =====================================================
@@ -3121,7 +3122,7 @@ function updateTournamentTypeUI(){
     groupCard.classList.toggle("hidden",!grouped);
 
     const messages={
-        roundrobin:"Teams are divided into the selected number of groups. Every team in a group plays every other team.",
+        roundrobin:"Teams are divided into groups for league matches. For a 6-group tournament, the KO button selects the top 2 from each group plus the best 4 third-place teams for a Round of 16.",
         knockout:"Direct knockout bracket. Teams are seeded into rounds with automatic byes when required.",
         worldcup:"Group-stage round robin followed by a knockout stage. Top 2 teams from each group qualify.",
         ucl:"League-phase round robin followed by a knockout stage. The top half of the league table qualifies."
@@ -3137,7 +3138,7 @@ function updateTournamentTypeUI(){
     const knockoutButton=document.getElementById("generateKnockoutButton");
     knockoutButton.classList.toggle(
         "hidden",
-        !(type==="worldcup" || type==="ucl")
+        !(type==="worldcup" || type==="roundrobin")
     );
 }
 
