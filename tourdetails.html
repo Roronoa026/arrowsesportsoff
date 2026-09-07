@@ -1107,29 +1107,41 @@ MATCHDAY FEATURE POPUP
     .matchday-feature-image{max-height:90vh;}
     .matchday-feature-close{top:-4px;right:-4px;}
 }
+
+
+/* KNOCKOUT BRACKET — tournament draw */
+.ko-bracket-wrap{overflow-x:auto;overflow-y:hidden;padding:14px 6px 28px;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.ko-bracket{display:grid;grid-template-columns:260px 260px 260px 260px;gap:58px;min-width:1214px;align-items:stretch;padding:4px 18px 10px 4px;}
+.ko-round{display:flex;flex-direction:column;min-width:0;}
+.ko-round-title{text-align:center;font-weight:900;font-size:14px;letter-spacing:.7px;margin:0 0 14px;padding:10px 8px;border-radius:10px;background:linear-gradient(135deg,rgba(48,210,112,.18),rgba(255,255,255,.04));border:1px solid rgba(77,230,135,.28);text-transform:uppercase;white-space:nowrap;}
+.ko-round-matches{display:flex;flex:1;flex-direction:column;justify-content:space-around;gap:14px;min-height:760px;}
+.ko-match{position:relative;flex:0 0 auto;border:1px solid rgba(89,229,143,.28);border-radius:10px;background:linear-gradient(145deg,rgba(10,36,23,.96),rgba(3,18,12,.96));padding:7px 10px;box-shadow:0 8px 22px rgba(0,0,0,.25);min-height:76px;box-sizing:border-box;}
+.ko-match::after{content:"";position:absolute;left:100%;top:50%;width:59px;border-top:2px solid rgba(84,211,133,.35);}
+.ko-round:not(:first-child) .ko-match::before{content:"";position:absolute;right:100%;top:50%;width:59px;border-top:2px solid rgba(84,211,133,.35);}
+.ko-round:last-child .ko-match::after{display:none;}
+.ko-match-label{font-size:9px;line-height:1.1;color:#8fdbaa;opacity:.85;margin-bottom:4px;text-transform:uppercase;letter-spacing:.65px;}
+.ko-team{display:flex!important;align-items:center!important;gap:8px!important;height:27px!important;min-height:27px!important;font-size:12px!important;font-weight:800!important;line-height:1!important;padding:1px 0!important;box-sizing:border-box!important;}
+.ko-team + .ko-team{border-top:1px solid rgba(255,255,255,.08);}
+.ko-team-logo{display:block!important;width:22px!important;height:22px!important;min-width:22px!important;max-width:22px!important;min-height:22px!important;max-height:22px!important;flex:0 0 22px!important;border-radius:50%!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border:1px solid rgba(255,255,255,.18)!important;overflow:hidden!important;}
+.ko-team-name{display:block!important;flex:1!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.ko-score{font-size:14px!important;font-weight:900!important;min-width:20px!important;text-align:right!important;color:#fff;}
+.ko-tbd{opacity:.42;font-style:italic;}
+.ko-winner .ko-team-name,.ko-winner .ko-score{color:#f2d46c;}
+.ko-bracket-wrap::after{content:"Swipe sideways to view the full draw →";display:block;font-size:10px;opacity:.55;margin-top:10px;text-align:left;}
+@media(max-width:700px){
+  .ko-bracket{grid-template-columns:210px 210px 210px 210px;gap:42px;min-width:966px;padding-right:12px;}
+  .ko-round-matches{min-height:700px;}
+  .ko-match{min-height:70px;padding:6px 8px;}
+  .ko-match::after,.ko-round:not(:first-child) .ko-match::before{width:43px;}
+  .ko-round-title{font-size:11px;padding:8px 5px;}
+  .ko-team{font-size:11px!important;height:25px!important;min-height:25px!important;}
+  .ko-team-logo{width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important;min-height:20px!important;max-height:20px!important;flex-basis:20px!important;}
+}
+
 </style>
 
 
 <script>
-
-/* KNOCKOUT BRACKET */
-.ko-bracket-wrap{overflow-x:auto;padding:10px 2px 24px;-webkit-overflow-scrolling:touch;}
-.ko-bracket{display:grid;grid-template-columns:repeat(4,minmax(235px,1fr));gap:24px;min-width:1040px;align-items:stretch;}
-.ko-round{display:flex;flex-direction:column;min-width:0;}
-.ko-round-title{text-align:center;font-weight:800;font-size:15px;letter-spacing:.5px;margin:0 0 14px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);}
-.ko-round-matches{display:flex;flex:1;flex-direction:column;justify-content:space-around;gap:14px;}
-.ko-match{position:relative;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(5,16,10,.55);padding:10px 12px;box-shadow:0 8px 22px rgba(0,0,0,.14);}
-.ko-match::after{content:"";position:absolute;right:-25px;top:50%;width:25px;border-top:1px solid rgba(255,255,255,.18);}
-.ko-round:last-child .ko-match::after{display:none;}
-.ko-match-label{font-size:10px;opacity:.65;margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px;}
-.ko-team{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px;font-weight:700;}
-.ko-team + .ko-team{border-top:1px solid rgba(255,255,255,.07);}
-.ko-team-logo{width:26px!important;height:26px!important;min-width:26px!important;max-width:26px!important;min-height:26px!important;max-height:26px!important;flex:0 0 26px!important;border-radius:50%;background-size:cover;background-position:center;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.12);overflow:hidden;}
-.ko-team-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ko-score{font-size:15px;font-weight:900;min-width:20px;text-align:right;}
-.ko-tbd{opacity:.45;font-style:italic;}
-.ko-winner{color:#f3cf62;}
-@media(max-width:700px){.ko-bracket{grid-template-columns:repeat(4,220px);min-width:952px;gap:18px}.ko-bracket-wrap{margin-left:-4px;margin-right:-4px}.ko-round-title{position:sticky;top:0;z-index:2}}
 
 /* ARROWS v5: safe Duo fixture generation fallback */
 window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
