@@ -1111,6 +1111,26 @@ MATCHDAY FEATURE POPUP
 
 
 <script>
+
+/* KNOCKOUT BRACKET */
+.ko-bracket-wrap{overflow-x:auto;padding:10px 2px 24px;-webkit-overflow-scrolling:touch;}
+.ko-bracket{display:grid;grid-template-columns:repeat(4,minmax(235px,1fr));gap:24px;min-width:1040px;align-items:stretch;}
+.ko-round{display:flex;flex-direction:column;min-width:0;}
+.ko-round-title{text-align:center;font-weight:800;font-size:15px;letter-spacing:.5px;margin:0 0 14px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);}
+.ko-round-matches{display:flex;flex:1;flex-direction:column;justify-content:space-around;gap:14px;}
+.ko-match{position:relative;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(5,16,10,.55);padding:10px 12px;box-shadow:0 8px 22px rgba(0,0,0,.14);}
+.ko-match::after{content:"";position:absolute;right:-25px;top:50%;width:25px;border-top:1px solid rgba(255,255,255,.18);}
+.ko-round:last-child .ko-match::after{display:none;}
+.ko-match-label{font-size:10px;opacity:.65;margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px;}
+.ko-team{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px;font-weight:700;}
+.ko-team + .ko-team{border-top:1px solid rgba(255,255,255,.07);}
+.ko-team img{width:24px;height:24px;object-fit:cover;border-radius:50%;flex:0 0 24px;}
+.ko-team-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ko-score{font-size:15px;font-weight:900;min-width:20px;text-align:right;}
+.ko-tbd{opacity:.45;font-style:italic;}
+.ko-winner{color:#f3cf62;}
+@media(max-width:700px){.ko-bracket{grid-template-columns:repeat(4,220px);min-width:952px;gap:18px}.ko-bracket-wrap{margin-left:-4px;margin-right:-4px}.ko-round-title{position:sticky;top:0;z-index:2}}
+
 /* ARROWS v5: safe Duo fixture generation fallback */
 window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
   const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
@@ -1224,6 +1244,10 @@ NAVIGATION
 
     <button onclick="showPage('fixtures')">
         📅 Fixtures
+    </button>
+
+    <button onclick="showPage('koFixtures')">
+        🏆 KO Fixture
     </button>
 
     <button onclick="showPage('points')">
@@ -1443,6 +1467,22 @@ FIXTURES
 
     <div id="fixtureList"></div>
 
+</section>
+
+
+<!-- =========================
+KNOCKOUT DRAW
+========================= -->
+
+<section id="koFixtures" class="section">
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h2 style="margin:0;">🏆 Knockout Draw</h2>
+            <button class="pdf-download-button" onclick="printSectionPDF('koFixtures','Knockout Draw')">⬇️ Download PDF</button>
+        </div>
+        <p>Round of 16 → Quarter Finals → Semi Finals → Final</p>
+    </div>
+    <div id="koBracket"></div>
 </section>
 
 
@@ -2198,6 +2238,70 @@ function fixtureHTML(
             ${compact?"":mvpHtml}
         </div>`;
 }
+
+/* =========================================
+KNOCKOUT DRAW
+========================================= */
+function renderKOBracket(){
+    const box=document.getElementById("koBracket");
+    if(!box) return;
+
+    const all=tournament.fixtures || [];
+    const ko=all.filter(m=>{
+        const stage=String(m.stage||"").toLowerCase();
+        const group=String(m.group||"").toLowerCase();
+        return stage.includes("knockout") || stage.includes("round of 16") || stage.includes("quarter") || stage.includes("semi") || stage.includes("final") || group.includes("round of 16") || group.includes("quarter") || group.includes("semi") || group.includes("final");
+    });
+
+    if(!ko.length){
+        box.innerHTML='<div class="empty">KO fixtures have not been generated yet. Generate the knockout stage from the admin panel and the draw will appear here automatically.</div>';
+        return;
+    }
+
+    function roundKey(m){
+        const text=(String(m.stage||"")+" "+String(m.group||"")).toLowerCase();
+        if(text.includes("round of 16") || (String(m.stage||"").toLowerCase()==="knockout" && Number(m.round)===1)) return "r16";
+        if(text.includes("quarter")) return "qf";
+        if(text.includes("semi")) return "sf";
+        if(text.includes("final") && !text.includes("semi")) return "f";
+        if(Number(m.round)===2) return "qf";
+        if(Number(m.round)===3) return "sf";
+        if(Number(m.round)===4) return "f";
+        return "r16";
+    }
+
+    const rounds={r16:[],qf:[],sf:[],f:[]};
+    ko.forEach(m=>rounds[roundKey(m)].push(m));
+    Object.values(rounds).forEach(arr=>arr.sort((a,b)=>(Number(a.round)||0)-(Number(b.round)||0) || String(a.id||"").localeCompare(String(b.id||""))));
+
+    const specs=[
+        ["r16","Round of 16",8],
+        ["qf","Quarter Finals",4],
+        ["sf","Semi Finals",2],
+        ["f","Final",1]
+    ];
+
+    function teamRow(team,score,winner){
+        if(!team) return '<div class="ko-team ko-tbd"><span class="ko-team-name">TBD</span></div>';
+        const img=team.logo||team.image||team.photo||"";
+        return `<div class="ko-team ${winner?'ko-winner':''}">${img?`<img src="${escapeHTML(img)}" alt="">`:''}<span class="ko-team-name">${escapeHTML(team.name||"Team")}</span>${score!==null?`<span class="ko-score">${score}</span>`:''}</div>`;
+    }
+
+    function matchCard(m,index){
+        if(!m) return `<div class="ko-match"><div class="ko-match-label">Match ${index+1}</div>${teamRow(null,null,false)}${teamRow(null,null,false)}</div>`;
+        const home=getTeam(m.home), away=getTeam(m.away);
+        const r=getMatchResult(m);
+        const played=!!m.played;
+        const hs=played?Number(r.homePoints)||0:null, as=played?Number(r.awayPoints)||0:null;
+        return `<div class="ko-match"><div class="ko-match-label">Match ${index+1}${played?' • Completed':''}</div>${teamRow(home,hs,played&&hs>as)}${teamRow(away,as,played&&as>hs)}</div>`;
+    }
+
+    box.innerHTML=`<div class="ko-bracket-wrap"><div class="ko-bracket">${specs.map(([key,title,count])=>{
+        const matches=rounds[key];
+        return `<div class="ko-round"><div class="ko-round-title">${title}</div><div class="ko-round-matches">${Array.from({length:count},(_,i)=>matchCard(matches[i],i)).join("")}</div></div>`;
+    }).join("")}</div></div>`;
+}
+
 
 /* =========================================
 POINTS TABLE
@@ -3332,6 +3436,8 @@ function renderAll(){
     renderTeams();
 
     renderFixtures();
+
+    renderKOBracket();
 
     renderPoints();
 
