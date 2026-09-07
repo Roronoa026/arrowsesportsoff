@@ -1124,7 +1124,7 @@ MATCHDAY FEATURE POPUP
 .ko-match-label{font-size:10px;opacity:.65;margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px;}
 .ko-team{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px;font-weight:700;}
 .ko-team + .ko-team{border-top:1px solid rgba(255,255,255,.07);}
-.ko-team img{width:24px;height:24px;object-fit:cover;border-radius:50%;flex:0 0 24px;}
+.ko-team-logo{width:26px!important;height:26px!important;min-width:26px!important;max-width:26px!important;min-height:26px!important;max-height:26px!important;flex:0 0 26px!important;border-radius:50%;background-size:cover;background-position:center;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.12);overflow:hidden;}
 .ko-team-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ko-score{font-size:15px;font-weight:900;min-width:20px;text-align:right;}
 .ko-tbd{opacity:.45;font-style:italic;}
@@ -2284,7 +2284,10 @@ function renderKOBracket(){
     function teamRow(team,score,winner){
         if(!team) return '<div class="ko-team ko-tbd"><span class="ko-team-name">TBD</span></div>';
         const img=team.logo||team.image||team.photo||"";
-        return `<div class="ko-team ${winner?'ko-winner':''}">${img?`<img src="${escapeHTML(img)}" alt="">`:''}<span class="ko-team-name">${escapeHTML(team.name||"Team")}</span>${score!==null?`<span class="ko-score">${score}</span>`:''}</div>`;
+        // Use a CSS background instead of an <img>. The site has global image rules
+        // for team artwork which can make logos full-size inside the KO bracket.
+        const logo=img ? `<span class="ko-team-logo" style="background-image:url(&quot;${escapeHTML(img)}&quot;)"></span>` : '';
+        return `<div class="ko-team ${winner?'ko-winner':''}">${logo}<span class="ko-team-name">${escapeHTML(team.name||"Team")}</span>${score!==null?`<span class="ko-score">${score}</span>`:''}</div>`;
     }
 
     function matchCard(m,index){
