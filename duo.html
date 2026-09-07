@@ -2304,24 +2304,61 @@ function generateKnockoutStage(){
     const bestThird=rankedTeams(thirdPlaced,leagueFixtures).slice(0,4);
     const qualifiers=[...automatic,...bestThird];
 
-    // Seed the Round of 16 by overall league performance. Stronger qualifiers
-    // are paired against lower seeds, while avoiding a same-group rematch when possible.
-    const seeded=rankedTeams(qualifiers,leagueFixtures);
-    const topHalf=seeded.slice(0,8);
-    const bottomHalf=seeded.slice(8).reverse();
-    const pairs=[];
+    // Round-of-16 draw rules:
+    // 1) All six group winners are protected and face a non-winner.
+    // 2) Third-place qualifiers are prioritised as opponents for group winners.
+    // 3) No team can face a team from its own group in the Round of 16 when an
+    //    eligible alternative exists.
+    // 4) The four remaining non-winners are paired to complete the 8 fixtures.
+    // Rankings use the same table tiebreakers: Points -> GD -> GF.
+    const groupWinners=[];
+    const runnersUp=[];
+    groupNames.forEach(groupName=>{
+        const ranked=rankedTeams(groupMap[groupName],leagueFixtures);
+        groupWinners.push(ranked[0]);
+        runnersUp.push(ranked[1]);
+    });
 
     function teamGroup(id){
         const team=tournament.teams.find(t=>String(t.id)===String(id));
         return team ? (team.tournamentGroup || "") : "";
     }
 
-    topHalf.forEach(home=>{
-        let idx=bottomHalf.findIndex(away=>teamGroup(away)!==teamGroup(home));
-        if(idx<0) idx=0;
-        const away=bottomHalf.splice(idx,1)[0];
+    // Strongest winners are drawn first. Weakest eligible third-place teams are
+    // used first, then weakest eligible runners-up. This rewards group winners.
+    const winners=rankedTeams(groupWinners,leagueFixtures);
+    const thirdsPool=rankedTeams(bestThird,leagueFixtures).reverse();
+    const runnersPool=rankedTeams(runnersUp,leagueFixtures).reverse();
+    const pairs=[];
+
+    winners.forEach(home=>{
+        let pool=thirdsPool;
+        let idx=pool.findIndex(away=>teamGroup(away)!==teamGroup(home));
+
+        if(idx<0){
+            pool=runnersPool;
+            idx=pool.findIndex(away=>teamGroup(away)!==teamGroup(home));
+        }
+        if(idx<0 && thirdsPool.length){ pool=thirdsPool; idx=0; }
+        if(idx<0 && runnersPool.length){ pool=runnersPool; idx=0; }
+
+        const away=pool.splice(idx,1)[0];
         pairs.push([home,away]);
     });
+
+    // Four non-winners remain. Pair strongest vs weakest while avoiding a
+    // same-group rematch wherever possible.
+    let remaining=rankedTeams([...thirdsPool,...runnersPool],leagueFixtures);
+    while(remaining.length){
+        const home=remaining.shift();
+        let idx=-1;
+        for(let i=remaining.length-1;i>=0;i--){
+            if(teamGroup(remaining[i])!==teamGroup(home)){ idx=i; break; }
+        }
+        if(idx<0) idx=remaining.length-1;
+        const away=remaining.splice(idx,1)[0];
+        pairs.push([home,away]);
+    }
 
     pairs.forEach((pair,index)=>{
         tournament.fixtures.push(
@@ -2333,7 +2370,7 @@ function generateKnockoutStage(){
     save();
     renderAll();
     showPageByName("fixtures");
-    alert("Round of 16 generated: top 2 from each group + best 4 third-place teams.");
+    alert("Round of 16 generated: 12 automatic qualifiers + best 4 third-place teams. Group winners are protected from facing each other.");
 }
 
 /* =====================================================
