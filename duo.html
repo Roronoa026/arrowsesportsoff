@@ -2243,7 +2243,7 @@ function rankedTeams(teamIds, fixtureSet){
  * - top half of all teams qualify
  * - knockout fixtures are generated after the league phase is completed
  */
-function generateKnockoutStage(){
+async function generateKnockoutStage(){
     const type=tournament.type || "roundrobin";
 
     // This tournament uses 6 groups x 5 teams. After the league stage:
@@ -2381,10 +2381,30 @@ function generateKnockoutStage(){
     });
 
     tournament.knockoutReady=false;
-    save();
+
+    // Persist the new KO fixtures before reporting success. The public
+    // tourdetails.html page reads fixtures directly from Supabase, so merely
+    // updating the admin page in memory is not enough.
+    try{
+        await ARROWS_DB.replaceFixtures(tournament.fixtures);
+        const confirmed = await ARROWS_DB.getTournament();
+        if(confirmed){
+            tournament = confirmed;
+            normalizeTournament();
+        }
+        window.ARROWS_CLOUD_OK = true;
+    }catch(error){
+        window.ARROWS_CLOUD_OK = false;
+        console.error("KO fixture sync failed:", error);
+        alert("KO fixtures were created on this screen but could not be published to Supabase.\n\n" + (error.message || error));
+        renderAll();
+        showPageByName("fixtures");
+        return;
+    }
+
     renderAll();
     showPageByName("fixtures");
-    alert("Round of 16 generated: 12 automatic qualifiers + best 4 third-place teams. Group winners are protected from facing each other.");
+    alert("Round of 16 generated and published: 12 automatic qualifiers + best 4 third-place teams. The KO draw is now available in tourdetails.html.");
 }
 
 /* =====================================================
