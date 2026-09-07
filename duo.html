@@ -2271,14 +2271,26 @@ function generateKnockoutStage(){
         return;
     }
 
+    // IMPORTANT: tourdetails.html builds the points table from fixture.group,
+    // not from team.tournamentGroup. Older/live tournaments may therefore
+    // have no tournamentGroup saved on the team objects. Build the KO groups
+    // from the exact same source as the public points table.
     const groupMap={};
-    tournament.teams.forEach(team=>{
-        const group=team.tournamentGroup || "";
+    leagueFixtures.forEach(match=>{
+        const group=String(match.group || "").trim();
+        if(!group || group.toLowerCase()==="knockout") return;
         if(!groupMap[group]) groupMap[group]=[];
-        groupMap[group].push(team.id);
+        [match.home, match.away].forEach(teamId=>{
+            if(teamId===null || teamId===undefined || teamId==="") return;
+            if(!groupMap[group].some(id=>String(id)===String(teamId))){
+                groupMap[group].push(teamId);
+            }
+        });
     });
 
-    const groupNames=Object.keys(groupMap).filter(Boolean).sort();
+    const groupNames=Object.keys(groupMap).filter(Boolean).sort((a,b)=>
+        String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:"base"})
+    );
     if(groupNames.length !== 6){
         alert("KO qualification needs exactly 6 groups. Current groups found: "+groupNames.length);
         return;
@@ -2320,8 +2332,10 @@ function generateKnockoutStage(){
     });
 
     function teamGroup(id){
-        const team=tournament.teams.find(t=>String(t.id)===String(id));
-        return team ? (team.tournamentGroup || "") : "";
+        // Use fixture-derived group membership, matching tourdetails.html.
+        return groupNames.find(groupName=>
+            groupMap[groupName].some(teamId=>String(teamId)===String(id))
+        ) || "";
     }
 
     // Strongest winners are drawn first. Weakest eligible third-place teams are
