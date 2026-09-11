@@ -2284,7 +2284,7 @@ function renderKOBracket(){
 
     const rounds={r16:[],qf:[],sf:[],f:[]};
     ko.forEach(m=>rounds[roundKey(m)].push(m));
-    Object.values(rounds).forEach(arr=>arr.sort((a,b)=>(Number(a.round)||0)-(Number(b.round)||0) || String(a.id||"").localeCompare(String(b.id||""))));
+    Object.values(rounds).forEach(arr=>arr.sort((a,b)=>(Number(a.bracketOrder)||999)-(Number(b.bracketOrder)||999) || (Number(a.round)||0)-(Number(b.round)||0) || String(a.id||"").localeCompare(String(b.id||""))));
 
     const specs=[
         ["r16","Round of 16",8],

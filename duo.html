@@ -2597,6 +2597,9 @@ function sortFixturesForDisplay(fixtures){
         const roundDiff=fixtureRoundNumber(a)-fixtureRoundNumber(b);
         if(roundDiff) return roundDiff;
 
+        const bracketDiff=(Number(a?.bracketOrder)||999)-(Number(b?.bracketOrder)||999);
+        if(bracketDiff) return bracketDiff;
+
         const dateDiff=String(a?.date||"").localeCompare(String(b?.date||""));
         if(dateDiff) return dateDiff;
 
@@ -3045,7 +3048,7 @@ async function advanceKnockoutIfReady(completedMatch){
 
     const current=tournament.fixtures
         .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===currentRound)
-        .sort((a,b)=>String(a.id||"").localeCompare(String(b.id||"")));
+        .sort((a,b)=>(Number(a.bracketOrder)||999)-(Number(b.bracketOrder)||999) || String(a.id||"").localeCompare(String(b.id||"")));
 
     const expected=({1:8,2:4,3:2})[currentRound];
     if(current.length!==expected) return false;
@@ -3059,9 +3062,9 @@ async function advanceKnockoutIfReady(completedMatch){
 
     const winners=current.map(knockoutWinner);
     for(let i=0;i<winners.length;i+=2){
-        tournament.fixtures.push(
-            createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound))
-        );
+        const nextMatch=createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound));
+        nextMatch.bracketOrder=(i/2)+1;
+        tournament.fixtures.push(nextMatch);
     }
 
     tournament.fixtures=sortFixturesForDisplay(tournament.fixtures);
@@ -3073,13 +3076,40 @@ async function advanceKnockoutIfReady(completedMatch){
 async function repairKnockoutProgression(){
     let changed=false;
 
-    // Backfill a missing next round from already-completed knockout results.
-    // This is especially useful when upgrading an existing live tournament
-    // where all Round-of-16 results were saved before auto-progression existed.
+    // Give every knockout round a stable bracket position. UUIDs are random,
+    // so they must never be used as the visual/bracket order.
+    for(const round of [1,2,3,4]){
+        const matches=tournament.fixtures
+            .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===round);
+
+        if(round===1){
+            // Preserve the order already used by the Round-of-16 draw.
+            matches.sort((a,b)=>(Number(a.bracketOrder)||999)-(Number(b.bracketOrder)||999) || String(a.id||"").localeCompare(String(b.id||"")));
+            matches.forEach((m,i)=>{ if(Number(m.bracketOrder)!==i+1){ m.bracketOrder=i+1; changed=true; } });
+        }else{
+            const prev=tournament.fixtures
+                .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===round-1)
+                .sort((a,b)=>(Number(a.bracketOrder)||999)-(Number(b.bracketOrder)||999) || String(a.id||"").localeCompare(String(b.id||"")));
+
+            // Recover the correct slot for already-created QF/SF/Final matches
+            // by matching each fixture to the two winners that feed that slot.
+            for(let i=0;i<prev.length;i+=2){
+                const w1=knockoutWinner(prev[i]), w2=knockoutWinner(prev[i+1]);
+                if(!w1 || !w2) continue;
+                const found=matches.find(m=>
+                    (String(m.home)===String(w1) && String(m.away)===String(w2)) ||
+                    (String(m.home)===String(w2) && String(m.away)===String(w1))
+                );
+                if(found && Number(found.bracketOrder)!==(i/2)+1){ found.bracketOrder=(i/2)+1; changed=true; }
+            }
+        }
+    }
+
+    // Backfill any missing next round from completed results.
     for(const round of [1,2,3]){
         const current=tournament.fixtures
             .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===round)
-            .sort((a,b)=>String(a.id||"").localeCompare(String(b.id||"")));
+            .sort((a,b)=>(Number(a.bracketOrder)||999)-(Number(b.bracketOrder)||999) || String(a.id||"").localeCompare(String(b.id||"")));
         const expected=({1:8,2:4,3:2})[round];
         if(current.length!==expected) continue;
         if(current.some(m=>!m.played || !knockoutWinner(m))) continue;
@@ -3089,9 +3119,9 @@ async function repairKnockoutProgression(){
 
         const winners=current.map(knockoutWinner);
         for(let i=0;i<winners.length;i+=2){
-            tournament.fixtures.push(
-                createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound))
-            );
+            const nextMatch=createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound));
+            nextMatch.bracketOrder=(i/2)+1;
+            tournament.fixtures.push(nextMatch);
         }
         changed=true;
     }
@@ -3101,7 +3131,6 @@ async function repairKnockoutProgression(){
         await ARROWS_DB.replaceFixtures(tournament.fixtures);
         window.arrowsSetTournamentCache(tournament);
     }
-
     return changed;
 }
 
