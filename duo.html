@@ -1280,6 +1280,16 @@ async function loadTournamentFromSupabase(){
         }
 
         normalizeTournament();
+
+        // Upgrade/repair the live bracket automatically. If an earlier
+        // knockout round is already complete but its next round is missing,
+        // create and publish that next round now.
+        try{
+            await repairKnockoutProgression();
+        }catch(progressionError){
+            console.error("Could not repair knockout progression:", progressionError);
+        }
+
         await arrowsReady(true);
         await arrowsSyncDuoPlayers(tournament);
         window.ARROWS_CLOUD_OK = true;
@@ -2989,6 +2999,113 @@ async function deleteFixture(id){
 
 
 /* =====================================================
+KNOCKOUT AUTO-PROGRESSION
+===================================================== */
+
+function isKnockoutFixture(match){
+    if(!match) return false;
+    const stage=String(match.stage||"").toLowerCase();
+    const group=String(match.group||"").toLowerCase();
+    return stage.includes("knockout") || stage.includes("round of 16") ||
+           stage.includes("quarter") || stage.includes("semi") ||
+           stage.includes("final") || group.includes("round of 16") ||
+           group.includes("quarter") || group.includes("semi") ||
+           group.includes("final");
+}
+
+function knockoutRoundNumber(match){
+    if(!match) return 0;
+    const text=(String(match.stage||"")+" "+String(match.group||"")).toLowerCase();
+    if(text.includes("round of 16")) return 1;
+    if(text.includes("quarter")) return 2;
+    if(text.includes("semi")) return 3;
+    if(text.includes("final") && !text.includes("semi")) return 4;
+    const round=Number(match.round)||0;
+    return (round>=1 && round<=4) ? round : 0;
+}
+
+function knockoutWinner(match){
+    if(!match || !match.played) return null;
+    const result=getMatchResult(match);
+    const homePoints=Number(result.homePoints)||0;
+    const awayPoints=Number(result.awayPoints)||0;
+    if(homePoints===awayPoints) return null;
+    return homePoints>awayPoints ? match.home : match.away;
+}
+
+function knockoutRoundLabel(round){
+    return ({1:"Round of 16",2:"Quarter Finals",3:"Semi Finals",4:"Final"})[round] || "Knockout";
+}
+
+async function advanceKnockoutIfReady(completedMatch){
+    if(!isKnockoutFixture(completedMatch)) return false;
+
+    const currentRound=knockoutRoundNumber(completedMatch);
+    if(currentRound<1 || currentRound>=4) return false;
+
+    const current=tournament.fixtures
+        .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===currentRound)
+        .sort((a,b)=>String(a.id||"").localeCompare(String(b.id||"")));
+
+    const expected=({1:8,2:4,3:2})[currentRound];
+    if(current.length!==expected) return false;
+    if(current.some(m=>!m.played || !knockoutWinner(m))) return false;
+
+    const nextRound=currentRound+1;
+    const alreadyExists=tournament.fixtures.some(m=>
+        isKnockoutFixture(m) && knockoutRoundNumber(m)===nextRound
+    );
+    if(alreadyExists) return false;
+
+    const winners=current.map(knockoutWinner);
+    for(let i=0;i<winners.length;i+=2){
+        tournament.fixtures.push(
+            createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound))
+        );
+    }
+
+    tournament.fixtures=sortFixturesForDisplay(tournament.fixtures);
+    await ARROWS_DB.replaceFixtures(tournament.fixtures);
+    window.arrowsSetTournamentCache(tournament);
+    return true;
+}
+
+async function repairKnockoutProgression(){
+    let changed=false;
+
+    // Backfill a missing next round from already-completed knockout results.
+    // This is especially useful when upgrading an existing live tournament
+    // where all Round-of-16 results were saved before auto-progression existed.
+    for(const round of [1,2,3]){
+        const current=tournament.fixtures
+            .filter(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===round)
+            .sort((a,b)=>String(a.id||"").localeCompare(String(b.id||"")));
+        const expected=({1:8,2:4,3:2})[round];
+        if(current.length!==expected) continue;
+        if(current.some(m=>!m.played || !knockoutWinner(m))) continue;
+
+        const nextRound=round+1;
+        if(tournament.fixtures.some(m=>isKnockoutFixture(m) && knockoutRoundNumber(m)===nextRound)) continue;
+
+        const winners=current.map(knockoutWinner);
+        for(let i=0;i<winners.length;i+=2){
+            tournament.fixtures.push(
+                createMatch(winners[i],winners[i+1],"Knockout",nextRound,knockoutRoundLabel(nextRound))
+            );
+        }
+        changed=true;
+    }
+
+    if(changed){
+        tournament.fixtures=sortFixturesForDisplay(tournament.fixtures);
+        await ARROWS_DB.replaceFixtures(tournament.fixtures);
+        window.arrowsSetTournamentCache(tournament);
+    }
+
+    return changed;
+}
+
+/* =====================================================
 SAVE DUO RESULT
 ===================================================== */
 
@@ -3027,6 +3144,11 @@ async function saveDuoResult(matchId,button){
         return;
     }
 
+    if(isKnockoutFixture(match) && homePoints===awayPoints){
+        alert("Knockout matches cannot end in a draw. Please enter the final score after tie-break/extra time.");
+        return;
+    }
+
     const previous={result:match.result,motm:match.motm,goals:match.goals,played:match.played};
     match.result={homePoints,awayPoints,playerStats,mvp};
     match.motm=mvp;
@@ -3038,9 +3160,25 @@ async function saveDuoResult(matchId,button){
     try{
         if(!ARROWS_DB.saveDuoMatchResult) throw new Error("Please upload the rebuilt supabase-data.js too.");
         await ARROWS_DB.saveDuoMatchResult(match);
+
+        let advanced=false;
+        try{
+            advanced=await advanceKnockoutIfReady(match);
+        }catch(progressionError){
+            // The result itself is already safely stored. Do not report it as
+            // failed just because publishing the next bracket round failed.
+            console.error("Knockout progression failed:",progressionError);
+            alert("Result saved, but the next knockout round could not be generated.\n\n"+(progressionError.message||progressionError));
+        }
+
         window.arrowsSetTournamentCache(tournament);
         window.ARROWS_CLOUD_OK=true;
         renderAll();
+
+        if(advanced){
+            const nextRound=knockoutRoundNumber(match)+1;
+            alert(knockoutRoundLabel(nextRound)+" fixtures were generated automatically and published.");
+        }
     }catch(error){
         match.result=previous.result; match.motm=previous.motm; match.goals=previous.goals; match.played=previous.played;
         window.ARROWS_CLOUD_OK=false;
