@@ -1,5 +1,7 @@
 /* ARROWS ESPORTS — Quick Tournament data + knockout helpers
    Cloud source: public.quick_tournament_state (single row id='main').
+   Completed-match history is retained inside the state so Quick Tournament
+   career stats survive when a new bracket replaces the old one.
    Falls back to localStorage so the pages remain usable before the SQL migration is run. */
 (function(){
   const STORAGE_KEY="arrowsQuickTournament";
@@ -18,12 +20,14 @@
 
   function defaultState(){
     return {
-      version:1,
+      version:2,
+      instanceId:uid(),
       title:"ARROWS QUICK TOURNAMENT",
       size:8,
       status:"upcoming",
       players:[],
       fixtures:[],
+      history:[],
       updatedAt:new Date().toISOString()
     };
   }
@@ -47,16 +51,47 @@
     return null;
   }
 
+  function normalizeHistoryRow(h){
+    if(!h||typeof h!=="object") return null;
+    const instanceId=String(h.instanceId||"quick-history");
+    const matchId=String(h.matchId||"");
+    if(!matchId) return null;
+    return {
+      id:String(h.id||`${instanceId}:${matchId}`),
+      instanceId,
+      matchId,
+      tournamentTitle:String(h.tournamentTitle||"ARROWS QUICK TOURNAMENT"),
+      roundKey:ROUND_META[h.roundKey]?h.roundKey:"f",
+      roundLabel:String(h.roundLabel||ROUND_META[h.roundKey]?.label||"Final"),
+      date:String(h.date||""),
+      time:String(h.time||""),
+      homePlayerId:h.homePlayerId?String(h.homePlayerId):null,
+      awayPlayerId:h.awayPlayerId?String(h.awayPlayerId):null,
+      winnerPlayerId:h.winnerPlayerId?String(h.winnerPlayerId):null,
+      homeClanPlayerId:h.homeClanPlayerId?String(h.homeClanPlayerId):null,
+      awayClanPlayerId:h.awayClanPlayerId?String(h.awayClanPlayerId):null,
+      winnerClanPlayerId:h.winnerClanPlayerId?String(h.winnerClanPlayerId):null,
+      homeName:String(h.homeName||""),
+      awayName:String(h.awayName||""),
+      winnerName:String(h.winnerName||""),
+      homeScore:(h.homeScore!==null&&h.homeScore!==""&&Number.isFinite(Number(h.homeScore)))?Math.max(0,Number(h.homeScore)):null,
+      awayScore:(h.awayScore!==null&&h.awayScore!==""&&Number.isFinite(Number(h.awayScore)))?Math.max(0,Number(h.awayScore)):null,
+      completedAt:String(h.completedAt||new Date().toISOString())
+    };
+  }
+
   function normalizeState(raw){
     const base=defaultState();
     const s=(raw&&typeof raw==="object")?raw:{};
-    base.version=1;
+    base.version=2;
+    base.instanceId=String(s.instanceId||base.instanceId);
     base.title=String(s.title||base.title).trim()||base.title;
     base.size=validSize(s.size);
     base.status=["upcoming","active","completed"].includes(s.status)?s.status:"upcoming";
     base.players=Array.isArray(s.players)?s.players.map((p,i)=>({
       id:String(p&&p.id||uid()),
-      name:String(p&&p.name||`Player ${i+1}`).trim()||`Player ${i+1}`
+      name:String(p&&p.name||`Player ${i+1}`).trim()||`Player ${i+1}`,
+      clanPlayerId:p&&p.clanPlayerId?String(p.clanPlayerId):null
     })).slice(0,16):[];
     base.fixtures=Array.isArray(s.fixtures)?s.fixtures.map((m,i)=>{
       const roundKey=ROUND_META[m&&m.roundKey]?m.roundKey:(String(m&&m.round||"").toLowerCase().includes("16")?"r16":String(m&&m.round||"").toLowerCase().includes("quarter")?"qf":String(m&&m.round||"").toLowerCase().includes("semi")?"sf":"f");
@@ -78,6 +113,7 @@
         note:String(m&&m.note||"")
       };
     }):[];
+    base.history=Array.isArray(s.history)?s.history.map(normalizeHistoryRow).filter(Boolean):[];
     base.updatedAt=String(s.updatedAt||base.updatedAt);
     return base;
   }
@@ -108,6 +144,8 @@
     const rounds=roundsForSize(size);
     const fixtures=[];
     let previous=[];
+
+    s.instanceId=uid();
 
     rounds.forEach((round,ri)=>{
       const matchCount=size/Math.pow(2,ri+1);
@@ -172,8 +210,6 @@
 
   function sanitizeResults(state){
     const s=normalizeState(state);
-    // Re-check winners against the currently resolved players. If an upstream winner
-    // changes, invalid downstream results are cleared instead of showing impossible matches.
     const ordered=s.fixtures.slice().sort((a,b)=>{
       const ar=ROUND_META[a.roundKey]?.order||99, br=ROUND_META[b.roundKey]?.order||99;
       return ar-br || a.order-b.order;
@@ -213,6 +249,87 @@
     try{return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null"));}catch(e){return defaultState();}
   }
 
+  async function syncPlayerLinks(input){
+    const state=normalizeState(input);
+    if(!state.players.length) return state;
+
+    const rows=await cloudRequest("players?select=id,name");
+    const permanent=Array.isArray(rows)?rows.slice():[];
+
+    for(const player of state.players){
+      if(player.clanPlayerId) continue;
+      try{
+        const wanted=player.name.trim().toLowerCase();
+        let match=permanent.find(p=>String(p.name||"").trim().toLowerCase()===wanted);
+        if(!match){
+          const id=uid();
+          const created=await cloudRequest("players",{
+            method:"POST",
+            headers:{Prefer:"return=representation"},
+            body:JSON.stringify({
+              id,
+              name:player.name,
+              efootball_id:"",
+              country:"",
+              photo:"",
+              team_id:null
+            })
+          });
+          match=Array.isArray(created)&&created.length?created[0]:{id,name:player.name};
+          permanent.push(match);
+        }
+        player.clanPlayerId=String(match.id);
+      }catch(error){
+        console.warn(`Could not link Quick Tournament player ${player.name}`,error);
+      }
+    }
+    return state;
+  }
+
+  function syncHistory(input){
+    const state=sanitizeResults(input);
+    const instanceId=String(state.instanceId||uid());
+
+    const previous=(Array.isArray(state.history)?state.history:[])
+      .filter(h=>String(h.instanceId)!==instanceId);
+
+    const current=[];
+    (state.fixtures||[]).forEach(match=>{
+      if(match.status!=="completed"||!match.winnerId) return;
+      const parts=getParticipants(state,match);
+      const home=parts.home.player;
+      const away=parts.away.player;
+      const winner=playerById(state,match.winnerId);
+      if(!home||!away||!winner) return;
+
+      current.push({
+        id:`${instanceId}:${match.id}`,
+        instanceId,
+        matchId:String(match.id),
+        tournamentTitle:state.title||"ARROWS QUICK TOURNAMENT",
+        roundKey:match.roundKey,
+        roundLabel:match.roundLabel,
+        date:match.date||"",
+        time:match.time||"",
+        homePlayerId:String(home.id),
+        awayPlayerId:String(away.id),
+        winnerPlayerId:String(winner.id),
+        homeClanPlayerId:home.clanPlayerId?String(home.clanPlayerId):null,
+        awayClanPlayerId:away.clanPlayerId?String(away.clanPlayerId):null,
+        winnerClanPlayerId:winner.clanPlayerId?String(winner.clanPlayerId):null,
+        homeName:home.name||"",
+        awayName:away.name||"",
+        winnerName:winner.name||"",
+        homeScore:match.homeScore,
+        awayScore:match.awayScore,
+        completedAt:new Date().toISOString()
+      });
+    });
+
+    state.history=[...previous,...current];
+    return state;
+  }
+
   async function load(){
     try{
       const rows=await cloudRequest(`${TABLE}?id=eq.${encodeURIComponent(ROW_ID)}&select=data,updated_at&limit=1`);
@@ -232,6 +349,12 @@
 
   async function save(input){
     let state=sanitizeResults(input);
+    try{
+      state=await syncPlayerLinks(state);
+    }catch(error){
+      console.warn("Could not link Quick Tournament players to permanent player records",error);
+    }
+    state=syncHistory(state);
     state.updatedAt=new Date().toISOString();
     saveLocal(state);
     try{
@@ -249,6 +372,6 @@
   window.ARROWS_QUICK={
     defaultState,normalizeState,validSize,roundsForSize,generateBracket,sanitizeResults,
     playerById,fixtureById,resolveSource,getParticipants,champion,uid,load,save,
-    roundMeta:ROUND_META,storageKey:STORAGE_KEY
+    syncHistory,roundMeta:ROUND_META,storageKey:STORAGE_KEY
   };
 })();
