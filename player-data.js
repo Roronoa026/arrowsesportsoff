@@ -2,19 +2,50 @@
 (function () {
   let playerCache = [];
   let tournamentCache = null;
+  let quickTournamentCache = null;
   let readyPromise = null;
 
   function arrowsId() {
     return crypto.randomUUID();
   }
+
   window.arrowsEscape = function (value) {
     return String(value ?? "").replace(/[&<>'"]/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
     }[c]));
   };
 
+  async function loadQuickTournamentState() {
+    const cfg = window.ARROWS_SUPABASE || {};
+    const base = String(cfg.url || "").replace(/\/$/, "");
+    const key = String(cfg.publishableKey || "");
+    if (!base || !key) return null;
+
+    try {
+      const res = await fetch(
+        base + "/rest/v1/quick_tournament_state?id=eq.main&select=data&limit=1",
+        {
+          cache:"no-store",
+          headers:{apikey:key, Authorization:"Bearer " + key}
+        }
+      );
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return rows && rows.length && rows[0].data && typeof rows[0].data === "object"
+        ? rows[0].data
+        : null;
+    } catch (error) {
+      console.warn("Could not load Quick Tournament stats", error);
+      return null;
+    }
+  }
+
   window.arrowsSetTournamentCache = function (t) {
     tournamentCache = t && typeof t === "object" ? t : null;
+  };
+
+  window.arrowsSetQuickTournamentCache = function (t) {
+    quickTournamentCache = t && typeof t === "object" ? t : null;
   };
 
   window.arrowsGetPlayers = function () {
@@ -29,8 +60,14 @@
     if (!readyPromise || forceRefresh) {
       readyPromise = (async () => {
         await ARROWS_DB.healthCheck();
-        playerCache = await ARROWS_DB.getPlayers();
-        tournamentCache = await ARROWS_DB.getTournament();
+        const [players, tournament, quick] = await Promise.all([
+          ARROWS_DB.getPlayers(),
+          ARROWS_DB.getTournament(),
+          loadQuickTournamentState()
+        ]);
+        playerCache = players || [];
+        tournamentCache = tournament || null;
+        quickTournamentCache = quick || null;
         return true;
       })();
     }
@@ -103,7 +140,7 @@
     }
   };
 
-  window.arrowsTournamentRecords = function () {
+  function arrowsDuoTournamentRecords() {
     const records = [];
     const duo = tournamentCache;
     if (!duo || !Array.isArray(duo.teams)) return records;
@@ -112,7 +149,6 @@
     const localPlayerById = {};
     const stats = {};
 
-    // Resolve any tournament/team-local player ID to the permanent clan player ID.
     duo.teams.forEach(team => (team.players || []).forEach(p => {
       localPlayerById[String(p.id)] = { player: p, team };
       if (p.clanPlayerId) localPlayerById[String(p.clanPlayerId)] = { player: p, team };
@@ -154,7 +190,6 @@
       const playerStats = result && Array.isArray(result.playerStats) ? result.playerStats : [];
 
       if (playerStats.length) {
-        // New result format: the admin-entered player rows are authoritative.
         playerStats.forEach(row => {
           const rowTeam = teamById[String(row.teamId)] ||
             ((home.players || []).some(p => String(p.id) === String(row.playerId) || String(p.clanPlayerId || '') === String(row.playerId)) ? home : away);
@@ -170,7 +205,6 @@
           else if (outcome === 'draw') s.draws++;
         });
       } else {
-        // Legacy fallback for matches saved before per-player result rows existed.
         const goals = Array.isArray(match.goals) ? match.goals : [];
         const homeScore = result ? Number(result.homePoints || 0) : goals.filter(g => String(g.teamId) === String(home.id)).length;
         const awayScore = result ? Number(result.awayPoints || 0) : goals.filter(g => String(g.teamId) === String(away.id)).length;
@@ -218,6 +252,138 @@
       motm:s.motm
     }));
     return records;
+  }
+
+  function arrowsQuickTournamentRecords() {
+    const quick = quickTournamentCache;
+    if (!quick || typeof quick !== "object") return [];
+
+    const quickPlayers = Array.isArray(quick.players) ? quick.players : [];
+    const quickById = Object.fromEntries(quickPlayers.map(p => [String(p.id), p]));
+    const canonicalFrom = (clanPlayerId, quickPlayerId, name) => {
+      if (clanPlayerId) return String(clanPlayerId);
+      const qp = quickById[String(quickPlayerId || "")];
+      if (qp && qp.clanPlayerId) return String(qp.clanPlayerId);
+      const wanted = String(name || qp?.name || "").trim().toLowerCase();
+      if (wanted) {
+        const permanent = playerCache.find(p => String(p.name || "").trim().toLowerCase() === wanted);
+        if (permanent) return String(permanent.id);
+      }
+      return qp ? String(qp.id) : null;
+    };
+
+    const fixtureById = id => (Array.isArray(quick.fixtures) ? quick.fixtures : [])
+      .find(m => String(m.id) === String(id)) || null;
+    const quickPlayerById = id => quickById[String(id)] || null;
+
+    const resolveSource = (source, seen = new Set()) => {
+      if (!source || typeof source !== "object") return null;
+      if (source.type === "player") return quickPlayerById(source.id);
+      if (source.type !== "winner" || !source.matchId) return null;
+      const match = fixtureById(source.matchId);
+      if (!match || seen.has(String(match.id))) return null;
+      seen.add(String(match.id));
+      return match.winnerId ? quickPlayerById(match.winnerId) : null;
+    };
+
+    const events = [];
+    const seenKeys = new Set();
+    (Array.isArray(quick.history) ? quick.history : []).forEach(h => {
+      const key = String(h.id || `${h.instanceId || "legacy"}:${h.matchId || ""}`);
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      events.push({
+        key,
+        instanceId:String(h.instanceId || "quick-history"),
+        title:String(h.tournamentTitle || quick.title || "ARROWS QUICK TOURNAMENT"),
+        homeCanonical:canonicalFrom(h.homeClanPlayerId, h.homePlayerId, h.homeName),
+        awayCanonical:canonicalFrom(h.awayClanPlayerId, h.awayPlayerId, h.awayName),
+        winnerCanonical:canonicalFrom(h.winnerClanPlayerId, h.winnerPlayerId, h.winnerName),
+        homeScore:h.homeScore === null || h.homeScore === "" ? 0 : Math.max(0, Number(h.homeScore) || 0),
+        awayScore:h.awayScore === null || h.awayScore === "" ? 0 : Math.max(0, Number(h.awayScore) || 0)
+      });
+    });
+
+    (Array.isArray(quick.fixtures) ? quick.fixtures : []).forEach(m => {
+      if (m.status !== "completed" || !m.winnerId) return;
+      const home = resolveSource(m.homeSource, new Set([String(m.id)]));
+      const away = resolveSource(m.awaySource, new Set([String(m.id)]));
+      if (!home || !away) return;
+      const key = `${quick.instanceId || "quick-current"}:${m.id}`;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      const winner = quickPlayerById(m.winnerId);
+      events.push({
+        key,
+        instanceId:String(quick.instanceId || "quick-current"),
+        title:String(quick.title || "ARROWS QUICK TOURNAMENT"),
+        homeCanonical:canonicalFrom(home.clanPlayerId, home.id, home.name),
+        awayCanonical:canonicalFrom(away.clanPlayerId, away.id, away.name),
+        winnerCanonical:winner ? canonicalFrom(winner.clanPlayerId, winner.id, winner.name) : null,
+        homeScore:m.homeScore === null || m.homeScore === "" ? 0 : Math.max(0, Number(m.homeScore) || 0),
+        awayScore:m.awayScore === null || m.awayScore === "" ? 0 : Math.max(0, Number(m.awayScore) || 0)
+      });
+    });
+
+    const groups = {};
+    const ensure = (group, playerId) => {
+      if (!playerId) return null;
+      const id = String(playerId);
+      if (!group.stats[id]) group.stats[id] = {
+        goals:0, goalsConceded:0, assists:0, matches:0,
+        wins:0, losses:0, draws:0, motm:0
+      };
+      return group.stats[id];
+    };
+
+    events.forEach(event => {
+      if (!event.homeCanonical || !event.awayCanonical || !event.winnerCanonical) return;
+      if (event.homeCanonical === event.awayCanonical) return;
+
+      const key = event.instanceId || "quick";
+      if (!groups[key]) groups[key] = {title:event.title, stats:{}};
+      const group = groups[key];
+      const home = ensure(group, event.homeCanonical);
+      const away = ensure(group, event.awayCanonical);
+      if (!home || !away) return;
+
+      home.matches++;
+      away.matches++;
+      home.goals += event.homeScore;
+      away.goals += event.awayScore;
+      home.goalsConceded += event.awayScore;
+      away.goalsConceded += event.homeScore;
+
+      if (String(event.winnerCanonical) === String(event.homeCanonical)) {
+        home.wins++;
+        away.losses++;
+      } else if (String(event.winnerCanonical) === String(event.awayCanonical)) {
+        away.wins++;
+        home.losses++;
+      }
+    });
+
+    const records = [];
+    Object.values(groups).forEach(group => {
+      Object.entries(group.stats).forEach(([playerId, s]) => records.push({
+        playerId,
+        tournament:group.title || "ARROWS QUICK TOURNAMENT",
+        teams:["Quick Tournament"],
+        goals:s.goals,
+        goalsConceded:s.goalsConceded,
+        assists:s.assists,
+        matches:s.matches,
+        wins:s.wins,
+        losses:s.losses,
+        draws:s.draws,
+        motm:s.motm
+      }));
+    });
+    return records;
+  }
+
+  window.arrowsTournamentRecords = function () {
+    return [...arrowsDuoTournamentRecords(), ...arrowsQuickTournamentRecords()];
   };
 
   window.arrowsPlayerStats = function (playerId) {
@@ -234,7 +400,6 @@
     return out;
   };
 
-  // Fixture generator retained for existing tournament UI.
   window.arrowsGenerateDuoFixtures = window.arrowsGenerateDuoFixtures || function(participants, groupCount) {
     const list = Array.isArray(participants) ? participants.filter(Boolean).slice() : [];
     let groups = Math.max(1, parseInt(groupCount, 10) || 1);
