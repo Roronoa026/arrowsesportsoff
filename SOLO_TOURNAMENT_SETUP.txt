@@ -1,0 +1,17 @@
+SOLO TOURNAMENT FIX
+====================
+
+The original build referenced ARROWS_SOLO_DB but did not contain solo-tournament-data.js.
+
+This build adds:
+- solo-tournament-data.js: shared Supabase data layer
+- SOLO_TOURNAMENT_SQL.sql: tables + RLS + grants for solo tournaments
+- a small admin fix so group names are saved with participants
+
+DEPLOYMENT:
+1. Upload/deploy this ZIP.
+2. In Supabase -> SQL Editor, run the COMPLETE contents of SOLO_TOURNAMENT_SQL.sql once.
+3. Open the Solo Tournament admin page, create a tournament, select existing players, and save.
+4. Open the Solo Tournament viewer.
+
+The solo system uses the same Supabase project configured in supabase-config.js.
